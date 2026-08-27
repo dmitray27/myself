@@ -1,0 +1,109 @@
+package com.example.radio_bridge_dual
+
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
+import android.os.Build
+import androidx.annotation.NonNull
+import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.plugin.common.MethodChannel
+
+class MainActivity : FlutterActivity() {
+    private val CHANNEL = "esp32/network"
+
+    private var connectivityManager: ConnectivityManager? = null
+    private var networkCallback: ConnectivityManager.NetworkCallback? = null
+
+    override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
+        super.configureFlutterEngine(flutterEngine)
+
+        connectivityManager =
+            getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "bindToWifi" -> bindToWifi(result)
+                    "unbind" -> {
+                        unbind()
+                        result.success(true)
+                    }
+                    else -> result.notImplemented()
+                }
+            }
+    }
+
+    private fun bindToWifi(result: MethodChannel.Result) {
+        val cm = connectivityManager
+        if (cm == null) {
+            result.success(false)
+            return
+        }
+
+        // Снимаем предыдущую привязку/колбэк, чтобы они не накапливались
+        // при периодическом вызове раз в 5 с из _checkConnection()
+        unbind()
+
+        val request = NetworkRequest.Builder()
+            .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
+            // НЕ добавляем NET_CAPABILITY_INTERNET: сеть ESP32 без интернета,
+            // иначе система откажет в выдаче сети
+            .build()
+
+        var reported = false
+
+        val callback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                val ok = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    cm.bindProcessToNetwork(network)
+                } else {
+                    @Suppress("DEPRECATION")
+                    ConnectivityManager.setProcessDefaultNetwork(network)
+                }
+                if (!reported) {
+                    reported = true
+                    // Колбэк приходит в фоновом потоке, а MethodChannel.Result
+                    // обязан вызываться в главном потоке
+                    runOnUiThread { result.success(ok) }
+                }
+            }
+
+            override fun onUnavailable() {
+                if (!reported) {
+                    reported = true
+                    runOnUiThread { result.success(false) }
+                }
+            }
+        }
+
+        networkCallback = callback
+        // requestNetwork с таймаутом, чтобы onUnavailable точно пришёл (API 26+)
+        cm.requestNetwork(request, callback, 8000)
+    }
+
+    private fun unbind() {
+        val cm = connectivityManager ?: return
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            cm.bindProcessToNetwork(null)
+        } else {
+            @Suppress("DEPRECATION")
+            ConnectivityManager.setProcessDefaultNetwork(null)
+        }
+        networkCallback?.let {
+            try {
+                cm.unregisterNetworkCallback(it)
+            } catch (e: Exception) {
+                // колбэк мог быть уже снят — игнорируем
+            }
+        }
+        networkCallback = null
+    }
+
+    override fun onDestroy() {
+        unbind()
+        super.onDestroy()
+    }
+}
