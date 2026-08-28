@@ -93,7 +93,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   final List<_PendingEcho> _pendingEcho = [];
 
   static const String _esp32Address = '192.168.4.1';
-  static const Duration _pollInterval = Duration(seconds: 5);
+  static const Duration _pollInterval = Duration(seconds: 2);
   static const int _maxPendingEcho = 16;
   static const Duration _echoTimeout = Duration(seconds: 6);
   // Ограничение поля ввода в символах; фактический лимит прошивки —
@@ -346,7 +346,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     try {
       final response = await http
           .get(Uri.parse('http://$_esp32Address/ping'))
-          .timeout(const Duration(seconds: 3));
+          .timeout(const Duration(seconds: 2));
       return response.statusCode == 200;
     } catch (e) {
       debugPrint('ESP32 не ответил на ping: $e');
@@ -360,7 +360,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     try {
       final response = await http
           .get(Uri.parse('http://$_esp32Address/info'))
-          .timeout(const Duration(seconds: 3));
+          .timeout(const Duration(seconds: 2));
 
       String? ssid;
       if (response.statusCode == 200) {
@@ -438,7 +438,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
       _webSocketChannel = IOWebSocketChannel.connect(
         'ws://$_esp32Address:81',
-        pingInterval: const Duration(seconds: 15),
+        pingInterval: const Duration(seconds: 5),
       );
 
       _webSocketSubscription = _webSocketChannel!.stream.listen(
@@ -508,7 +508,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     try {
       if (subscription != null) {
         try {
-          await subscription.cancel().timeout(const Duration(seconds: 3));
+          await subscription.cancel().timeout(const Duration(seconds: 2));
         } catch (e) {
           debugPrint('Ошибка/таймаут отписки: $e');
         }
