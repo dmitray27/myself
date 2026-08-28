@@ -125,6 +125,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
     _isForeground = state == AppLifecycleState.resumed;
   }
 
@@ -494,8 +495,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (_isDisconnecting) return;
     _isDisconnecting = true;
 
-    await _stopForegroundService();
-
+    // Сервис здесь не гасим: _disconnect() вызывается и перед каждым
+    // переподключением, а с Android 12 запустить foreground-сервис из фона
+    // уже нельзя — после разрыва со свёрнутым приложением он бы не вернулся.
+    // Остановка — только в dispose()
     _failPendingEcho();
 
     // Снимаем ссылки ДО ожиданий, чтобы новая попытка подключения

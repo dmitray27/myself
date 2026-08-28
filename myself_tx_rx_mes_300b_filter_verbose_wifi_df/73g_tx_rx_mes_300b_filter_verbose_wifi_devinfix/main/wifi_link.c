@@ -46,8 +46,9 @@
 // Последние сообщения хранятся на плате: клиент, у которого соединение
 // оборвалось (например при засыпании телефона), получает пропущенное
 // сразу после рукопожатия
+// 300 символов кириллицы — это 600 байт, плюс имя и разделитель
 #define HISTORY_SIZE    20
-#define HISTORY_MAX_LEN 320
+#define HISTORY_MAX_LEN 704
 
 static const char *TAG = "WIFI_LINK";
 
@@ -290,7 +291,27 @@ static void history_store(const char *payload)
 {
     xSemaphoreTake(s_ws_mutex, portMAX_DELAY);
 
-    strlcpy(s_history[s_history_count % HISTORY_SIZE], payload, HISTORY_MAX_LEN);
+    char *slot = s_history[s_history_count % HISTORY_SIZE];
+    if (strlcpy(slot, payload, HISTORY_MAX_LEN) >= HISTORY_MAX_LEN) {
+        // strlcpy режет по байтам: оборванная UTF-8 последовательность
+        // в хвосте сломает декодирование кадра на стороне приложения
+        size_t end = strlen(slot);
+        size_t start = end;
+        while (start > 0 && ((unsigned char)slot[start - 1] & 0xC0) == 0x80) {
+            start--;
+        }
+        if (start > 0) {
+            unsigned char lead = (unsigned char)slot[start - 1];
+            if (lead & 0x80) {
+                size_t need = ((lead & 0xE0) == 0xC0) ? 2 :
+                              ((lead & 0xF0) == 0xE0) ? 3 :
+                              ((lead & 0xF8) == 0xF0) ? 4 : 1;
+                if (start - 1 + need > end) {
+                    slot[start - 1] = '\0';
+                }
+            }
+        }
+    }
     s_history_count++;
 
     xSemaphoreGive(s_ws_mutex);

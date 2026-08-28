@@ -24,10 +24,14 @@ class ChatForegroundService : Service() {
 
         val wifiManager =
             applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
-        val lock = wifiManager.createWifiLock(
-            WifiManager.WIFI_MODE_FULL_HIGH_PERF,
-            WIFI_LOCK_TAG,
-        )
+        // WIFI_MODE_FULL_HIGH_PERF устарел с API 29 и там игнорируется
+        val mode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            WifiManager.WIFI_MODE_FULL_LOW_LATENCY
+        } else {
+            @Suppress("DEPRECATION")
+            WifiManager.WIFI_MODE_FULL_HIGH_PERF
+        }
+        val lock = wifiManager.createWifiLock(mode, WIFI_LOCK_TAG)
         lock.setReferenceCounted(false)
         lock.acquire()
         wifiLock = lock
