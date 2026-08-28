@@ -54,7 +54,7 @@ class ChatScreen extends StatefulWidget {
   State<ChatScreen> createState() => _ChatScreenState();
 }
 
-class _ChatScreenState extends State<ChatScreen> {
+class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   final TextEditingController _textController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
   final List<Message> _messages = [];
@@ -77,6 +77,10 @@ class _ChatScreenState extends State<ChatScreen> {
       FlutterLocalNotificationsPlugin();
   bool _notificationsReady = false;
 
+  // На переднем плане звучит AudioPlayer, в фоне — канал уведомлений:
+  // иначе на одно сообщение слышны два звука
+  bool _isForeground = true;
+
   ConnectionStatus _connectionState = ConnectionStatus.disconnected;
   String _currentWifiName = 'Не подключено';
   String _lastError = '';
@@ -97,7 +101,10 @@ class _ChatScreenState extends State<ChatScreen> {
   static const int _maxMessageLength = 300;
   static const int _maxNameLength = 15;
   static const String _notificationAsset = '73g_assets/sounds/notify.mp3';
+  // Каналы Android неизменяемы после создания, поэтому звук переключается
+  // сменой канала, а не флагом playSound
   static const String _notificationChannelId = 'chat_messages';
+  static const String _silentNotificationChannelId = 'chat_messages_silent';
   static const int _messageNotificationId = 1001;
   static const String _soundPrefKey = 'sound_enabled';
   static const MethodChannel _networkChannel =
@@ -111,12 +118,19 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initPreferences();
     _initNotifications();
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _isForeground = state == AppLifecycleState.resumed;
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _stopForegroundService();
     _unbindWifi();
     _connectionTimer?.cancel();
@@ -202,8 +216,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
     try {
       final details = AndroidNotificationDetails(
-        _notificationChannelId,
-        'Сообщения чата',
+        _soundEnabled ? _notificationChannelId : _silentNotificationChannelId,
+        _soundEnabled ? 'Сообщения чата' : 'Сообщения чата (без звука)',
         channelDescription: 'Входящие сообщения из эфира',
         importance: Importance.high,
         priority: Priority.high,
@@ -594,8 +608,18 @@ class _ChatScreenState extends State<ChatScreen> {
       return;
     }
 
+    // В истории собственные сообщения не отличить по очереди эха (она очищена
+    // при разрыве), поэтому опираемся на имя
+    final isMine = frame.isHistory && frame.from == _myName;
+
+    // Прошивка отдаёт последние 20 кадров при каждом рукопожатии: после
+    // переподключения те же сообщения приходят повторно
+    if (frame.isHistory && _alreadyShown(frame.from, frame.text, isMine)) {
+      return;
+    }
+
     setState(() {
-      _messages.add(Message(frame.from, frame.text, false));
+      _messages.add(Message(frame.from, frame.text, isMine));
       if (_messages.length > 500) {
         _messages.removeAt(0);
       }
@@ -607,8 +631,20 @@ class _ChatScreenState extends State<ChatScreen> {
     if (frame.isHistory) return;
 
     // Только чужие сообщения: ping, System: и собственное эхо ушли по return выше
-    _playNotificationSound();
-    _showMessageNotification(frame.from, frame.text);
+    if (_isForeground || !Platform.isAndroid) {
+      _playNotificationSound();
+    } else {
+      _showMessageNotification(frame.from, frame.text);
+    }
+  }
+
+  bool _alreadyShown(String from, String text, bool isMe) {
+    for (final message in _messages.reversed) {
+      if (message.from == from && message.text == text && message.isMe == isMe) {
+        return true;
+      }
+    }
+    return false;
   }
 
   Future<void> _sendMessage() async {
