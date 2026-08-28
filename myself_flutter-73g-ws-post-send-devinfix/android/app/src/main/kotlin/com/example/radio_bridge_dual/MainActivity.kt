@@ -1,6 +1,7 @@
 package com.example.radio_bridge_dual
 
 import android.content.Context
+import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
@@ -31,9 +32,28 @@ class MainActivity : FlutterActivity() {
                         unbind()
                         result.success(true)
                     }
+                    "startService" -> {
+                        startChatService()
+                        result.success(true)
+                    }
+                    "stopService" -> {
+                        stopService(Intent(this, ChatForegroundService::class.java))
+                        result.success(true)
+                    }
                     else -> result.notImplemented()
                 }
             }
+    }
+
+    // Сервис держит процесс живым при погашенном экране, иначе ОС
+    // замораживает его и WebSocket к плате перестаёт читать кадры
+    private fun startChatService() {
+        val intent = Intent(this, ChatForegroundService::class.java)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent)
+        } else {
+            startService(intent)
+        }
     }
 
     private fun bindToWifi(result: MethodChannel.Result) {

@@ -35,6 +35,18 @@ void main() {
       final echoed = parseIncomingFrame('$name:$text');
       expect(echoed.echoKey, echoKeyFor(name, text));
     });
+
+    test('кадр истории разбирается как чат с флагом isHistory', () {
+      final frame = parseIncomingFrame('hist:Вася:привет');
+      expect(frame.kind, IncomingKind.chat);
+      expect(frame.from, 'Вася');
+      expect(frame.text, 'привет');
+      expect(frame.isHistory, isTrue);
+    });
+
+    test('обычный кадр не помечается историей', () {
+      expect(parseIncomingFrame('Вася:привет').isHistory, isFalse);
+    });
   });
 
   group('исходящие кадры', () {

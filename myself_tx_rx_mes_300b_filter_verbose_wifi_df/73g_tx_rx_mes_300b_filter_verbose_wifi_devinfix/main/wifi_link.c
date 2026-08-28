@@ -43,12 +43,23 @@
 #define WS_MAX_FRAME_LEN 1024
 #define WS_HARD_MAX_LEN  8192
 
+// Последние сообщения хранятся на плате: клиент, у которого соединение
+// оборвалось (например при засыпании телефона), получает пропущенное
+// сразу после рукопожатия
+#define HISTORY_SIZE    20
+#define HISTORY_MAX_LEN 320
+
 static const char *TAG = "WIFI_LINK";
 
 static QueueHandle_t s_tx_queue = NULL;
 static httpd_handle_t s_http_server = NULL;
 static httpd_handle_t s_ws_server = NULL;
 static SemaphoreHandle_t s_ws_mutex = NULL;
+
+// Кольцевой буфер разосланных сообщений в виде "from:text".
+// Доступ под s_ws_mutex
+static char s_history[HISTORY_SIZE][HISTORY_MAX_LEN];
+static uint32_t s_history_count = 0;
 
 // SSID точки доступа: собирается в wifi_link_init и отдаётся клиенту по /info,
 // чтобы приложению не требовалось разрешение геолокации для чтения имени сети
@@ -247,6 +258,44 @@ static void ws_queue_text(int fd, const char *payload, size_t len)
     }
 }
 
+// Кадры истории отличаются префиксом "hist:": приложение показывает их
+// в чате, но не проигрывает по ним звук и не показывает уведомление
+static void history_send_to(int fd)
+{
+    char frame[HISTORY_MAX_LEN + 8];
+
+    xSemaphoreTake(s_ws_mutex, portMAX_DELAY);
+
+    uint32_t total = s_history_count;
+    uint32_t start = (total > HISTORY_SIZE) ? (total - HISTORY_SIZE) : 0;
+    for (uint32_t i = start; i < total; i++) {
+        const char *saved = s_history[i % HISTORY_SIZE];
+        if (saved[0] == '\0') {
+            continue;
+        }
+        int len = snprintf(frame, sizeof(frame), "hist:%s", saved);
+        if (len <= 5) {
+            continue;
+        }
+        if (len > (int)sizeof(frame) - 1) {
+            len = (int)sizeof(frame) - 1;
+        }
+        ws_queue_text(fd, frame, (size_t)len);
+    }
+
+    xSemaphoreGive(s_ws_mutex);
+}
+
+static void history_store(const char *payload)
+{
+    xSemaphoreTake(s_ws_mutex, portMAX_DELAY);
+
+    strlcpy(s_history[s_history_count % HISTORY_SIZE], payload, HISTORY_MAX_LEN);
+    s_history_count++;
+
+    xSemaphoreGive(s_ws_mutex);
+}
+
 // Служебное уведомление одному клиенту: приложение показывает его как SnackBar
 static void ws_notify(int fd, const char *text)
 {
@@ -282,6 +331,8 @@ void wifi_link_broadcast(const char *from, const char *text)
     payload[from_len] = ':';
     memcpy(payload + from_len + 1, text, text_len);
     payload[payload_len] = '\0';
+
+    history_store(payload);
 
     size_t client_count = WS_MAX_CLIENTS;
     int client_fds[WS_MAX_CLIENTS];
@@ -567,6 +618,7 @@ static esp_err_t ws_handler(httpd_req_t *req)
         int fd = httpd_req_to_sockfd(req);
         ESP_LOGI(TAG, "WS handshake done, fd=%d", fd);
         client_register(fd);
+        history_send_to(fd);
         return ESP_OK;
     }
 
