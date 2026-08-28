@@ -18,9 +18,11 @@ import android.os.IBinder
 class ChatForegroundService : Service() {
 
     private var wifiLock: WifiManager.WifiLock? = null
+    private var connected = true
 
     override fun onCreate() {
         super.onCreate()
+        instance = this
 
         val wifiManager =
             applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
@@ -40,27 +42,7 @@ class ChatForegroundService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         createNotificationChannel()
 
-        val contentIntent = PendingIntent.getActivity(
-            this,
-            0,
-            Intent(this, MainActivity::class.java),
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-        )
-
-        val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            Notification.Builder(this, CHANNEL_ID)
-        } else {
-            @Suppress("DEPRECATION")
-            Notification.Builder(this)
-        }
-
-        val notification = builder
-            .setContentTitle("Радиочат активен")
-            .setContentText("Соединение с ESP32 поддерживается")
-            .setSmallIcon(android.R.drawable.stat_sys_data_bluetooth)
-            .setContentIntent(contentIntent)
-            .setOngoing(true)
-            .build()
+        val notification = buildNotification(connected)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             startForeground(
@@ -78,7 +60,52 @@ class ChatForegroundService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? = null
 
+    // Смахнули из недавних: Dart-движок уничтожен вместе с активностью,
+    // а вместе с ним и WebSocket — уведомление не должно врать о связи
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        updateNotification(false)
+        super.onTaskRemoved(rootIntent)
+    }
+
+    private fun updateNotification(isConnected: Boolean) {
+        connected = isConnected
+        val manager =
+            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        manager.notify(NOTIFICATION_ID, buildNotification(isConnected))
+    }
+
+    private fun buildNotification(isConnected: Boolean): Notification {
+        val contentIntent = PendingIntent.getActivity(
+            this,
+            0,
+            Intent(this, MainActivity::class.java),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+
+        val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Notification.Builder(this, CHANNEL_ID)
+        } else {
+            @Suppress("DEPRECATION")
+            Notification.Builder(this)
+        }
+
+        val text = if (isConnected) {
+            "Соединение с ESP32 поддерживается"
+        } else {
+            "Соединение с ESP32 отсутствует — откройте приложение"
+        }
+
+        return builder
+            .setContentTitle("Радиочат активен")
+            .setContentText(text)
+            .setSmallIcon(android.R.drawable.stat_sys_data_bluetooth)
+            .setContentIntent(contentIntent)
+            .setOngoing(true)
+            .build()
+    }
+
     override fun onDestroy() {
+        instance = null
         wifiLock?.let {
             if (it.isHeld) {
                 it.release()
@@ -110,5 +137,13 @@ class ChatForegroundService : Service() {
         private const val CHANNEL_ID = "chat_connection"
         private const val NOTIFICATION_ID = 1
         private const val WIFI_LOCK_TAG = "radio_bridge_dual:wifi"
+
+        // Сервис живёт в том же процессе, что и активность: текст уведомления
+        // обновляем напрямую, а не через startService — из фона его не вызвать
+        private var instance: ChatForegroundService? = null
+
+        fun setConnected(isConnected: Boolean) {
+            instance?.updateNotification(isConnected)
+        }
     }
 }

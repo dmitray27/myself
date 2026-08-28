@@ -40,6 +40,11 @@ class MainActivity : FlutterActivity() {
                         stopService(Intent(this, ChatForegroundService::class.java))
                         result.success(true)
                     }
+                    "setServiceConnected" -> {
+                        val connected = call.argument<Boolean>("connected") ?: false
+                        ChatForegroundService.setConnected(connected)
+                        result.success(true)
+                    }
                     else -> result.notImplemented()
                 }
             }

@@ -191,6 +191,19 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
   }
 
+  // Соединение держит Dart-движок, а не сервис, поэтому текст его
+  // уведомления обновляем отсюда
+  Future<void> _setServiceConnected(bool connected) async {
+    if (!Platform.isAndroid) return;
+    try {
+      await _networkChannel.invokeMethod('setServiceConnected', {
+        'connected': connected,
+      });
+    } catch (e) {
+      debugPrint('setServiceConnected error: $e');
+    }
+  }
+
   Future<void> _initNotifications() async {
     try {
       const settings = InitializationSettings(
@@ -480,6 +493,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       debugPrint('✅ Успешно подключено к ESP32');
 
       await _startForegroundService();
+      await _setServiceConnected(true);
 
       // Имя отправляем на каждом подключении: ESP32 не хранит его между сессиями
       _sendUserName();
@@ -498,7 +512,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     // Сервис здесь не гасим: _disconnect() вызывается и перед каждым
     // переподключением, а с Android 12 запустить foreground-сервис из фона
     // уже нельзя — после разрыва со свёрнутым приложением он бы не вернулся.
-    // Остановка — только в dispose()
+    // Остановка — только в dispose(), здесь лишь меняем текст его уведомления
+    await _setServiceConnected(false);
+
     _failPendingEcho();
 
     // Снимаем ссылки ДО ожиданий, чтобы новая попытка подключения
