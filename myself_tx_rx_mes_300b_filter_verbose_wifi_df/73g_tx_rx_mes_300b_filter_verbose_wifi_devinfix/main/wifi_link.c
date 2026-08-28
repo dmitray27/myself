@@ -209,7 +209,7 @@ static void ws_send_work(void *arg)
     ws_pkt.len = ctx->len;
 
     esp_err_t ret = httpd_ws_send_frame_async(ctx->server, ctx->fd, &ws_pkt);  
-if (ret != ESP_OK) {  
+   if (ret != ESP_OK) {  
     ESP_LOGW(TAG, "WS send to fd %d failed: %d", ctx->fd, ret);  
     httpd_sess_trigger_close(ctx->server, ctx->fd); 
 }  
