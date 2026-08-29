@@ -31,7 +31,17 @@ class IncomingFrame {
   /// вид "<имя>:<текст>", ровно то, что рассылает прошивка.
   final String echoKey;
 
-  const IncomingFrame._(this.kind, {this.from = '', this.text = '', this.echoKey = ''});
+  /// Кадр из буфера прошивки ("hist:<имя>:<текст>"), досланный после
+  /// переподключения. Показывается в чате, но без звука и уведомления.
+  final bool isHistory;
+
+  const IncomingFrame._(
+    this.kind, {
+    this.from = '',
+    this.text = '',
+    this.echoKey = '',
+    this.isHistory = false,
+  });
 
   static const IncomingFrame ignored = IncomingFrame._(IncomingKind.ignore);
   static const IncomingFrame ping = IncomingFrame._(IncomingKind.ping);
@@ -41,6 +51,10 @@ class IncomingFrame {
 /// (WS_MAX_FRAME_LEN в main/wifi_link.c). Считается в байтах UTF-8,
 /// а не в символах: кириллица занимает по два байта.
 const int kMaxFrameBytes = 1024;
+
+/// Префикс, которым прошивка помечает досланные из буфера сообщения
+/// (history_send_to в main/wifi_link.c).
+const String kHistoryPrefix = 'hist:';
 
 /// Кадр отправки сообщения в эфир.
 String buildMessageFrame(String name, String text) => 'msg:$name:$text';
@@ -61,8 +75,15 @@ bool messageFitsFrame(String name, String text) =>
 /// Разбирает входящий кадр. Пробелы по краям обрезаются так же, как это
 /// делал ChatScreen, поэтому echoKey совпадает с отправленным кадром.
 IncomingFrame parseIncomingFrame(String raw) {
-  final message = raw.trim();
+  var message = raw.trim();
   if (message.isEmpty) return IncomingFrame.ignored;
+
+  var isHistory = false;
+  if (message.startsWith(kHistoryPrefix)) {
+    isHistory = true;
+    message = message.substring(kHistoryPrefix.length).trim();
+    if (message.isEmpty) return IncomingFrame.ignored;
+  }
 
   if (message == 'ping') return IncomingFrame.ping;
 
@@ -82,5 +103,6 @@ IncomingFrame parseIncomingFrame(String raw) {
     from: from,
     text: text,
     echoKey: echoKeyFor(from, text),
+    isHistory: isHistory,
   );
 }

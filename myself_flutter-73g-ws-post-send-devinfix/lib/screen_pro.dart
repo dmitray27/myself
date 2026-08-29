@@ -1,798 +1,1257 @@
-#include "wifi_link.h"
+import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:http/http.dart' as http;
+import 'package:web_socket_channel/io.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:network_info_plus/network_info_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:window_manager/window_manager.dart';
+import 'dart:async';
+import 'dart:convert';
+import 'package:flutter/services.dart';
+import 'chat_protocol.dart';
+import 'dart:io';
+// Состояния подключения
+enum ConnectionStatus { disconnected, connecting, connected, error }
 
-#include <stdio.h>
-#include <stdbool.h>
-#include <string.h>
-#include <stdlib.h>
-#include <unistd.h>
+// Своё сообщение считается доставленным, когда ESP32 вернёт его
+// широковещательно: прошивка рассылает кадр только после того, как
+// поставила текст в очередь на передачу в эфир
+enum MessageStatus { sending, delivered, failed }
 
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "freertos/semphr.h"
+class Message {
+  final String from;
+  final String text;
+  final bool isMe;
+  final DateTime timestamp;
+  MessageStatus status;
 
-#include "esp_log.h"
-#include "esp_err.h"
-#include "esp_timer.h"
-#include "esp_mac.h"
-#include "esp_wifi.h"
-#include "esp_event.h"
-#include "esp_netif.h"
-#include "esp_http_server.h"
-
-// К префиксу добавляются последние два байта MAC точки доступа:
-// так несколько плат рядом не дают одинаковый SSID
-#define WIFI_SSID_PREFIX "AFSK-TRX-"
-// Пароль точки доступа задаётся в menuconfig (AFSK Wi-Fi Access Point),
-// чтобы он не лежал в исходниках и не был одинаковым на всех платах
-#define WIFI_PASS       CONFIG_AFSK_AP_PASSWORD
-#define WIFI_CHANNEL    1
-#define WIFI_MAX_STA    4
-#define WIFI_INACTIVE_TIME_S 30
-
-#define WIFI_AP_IP      "192.168.4.1"
-
-#define TX_QUEUE_LEN    4
-#define POST_BUF_SIZE   1024
-#define WS_MAX_CLIENTS  4
-#define WS_NAME_MAX     32
-
-// Кадр длиннее WS_MAX_FRAME_LEN вычитывается и игнорируется: на 300 бод
-// столько данных всё равно уходит в эфир десятки секунд.
-// Кадр длиннее WS_HARD_MAX_LEN вычитывать не пытаемся — рвём сессию,
-// иначе придётся выделять произвольный объём памяти по запросу клиента.
-#define WS_MAX_FRAME_LEN 1024
-#define WS_HARD_MAX_LEN  8192
-
-static const char *TAG = "WIFI_LINK";
-
-static QueueHandle_t s_tx_queue = NULL;
-static httpd_handle_t s_http_server = NULL;
-static httpd_handle_t s_ws_server = NULL;
-static SemaphoreHandle_t s_ws_mutex = NULL;
-
-// SSID точки доступа: собирается в wifi_link_init и отдаётся клиенту по /info,
-// чтобы приложению не требовалось разрешение геолокации для чтения имени сети
-static char s_ssid[33] = {0};
-
-// Дескриптор 0 — валидный номер сокета, поэтому пустой слот помечаем -1
-#define WS_FD_NONE (-1)
-
-typedef struct {
-    int fd;
-    char name[WS_NAME_MAX];
-    uint32_t last_msg_ms;
-} ws_client_t;
-
-// Состояние клиентов: имя из setName: и время последнего сообщения.
-// Индекс — просто слот, ищем по fd
-static ws_client_t s_ws_clients[WS_MAX_CLIENTS];
-
-static void clients_init(void)
-{
-    for (int i = 0; i < WS_MAX_CLIENTS; i++) {
-        s_ws_clients[i].fd = WS_FD_NONE;
-        s_ws_clients[i].name[0] = '\0';
-        s_ws_clients[i].last_msg_ms = 0;
-    }
+  Message(
+    this.from,
+    this.text,
+    this.isMe, {
+    DateTime? timestamp,
+    this.status = MessageStatus.delivered,
+  }) : timestamp = timestamp ?? DateTime.now();
 }
 
-QueueHandle_t wifi_link_get_tx_queue(void)
-{
-    return s_tx_queue;
+// Отправленный кадр, ждущий эха от ESP32
+class _PendingEcho {
+  final String frame;
+  final Message message;
+  Timer? timeout;
+
+  _PendingEcho(this.frame, this.message);
 }
 
-// ============================
-// Имена клиентов
-// ============================
+class ChatScreen extends StatefulWidget {
+  final bool isLinux;
 
-// Слот клиента по fd; при отсутствии занимает свободный.
-// Вызывать под s_ws_mutex
-static ws_client_t *client_slot_locked(int fd)
-{
-    for (int i = 0; i < WS_MAX_CLIENTS; i++) {
-        if (s_ws_clients[i].fd == fd) {
-            return &s_ws_clients[i];
-        }
-    }
-    for (int i = 0; i < WS_MAX_CLIENTS; i++) {
-        if (s_ws_clients[i].fd == WS_FD_NONE) {
-            s_ws_clients[i].fd = fd;
-            s_ws_clients[i].name[0] = '\0';
-            s_ws_clients[i].last_msg_ms = 0;
-            return &s_ws_clients[i];
-        }
-    }
-    return NULL;
+  const ChatScreen({super.key, required this.isLinux});
+
+  @override
+  State<ChatScreen> createState() => _ChatScreenState();
 }
 
-// Слот заводится сразу после рукопожатия: троттлинг работает по слоту,
-// поэтому клиент, не присылающий setName:, иначе не был бы ограничен
-static void client_register(int fd)
-{
-    xSemaphoreTake(s_ws_mutex, portMAX_DELAY);
-    if (!client_slot_locked(fd)) {
-        ESP_LOGW(TAG, "No free client slot for fd %d", fd);
+class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
+  final TextEditingController _textController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
+  final List<Message> _messages = [];
+  String _myName = "User";
+  final ScrollController _scrollController = ScrollController();
+  final FocusNode _inputFocusNode = FocusNode();
+
+  WebSocketChannel? _webSocketChannel;
+  StreamSubscription? _webSocketSubscription;
+
+  // Загружается асинхронно: до этого диалог смены имени открывать нельзя
+  SharedPreferences? _prefs;
+
+  final AudioPlayer _notificationPlayer = AudioPlayer();
+  bool _soundEnabled = true;
+
+  // Системные уведомления: со свёрнутым приложением AudioPlayer может молчать,
+  // а канал уведомлений ОС звучит и при погашенном экране
+  final FlutterLocalNotificationsPlugin _notifications =
+      FlutterLocalNotificationsPlugin();
+  bool _notificationsReady = false;
+
+  // На переднем плане звучит AudioPlayer, в фоне — канал уведомлений:
+  // иначе на одно сообщение слышны два звука
+  bool _isForeground = true;
+
+  ConnectionStatus _connectionState = ConnectionStatus.disconnected;
+  String _currentWifiName = 'Не подключено';
+  String _lastError = '';
+  bool _isConnecting = false;
+  bool _isDisconnecting = false;
+  Timer? _connectionTimer;
+
+  // Эхо собственных сообщений, пришедшее обратно с ESP32, показывать не нужно:
+  // оно уже добавлено в список локально при отправке.
+  final List<_PendingEcho> _pendingEcho = [];
+
+  static const String _esp32Address = '192.168.4.1';
+  static const Duration _pollInterval = Duration(seconds: 2);
+  static const int _maxPendingEcho = 16;
+  static const Duration _echoTimeout = Duration(seconds: 6);
+  // Ограничение поля ввода в символах; фактический лимит прошивки —
+  // kMaxFrameBytes байт на весь кадр, он проверяется при отправке
+  static const int _maxMessageLength = 300;
+  static const int _maxNameLength = 15;
+  static const String _notificationAsset = '73g_assets/sounds/notify.mp3';
+  // Каналы Android неизменяемы после создания, поэтому звук переключается
+  // сменой канала, а не флагом playSound
+  static const String _notificationChannelId = 'chat_messages';
+  static const String _silentNotificationChannelId = 'chat_messages_silent';
+  static const int _messageNotificationId = 1001;
+  static const String _soundPrefKey = 'sound_enabled';
+  static const MethodChannel _networkChannel =
+  MethodChannel('esp32/network');
+  String _deviceIp = '';
+
+  // ============================
+  // Жизненный цикл
+  // ============================
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _initPreferences();
+    _initNotifications();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    _isForeground = state == AppLifecycleState.resumed;
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _stopForegroundService();
+    _unbindWifi();
+    _connectionTimer?.cancel();
+    for (final pending in _pendingEcho) {
+      pending.timeout?.cancel();
     }
-    xSemaphoreGive(s_ws_mutex);
-}
+    _disconnect();
+    _textController.dispose();
+    _nameController.dispose();
+    _inputFocusNode.dispose();
+    _scrollController.dispose();
+    _notificationPlayer.dispose();
+    super.dispose();
+  }
 
-static void client_set_name(int fd, const char *name)
-{
-    xSemaphoreTake(s_ws_mutex, portMAX_DELAY);
+  // ============================
+  // Инициализация настроек
+  // ============================
+  Future<bool> _bindToWifi() async {
+    if (!Platform.isAndroid) return true; // на Linux/desktop не трогаем
+    try {
+      final ok = await _networkChannel.invokeMethod<bool>('bindToWifi');
+      debugPrint('bindToWifi -> $ok');
+      return ok ?? false;
+    } catch (e) {
+      debugPrint('bindToWifi error: $e');
+      return false;
+    }
+  }
 
-    ws_client_t *slot = client_slot_locked(fd);
-    if (slot) {
-        strlcpy(slot->name, name, sizeof(slot->name));
+  Future<void> _unbindWifi() async {
+    if (!Platform.isAndroid) return;
+    try {
+      await _networkChannel.invokeMethod('unbind');
+    } catch (e) {
+      debugPrint('unbind error: $e');
+    }
+  }
+
+  // Foreground-сервис держит процесс живым и удерживает WifiLock: иначе при
+  // погашенном экране ОС замораживает процесс и WebSocket перестаёт читаться
+  Future<void> _startForegroundService() async {
+    if (!Platform.isAndroid) return;
+    try {
+      await _networkChannel.invokeMethod('startService');
+    } catch (e) {
+      debugPrint('startService error: $e');
+    }
+  }
+
+  Future<void> _stopForegroundService() async {
+    if (!Platform.isAndroid) return;
+    try {
+      await _networkChannel.invokeMethod('stopService');
+    } catch (e) {
+      debugPrint('stopService error: $e');
+    }
+  }
+
+  // Соединение держит Dart-движок, а не сервис, поэтому текст его
+  // уведомления обновляем отсюда
+  Future<void> _setServiceConnected(bool connected) async {
+    if (!Platform.isAndroid) return;
+    try {
+      await _networkChannel.invokeMethod('setServiceConnected', {
+        'connected': connected,
+      });
+    } catch (e) {
+      debugPrint('setServiceConnected error: $e');
+    }
+  }
+
+  Future<void> _initNotifications() async {
+    try {
+      const settings = InitializationSettings(
+        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+      );
+      await _notifications.initialize(settings);
+
+      if (Platform.isAndroid) {
+        // Android 13+: без явного разрешения уведомления не показываются
+        await _notifications
+            .resolvePlatformSpecificImplementation<
+                AndroidFlutterLocalNotificationsPlugin>()
+            ?.requestNotificationsPermission();
+      }
+
+      _notificationsReady = true;
+    } catch (e) {
+      debugPrint('Не удалось инициализировать уведомления: $e');
+    }
+  }
+
+  Future<void> _showMessageNotification(String from, String text) async {
+    if (!_notificationsReady) return;
+
+    try {
+      final details = AndroidNotificationDetails(
+        _soundEnabled ? _notificationChannelId : _silentNotificationChannelId,
+        _soundEnabled ? 'Сообщения чата' : 'Сообщения чата (без звука)',
+        channelDescription: 'Входящие сообщения из эфира',
+        importance: Importance.high,
+        priority: Priority.high,
+        playSound: _soundEnabled,
+      );
+      await _notifications.show(
+        _messageNotificationId,
+        from,
+        text,
+        NotificationDetails(android: details),
+      );
+    } catch (e) {
+      debugPrint('Не удалось показать уведомление: $e');
+    }
+  }
+  Future<void> _initPreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    _prefs = prefs;
+
+    _soundEnabled = prefs.getBool(_soundPrefKey) ?? true;
+
+    final savedName = prefs.getString('user_name');
+    if (savedName != null && savedName.isNotEmpty) {
+      _myName = savedName;
     } else {
-        ESP_LOGW(TAG, "No free name slot for fd %d", fd);
+      _myName = "User_${DateTime.now().millisecondsSinceEpoch % 1000}";
+      await prefs.setString('user_name', _myName);
     }
 
-    xSemaphoreGive(s_ws_mutex);
-}
+    if (!mounted) return;
+    setState(() {});
+    _startConnectionMonitoring();
+  }
 
-// Копирует имя клиента в out. Возвращает false, если setName: не приходил
-static bool client_get_name(int fd, char *out, size_t out_size)
-{
-    bool found = false;
+  // ============================
+  // Мониторинг WiFi
+  // ============================
 
-    xSemaphoreTake(s_ws_mutex, portMAX_DELAY);
-    for (int i = 0; i < WS_MAX_CLIENTS; i++) {
-        if (s_ws_clients[i].fd == fd && s_ws_clients[i].name[0] != '\0') {
-            strlcpy(out, s_ws_clients[i].name, out_size);
-            found = true;
-            break;
+  void _startConnectionMonitoring() {
+    _connectionTimer = Timer.periodic(_pollInterval, (timer) {
+      _checkConnection();
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkConnection();
+    });
+  }
+
+  Future<void> _checkConnection() async {
+    if (_isConnecting || _isDisconnecting) return;
+
+    try {
+      final deviceIp = await _wifiIp();
+      final ipChanged = deviceIp != _deviceIp;
+
+      // Присваиваем вне setState: иначе при !mounted проверка сети
+      // пошла бы по устаревшему значению
+      _deviceIp = deviceIp;
+      // Перерисовка только при фактическом изменении: тик раз в 5 секунд
+      // иначе перестраивал всё дерево вхолостую
+      if (ipChanged && mounted) {
+        setState(() {});
+      }
+      if (deviceIp.startsWith('192.168.4.')) {
+        await _bindToWifi();
+      }
+      // Признак связи — ответ самой платы, а не IP из плагина: на десктопе
+      // и на части Android getWifiIP() не отдаёт адрес подсети ESP32, хотя
+      // плата доступна, и подключение по кнопке сносилось этой же проверкой
+      // на следующем тике
+      final reachable = _connectionState == ConnectionStatus.connected ||
+          await _pingEsp32();
+
+      if (!reachable) {
+        if (_connectionState != ConnectionStatus.disconnected) {
+          await _disconnect();
         }
+        if (mounted) {
+          setState(() {
+            _currentWifiName = 'Не подключено';
+            _connectionState = ConnectionStatus.disconnected;
+            _lastError = 'Подключитесь к WiFi ESP32';
+          });
+        }
+        return;
+      }
+
+      // Имя сети спрашиваем у самой платы: при смене IP и после того,
+      // как плата впервые ответила
+      if (ipChanged || _currentWifiName == 'Не подключено') {
+        await _updateWifiInfo();
+      }
+
+      // Повтор попытки после разрыва идёт по этому же таймеру,
+      // отдельный _reconnectTimer не нужен
+      if (_connectionState == ConnectionStatus.disconnected ||
+          _connectionState == ConnectionStatus.error) {
+        _connectToEsp32();
+      }
+    } catch (e) {
+      debugPrint('Ошибка проверки WiFi: $e');
+      if (mounted) {
+        setState(() {
+          _currentWifiName = 'Ошибка получения WiFi';
+        });
+      }
     }
-    xSemaphoreGive(s_ws_mutex);
+  }
 
-    return found;
-}
-
-static void client_forget(int fd)
-{
-    xSemaphoreTake(s_ws_mutex, portMAX_DELAY);
-    for (int i = 0; i < WS_MAX_CLIENTS; i++) {
-        if (s_ws_clients[i].fd == fd) {
-            s_ws_clients[i].fd = WS_FD_NONE;
-            s_ws_clients[i].name[0] = '\0';
-            s_ws_clients[i].last_msg_ms = 0;
-        }
+  // Адрес нужен только для того, чтобы заметить смену сети. Плагин бросает
+  // там, где спросить некого (десктоп без NetworkManager, Android без
+  // разрешений), и это не повод пропускать опрос платы, поэтому исключение
+  // гасится здесь, а не в _checkConnection().
+  Future<String> _wifiIp() async {
+    try {
+      return await NetworkInfo().getWifiIP() ?? '';
+    } catch (e) {
+      debugPrint('Локальный IP недоступен: $e');
+      return '';
     }
-    xSemaphoreGive(s_ws_mutex);
-}
+  }
 
-#define WS_MIN_MSG_INTERVAL_MS 100
+  // Плата ответила на /ping — значит связь есть, независимо от того,
+  // что вернул плагин Wi-Fi
+  Future<bool> _pingEsp32() async {
+    try {
+      final response = await http
+          .get(Uri.parse('http://$_esp32Address/ping'))
+          .timeout(const Duration(seconds: 2));
+      return response.statusCode == 200;
+    } catch (e) {
+      debugPrint('ESP32 не ответил на ping: $e');
+      return false;
+    }
+  }
 
-static bool client_check_rate(int fd, uint32_t now_ms)
-{
-    bool allowed = true;
+  // SSID берём у самой платы по HTTP: getWifiName() на Android требует
+  // разрешения геолокации, а /info отдаёт то же имя без него
+  Future<void> _updateWifiInfo() async {
+    try {
+      final response = await http
+          .get(Uri.parse('http://$_esp32Address/info'))
+          .timeout(const Duration(seconds: 2));
 
-    xSemaphoreTake(s_ws_mutex, portMAX_DELAY);
-    ws_client_t *slot = client_slot_locked(fd);
-    if (slot) {
-        if (slot->last_msg_ms != 0 &&
-            (now_ms - slot->last_msg_ms) < WS_MIN_MSG_INTERVAL_MS) {
-            allowed = false;
-        } else {
-            slot->last_msg_ms = now_ms;
+      String? ssid;
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map && decoded['ssid'] is String) {
+          final value = decoded['ssid'] as String;
+          if (value.isNotEmpty) ssid = value;
         }
+      }
+
+      if (mounted) {
+        setState(() {
+          _currentWifiName = ssid ?? 'Сеть ESP32';
+        });
+      }
+    } catch (e) {
+      debugPrint('Ошибка получения имени сети от ESP32: $e');
+      if (mounted) {
+        setState(() {
+          _currentWifiName = 'Сеть ESP32';
+        });
+      }
+    }
+  }
+
+  Future<void> _playNotificationSound() async {
+    if (!_soundEnabled) return;
+    try {
+      await _notificationPlayer.stop();
+      await _notificationPlayer.play(AssetSource(_notificationAsset));
+    } catch (e) {
+      debugPrint('Не удалось проиграть звук уведомления: $e');
+    }
+  }
+
+  Future<void> _toggleSound() async {
+    final enabled = !_soundEnabled;
+    setState(() {
+      _soundEnabled = enabled;
+    });
+    await _prefs?.setBool(_soundPrefKey, enabled);
+  }
+
+  // ============================
+  // Подключение / отключение
+  // ============================
+
+  Future<void> _connectToEsp32() async {
+    if (_isConnecting) {
+      debugPrint('⚠️ Уже подключаюсь, пропускаю');
+      return;
+    }
+
+    _isConnecting = true;
+    // Заставляем ОС гнать трафик через Wi-Fi ESP32 (сеть без интернета)
+    await _bindToWifi();
+    if (mounted) {
+      setState(() {
+        _connectionState = ConnectionStatus.connecting;
+        _lastError = 'Подключение...';
+      });
+    }
+
+    debugPrint('Подключаюсь к ESP32 на $_esp32Address...');
+
+    try {
+      await _disconnect();
+
+      debugPrint('Проверяю ping ESP32...');
+      if (!await _pingEsp32()) {
+        throw Exception('ESP32 не отвечает на ping');
+      }
+
+      debugPrint('ESP32 доступен, подключаю WebSocket...');
+
+      _webSocketChannel = IOWebSocketChannel.connect(
+        'ws://$_esp32Address:81',
+        pingInterval: const Duration(seconds: 5),
+      );
+
+      _webSocketSubscription = _webSocketChannel!.stream.listen(
+            (message) {
+          debugPrint('📥 WebSocket: $message');
+          _processIncomingMessage(message.toString());
+        },
+        onError: (error) {
+          debugPrint('❌ WebSocket ошибка: $error');
+          if (_connectionState != ConnectionStatus.disconnected) {
+            _handleConnectionError('WebSocket ошибка');
+          }
+        },
+        onDone: () {
+          debugPrint('🔌 WebSocket закрыт');
+          if (_connectionState != ConnectionStatus.disconnected) {
+            _handleConnectionError('Соединение закрыто сервером');
+          }
+        },
+        cancelOnError: true,
+      );
+
+      // Ждём рукопожатия, но не дольше 8 с: на мёртвой сети .ready
+      // может висеть до системного TCP-таймаута и держать _isConnecting
+      await _webSocketChannel!.ready.timeout(const Duration(seconds: 8));
+
+      if (_webSocketChannel == null) {
+        throw Exception('WebSocket не создан');
+      }
+
+      if (mounted) {
+        setState(() {
+          _connectionState = ConnectionStatus.connected;
+          _lastError = '';
+        });
+      }
+
+      debugPrint('✅ Успешно подключено к ESP32');
+
+      await _startForegroundService();
+      await _setServiceConnected(true);
+
+      // Имя отправляем на каждом подключении: ESP32 не хранит его между сессиями
+      _sendUserName();
+    } catch (e) {
+      debugPrint('❌ Ошибка подключения: $e');
+      _handleConnectionError('Не удалось подключиться');
+    } finally {
+      _isConnecting = false;
+    }
+  }
+
+  Future<void> _disconnect() async {
+    if (_isDisconnecting) return;
+    _isDisconnecting = true;
+
+    // Сервис здесь не гасим: _disconnect() вызывается и перед каждым
+    // переподключением, а с Android 12 запустить foreground-сервис из фона
+    // уже нельзя — после разрыва со свёрнутым приложением он бы не вернулся.
+    // Остановка — только в dispose(), здесь лишь меняем текст его уведомления
+    await _setServiceConnected(false);
+
+    _failPendingEcho();
+
+    // Снимаем ссылки ДО ожиданий, чтобы новая попытка подключения
+    // не зацепилась за мёртвый канал
+    final subscription = _webSocketSubscription;
+    final channel = _webSocketChannel;
+    _webSocketSubscription = null;
+    _webSocketChannel = null;
+
+    try {
+      if (subscription != null) {
+        try {
+          await subscription.cancel().timeout(const Duration(seconds: 2));
+        } catch (e) {
+          debugPrint('Ошибка/таймаут отписки: $e');
+        }
+      }
+
+      if (channel != null) {
+        try {
+          await channel.sink.close().timeout(const Duration(seconds: 8));
+        } catch (e) {
+          debugPrint('Ошибка/таймаут при закрытии канала: $e');
+        }
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _connectionState = ConnectionStatus.disconnected;
+          _lastError = '';
+        });
+      }
+      _isDisconnecting = false;
+    }
+  }
+
+  void _handleConnectionError(String error) {
+    if (_connectionState == ConnectionStatus.disconnected || _isDisconnecting) return;
+
+    if (mounted) {
+      setState(() {
+        _connectionState = ConnectionStatus.error;
+        _lastError = error;
+      });
+    }
+
+    // Повторную попытку сделает _checkConnection по своему таймеру
+  }
+
+  // Подтверждения по оборванному соединению уже не придут
+  void _failPendingEcho() {
+    if (_pendingEcho.isEmpty) return;
+
+    for (final pending in _pendingEcho) {
+      pending.timeout?.cancel();
+      pending.message.status = MessageStatus.failed;
+    }
+    _pendingEcho.clear();
+
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  void _sendUserName() {
+    if (_webSocketChannel != null && _connectionState == ConnectionStatus.connected) {
+      try {
+        _webSocketChannel!.sink.add(buildSetNameFrame(_myName));
+        debugPrint('Отправлено имя: $_myName');
+      } catch (e) {
+        debugPrint('Ошибка отправки имени: $e');
+      }
+    }
+  }
+
+  // ============================
+  // Обработка сообщений
+  // ============================
+
+  void _processIncomingMessage(String message) {
+    if (!mounted) return;
+
+    final frame = parseIncomingFrame(message);
+
+    switch (frame.kind) {
+      case IncomingKind.ignore:
+        return;
+      case IncomingKind.ping:
+        if (_webSocketChannel != null &&
+            _connectionState == ConnectionStatus.connected) {
+          _webSocketChannel!.sink.add("pong");
+        }
+        return;
+      case IncomingKind.system:
+        _showSnackBar(frame.text);
+        return;
+      case IncomingKind.chat:
+        break;
+    }
+
+    // Своё сообщение, вернувшееся широковещательно. Сверяем с очередью
+    // отправленных, а не с именем: у собеседника имя может совпадать
+    final echoIndex = _pendingEcho.indexWhere((p) => p.frame == frame.echoKey);
+    if (echoIndex >= 0) {
+      final pending = _pendingEcho.removeAt(echoIndex);
+      pending.timeout?.cancel();
+      setState(() {
+        pending.message.status = MessageStatus.delivered;
+      });
+      return;
+    }
+
+    // В истории собственные сообщения не отличить по очереди эха (она очищена
+    // при разрыве), поэтому опираемся на имя
+    final isMine = frame.isHistory && frame.from == _myName;
+
+    // Прошивка отдаёт последние 20 кадров при каждом рукопожатии: после
+    // переподключения те же сообщения приходят повторно
+    if (frame.isHistory && _alreadyShown(frame.from, frame.text, isMine)) {
+      return;
+    }
+
+    setState(() {
+      _messages.add(Message(frame.from, frame.text, isMine));
+      if (_messages.length > 500) {
+        _messages.removeAt(0);
+      }
+    });
+    _scrollToBottom();
+
+    // История из буфера прошивки доезжает после переподключения: сообщение
+    // уже не новое, звук и уведомление по нему только мешают
+    if (frame.isHistory) return;
+
+    // Только чужие сообщения: ping, System: и собственное эхо ушли по return выше
+    if (_isForeground || !Platform.isAndroid) {
+      _playNotificationSound();
     } else {
-        // Слотов нет — считаем, что клиентов и так больше, чем нужно
-        allowed = false;
+      _showMessageNotification(frame.from, frame.text);
     }
-    xSemaphoreGive(s_ws_mutex);
+  }
 
-    return allowed;
-}
+  bool _alreadyShown(String from, String text, bool isMe) {
+    for (final message in _messages.reversed) {
+      if (message.from == from && message.text == text && message.isMe == isMe) {
+        return true;
+      }
+    }
+    return false;
+  }
 
-// ============================
-// Отправка WebSocket-кадров
-// ============================
+  Future<void> _sendMessage() async {
+    final text = _textController.text.trim();
+    if (text.isEmpty || _connectionState != ConnectionStatus.connected) return;
 
-typedef struct {
-    httpd_handle_t server;
-    int fd;
-    char *payload;
-    size_t len;
-} ws_send_ctx_t;
-
-// Выполняется в задаче httpd: только так запись в сокет не пересекается
-// с ответами самого сервера. Вызывать httpd_ws_send_frame_async напрямую
-// из чужой задачи (например из rx_task) нельзя — кадры перемешаются
-static void ws_send_work(void *arg)
-{
-    ws_send_ctx_t *ctx = (ws_send_ctx_t *)arg;
-
-    httpd_ws_frame_t ws_pkt = {0};
-    ws_pkt.type = HTTPD_WS_TYPE_TEXT;
-    ws_pkt.payload = (uint8_t *)ctx->payload;
-    ws_pkt.len = ctx->len;
-
-    esp_err_t ret = httpd_ws_send_frame_async(ctx->server, ctx->fd, &ws_pkt);  
-if (ret != ESP_OK) {  
-    ESP_LOGW(TAG, "WS send to fd %d failed: %d", ctx->fd, ret);  
-    httpd_sess_trigger_close(ctx->server, ctx->fd); 
-}  
-free(ctx->payload);  
-free(ctx);
-}
-
-static void ws_queue_text(int fd, const char *payload, size_t len)
-{
-    if (!s_ws_server || len == 0) {
-        return;
+    // Прошивка режет кадр по байтам, а не по символам: 300 символов
+    // кириллицы вместе с "msg:<имя>:" уже близко к её лимиту
+    if (!messageFitsFrame(_myName, text)) {
+      _showSnackBar('Сообщение слишком длинное для передачи');
+      return;
     }
 
-    ws_send_ctx_t *ctx = (ws_send_ctx_t *)calloc(1, sizeof(ws_send_ctx_t));
-    if (!ctx) {
-        return;
+    // Добавляем в UI мгновенно, но помечаем как неподтверждённое
+    final message = Message(_myName, text, true, status: MessageStatus.sending);
+    setState(() {
+      _messages.add(message);
+      if (_messages.length > 500) {
+        _messages.removeAt(0);
+      }
+    });
+
+    _textController.clear();
+    _scrollToBottom();
+    // После отправки поле остаётся активным, иначе следующий ввод
+    // требует повторного тапа
+    _inputFocusNode.requestFocus();
+
+    if (_webSocketChannel == null) {
+      setState(() {
+        message.status = MessageStatus.failed;
+      });
+      _showSnackBar('Нет подключения к WebSocket');
+      return;
     }
 
-    ctx->payload = (char *)malloc(len + 1);
-    if (!ctx->payload) {
-        free(ctx);
-        return;
+    // Формат кадра: msg:<имя>:<текст>
+    final outgoing = buildMessageFrame(_myName, text);
+    try {
+      _webSocketChannel!.sink.add(outgoing);
+      debugPrint('Отправлено через WS: $outgoing');
+    } catch (e) {
+      // sink.add обычно не бросает: ошибка мёртвого сокета приходит
+      // асинхронно в onError, поэтому подтверждением служит только эхо
+      debugPrint('Ошибка отправки WS: $e');
+      setState(() {
+        message.status = MessageStatus.failed;
+      });
+      _showSnackBar('Не удалось отправить');
+      return;
     }
 
-    memcpy(ctx->payload, payload, len);
-    ctx->payload[len] = '\0';
-    ctx->server = s_ws_server;
-    ctx->fd = fd;
-    ctx->len = len;
+    final pending = _PendingEcho(echoKeyFor(_myName, text), message);
+    pending.timeout = Timer(_echoTimeout, () {
+      _pendingEcho.remove(pending);
+      if (!mounted) return;
+      setState(() {
+        message.status = MessageStatus.failed;
+      });
+    });
+    _pendingEcho.add(pending);
 
-    if (httpd_queue_work(s_ws_server, ws_send_work, ctx) != ESP_OK) {
-        ESP_LOGW(TAG, "WS work queue full, frame to fd %d dropped", fd);
-        free(ctx->payload);
-        free(ctx);
+    if (_pendingEcho.length > _maxPendingEcho) {
+      final evicted = _pendingEcho.removeAt(0);
+      evicted.timeout?.cancel();
+      // Через setState: иначе галочка "отправляется" висела до следующей
+      // перерисовки по другому поводу
+      setState(() {
+        evicted.message.status = MessageStatus.failed;
+      });
     }
-}
+  }
 
-// Служебное уведомление одному клиенту: приложение показывает его как SnackBar
-static void ws_notify(int fd, const char *text)
-{
-    char payload[128];
-    int len = snprintf(payload, sizeof(payload), "System:%s", text);
-    if (len < 0) {
-        return;
+  String _formatTime(DateTime time) {
+    final h = time.hour.toString().padLeft(2, '0');
+    final m = time.minute.toString().padLeft(2, '0');
+    return '$h:$m';
+  }
+
+  Widget _buildStatusIcon(Message msg, bool isDark) {
+    switch (msg.status) {
+      case MessageStatus.sending:
+        return Icon(
+          Icons.schedule,
+          size: 12,
+          color: isDark ? Colors.white70 : Colors.black54,
+        );
+      case MessageStatus.delivered:
+        return Icon(
+          Icons.done,
+          size: 12,
+          color: isDark ? Colors.white70 : Colors.black54,
+        );
+      case MessageStatus.failed:
+        return Tooltip(
+          message: 'ESP32 не подтвердил приём',
+          child: Icon(
+            Icons.error_outline,
+            size: 12,
+            color: isDark ? Colors.red[300] : Colors.red[700],
+          ),
+        );
     }
-    if (len > (int)sizeof(payload) - 1) {
-        len = (int)sizeof(payload) - 1;
-    }
-    ws_queue_text(fd, payload, (size_t)len);
-}
+  }
 
-void wifi_link_broadcast(const char *from, const char *text)
-{
-    if (!s_ws_server || !from || !text) {
-        return;
-    }
+  void _showSnackBar(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
 
-    size_t from_len = strlen(from);
-    size_t text_len = strlen(text);
-    if (from_len == 0 || text_len == 0) {
-        return;
-    }
+  // Список перевёрнут (reverse: true), поэтому низ — это смещение 0.
+  // Прокрутка к maxScrollExtent давала промах: у ListView.builder он
+  // оценочный, пока не измерены все элементы
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          0,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
 
-    size_t payload_len = from_len + 1 + text_len;
-    char *payload = (char *)malloc(payload_len + 1);
-    if (!payload) {
-        return;
-    }
-    memcpy(payload, from, from_len);
-    payload[from_len] = ':';
-    memcpy(payload + from_len + 1, text, text_len);
-    payload[payload_len] = '\0';
+  // ============================
+  // Диалоги
+  // ============================
 
-    size_t client_count = WS_MAX_CLIENTS;
-    int client_fds[WS_MAX_CLIENTS];
-    if (httpd_get_client_list(s_ws_server, &client_count, client_fds) == ESP_OK) {
-        for (size_t i = 0; i < client_count; i++) {
-#ifdef CONFIG_HTTPD_WS_SUPPORT
-            // В списке есть и сокеты, не прошедшие рукопожатие
-            if (httpd_ws_get_fd_info(s_ws_server, client_fds[i]) !=
-                HTTPD_WS_CLIENT_WEBSOCKET) {
-                continue;
-            }
-#endif
-            ws_queue_text(client_fds[i], payload, payload_len);
-        }
-    }
-
-    free(payload);
-}
-
-// ============================
-// HTTP
-// ============================
-
-static int hex_val(char c)
-{
-    if (c >= '0' && c <= '9') return c - '0';
-    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
-    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
-    return -1;
-}
-
-static void url_decode(char *out, size_t out_size, const char *in, const char *end)
-{
-    size_t i = 0;
-    while (i < out_size - 1 && in && *in && in < end) {
-        if (*in == '+') {
-            out[i++] = ' ';
-        } else if (*in == '%' && (in + 2) < end &&
-                   hex_val(in[1]) >= 0 && hex_val(in[2]) >= 0) {
-            out[i++] = (char)((hex_val(in[1]) << 4) | hex_val(in[2]));
-            in += 2;
-        } else {
-            out[i++] = *in;
-        }
-        in++;
-    }
-    out[i] = '\0';
-}
-
-// Ищет значение параметра key ("from=") в теле формы. Совпадение считается
-// только в начале тела или после '&', иначе "myfrom=" сойдёт за "from="
-static char *find_param(char *body, const char *key)
-{
-    size_t klen = strlen(key);
-    for (char *p = strstr(body, key); p; p = strstr(p + 1, key)) {
-        if (p == body || p[-1] == '&') {
-            return p + klen;
-        }
-    }
-    return NULL;
-}
-
-static esp_err_t ping_get_handler(httpd_req_t *req)
-{
-    const char *resp = "pong";
-    httpd_resp_set_type(req, "text/plain");
-    httpd_resp_send(req, resp, strlen(resp));
-    return ESP_OK;
-}
-
-// Имя сети и адрес устройства: приложение показывает SSID, полученный отсюда
-static esp_err_t info_get_handler(httpd_req_t *req)
-{
-    char resp[96];
-    int len = snprintf(resp, sizeof(resp), "{\"ssid\":\"%s\",\"ip\":\"%s\"}",
-                       s_ssid, WIFI_AP_IP);
-    if (len < 0) {
-        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Format error");
-        return ESP_FAIL;
-    }
-    if (len > (int)sizeof(resp) - 1) {
-        len = (int)sizeof(resp) - 1;
+  void _showChangeNameDialog() {
+    final prefs = _prefs;
+    if (prefs == null) {
+      _showSnackBar('Настройки ещё загружаются');
+      return;
     }
 
-    httpd_resp_set_type(req, "application/json");
-    httpd_resp_send(req, resp, len);
-    return ESP_OK;
-}
+    _nameController.text = _myName;
 
-static esp_err_t send_post_handler(httpd_req_t *req)
-{
-    if (req->content_len == 0) {
-        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Empty body");
-        return ESP_FAIL;
+    showDialog<void>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Изменить имя'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _nameController,
+                maxLength: _maxNameLength,
+                decoration: const InputDecoration(
+                  labelText: 'Ваше имя в чате',
+                  border: OutlineInputBorder(),
+                  hintText: 'Введите новое имя',
+                ),
+                autofocus: true,
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Текущее имя: $_myName',
+                style: TextStyle(color: Colors.grey[600]),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Отмена'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final newName = _nameController.text.trim();
+                // Прошивка отделяет имя от текста первым двоеточием:
+                // с ним имя дойдёт до собеседников обрезанным
+                if (newName.contains(':')) {
+                  _showSnackBar('Имя не может содержать двоеточие');
+                  return;
+                }
+                if (newName.isNotEmpty && newName != _myName) {
+                  await prefs.setString('user_name', newName);
+                  setState(() {
+                    _myName = newName;
+                  });
+                  if (_connectionState == ConnectionStatus.connected) {
+                    _sendUserName();
+                  }
+                  if (!context.mounted) return;
+                  Navigator.pop(context);
+                } else if (newName.isEmpty) {
+                  _showSnackBar('Имя не может быть пустым');
+                }
+              },
+              child: const Text('Сохранить'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Без этого на Android из приложения нет выхода: сворачивание оставляет
+  // foreground-сервис с WifiLock жить дальше
+  Future<void> _confirmExit() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Выйти из радиочата?'),
+          content: const Text(
+            'Соединение с ESP32 будет закрыто, уведомления сняты, '
+            'новые сообщения приходить не будут.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Отмена'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Выйти'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) return;
+
+    _connectionTimer?.cancel();
+    await _disconnect();
+    await _stopForegroundService();
+    await _unbindWifi();
+
+    if (Platform.isAndroid) {
+      await SystemNavigator.pop();
+    } else {
+      await windowManager.close();
+    }
+  }
+
+  // ============================
+  // UI
+  // ============================
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isConnected = _connectionState == ConnectionStatus.connected;
+
+    String statusText = '';
+    Color statusColor = Colors.grey;
+    IconData statusIcon = Icons.wifi_off;
+
+    switch (_connectionState) {
+      case ConnectionStatus.disconnected:
+        statusText = _lastError.isNotEmpty ? _lastError : 'Нет подключения';
+        statusColor = Colors.red;
+        statusIcon = Icons.wifi_off;
+        break;
+      case ConnectionStatus.connecting:
+        statusText = 'Подключение к ESP32...';
+        statusColor = Colors.orange;
+        statusIcon = Icons.wifi_find;
+        break;
+      case ConnectionStatus.connected:
+        statusText = 'Подключено к ESP32';
+        statusColor = Colors.green;
+        statusIcon = Icons.wifi;
+        break;
+      case ConnectionStatus.error:
+        statusText = _lastError;
+        statusColor = Colors.red;
+        statusIcon = Icons.error;
+        break;
     }
 
-    // Раньше длинное тело молча обрезалось и клиент получал 200 OK
-    // на текст, который в эфир уходил не целиком
-    if (req->content_len > POST_BUF_SIZE - 1) {
-        ESP_LOGW(TAG, "POST body of %d bytes rejected", (int)req->content_len);
-        // httpd_err_code_t не содержит 413, поэтому статус ставим строкой
-        httpd_resp_set_status(req, "413 Payload Too Large");
-        httpd_resp_set_type(req, "text/plain");
-        httpd_resp_sendstr(req, "Body too large");
-        return ESP_FAIL;
-    }
-
-    size_t body_len = req->content_len;
-
-    esp_err_t result = ESP_FAIL;
-    char from[64] = {0};
-
-    // Оба буфера в куче: стек задачи httpd всего несколько килобайт
-    char *body = (char *)malloc(POST_BUF_SIZE);
-    char *text = (char *)calloc(1, POST_BUF_SIZE);
-    if (!body || !text) {
-        free(body);
-        free(text);
-        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Out of memory");
-        return ESP_FAIL;
-    }
-
-    int total = 0;
-    while (total < (int)body_len) {
-        int ret = httpd_req_recv(req, body + total, body_len - total);
-        if (ret == HTTPD_SOCK_ERR_TIMEOUT) {
-            continue;
-        }
-        if (ret <= 0) {
-            break;
-        }
-        total += ret;
-    }
-    body[total] = '\0';
-
-    char *p_from = find_param(body, "from=");
-    if (!p_from) {
-        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Missing 'from'");
-        goto cleanup;
-    }
-
-    char *p_text = find_param(body, "text=");
-    if (!p_text) {
-        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Missing 'text'");
-        goto cleanup;
-    }
-
-    const char *body_end = body + total;
-    const char *p_from_end = strchr(p_from, '&');
-    const char *p_text_end = strchr(p_text, '&');
-
-    url_decode(from, sizeof(from), p_from, p_from_end ? p_from_end : body_end);
-    url_decode(text, POST_BUF_SIZE, p_text, p_text_end ? p_text_end : body_end);
-
-    if (strchr(from, ':') != NULL ||
-        (strnlen(from, sizeof(from)) >= 6 && strncmp(from, "System", 6) == 0)) {
-        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid 'from'");
-        goto cleanup;
-    }
-
-    if (strlen(text) == 0) {
-        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Empty 'text'");
-        goto cleanup;
-    }
-
-    if (!s_tx_queue) {
-        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "No TX queue");
-        goto cleanup;
-    }
-
-    char *msg = strdup(text);
-    if (!msg) {
-        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Out of memory");
-        goto cleanup;
-    }
-
-    // В чат сообщение попадает только после того, как встало в очередь
-    // на передачу, иначе клиент видел бы "отправлено" для того,
-    // что в эфир не ушло
-    if (xQueueSend(s_tx_queue, &msg, pdMS_TO_TICKS(100)) != pdPASS) {
-        free(msg);
-        ESP_LOGW(TAG, "TX queue full, POST message dropped");
-        httpd_resp_set_status(req, "503 Service Unavailable");
-        httpd_resp_set_type(req, "text/plain");
-        httpd_resp_send(req, "TX queue full", HTTPD_RESP_USE_STRLEN);
-        result = ESP_OK;
-        goto cleanup;
-    }
-
-    wifi_link_broadcast(from, text);
-
-    const char *resp = "OK";
-    httpd_resp_set_type(req, "text/plain");
-    httpd_resp_send(req, resp, strlen(resp));
-    result = ESP_OK;
-
-cleanup:
-    free(body);
-    free(text);
-    return result;
-}
-
-// ============================
-// WebSocket
-// ============================
-
-static void ws_handle_frame(httpd_req_t *req, char *payload)
-{
-    int fd = httpd_req_to_sockfd(req);
-
-    uint32_t now_ms = (uint32_t)(esp_timer_get_time() / 1000);
-    if (!client_check_rate(fd, now_ms)) {
-        ESP_LOGW(TAG, "WS rate limit for fd %d", fd);
-        ws_notify(fd, "Слишком быстро");
-        return;
-    }
-
-    if (strncmp(payload, "setName:", 8) == 0) {
-        const char *name = payload + 8;
-        if (strlen(name) == 0 || strchr(name, ':')) {
-            ESP_LOGW(TAG, "Rejected name from fd %d: '%s'", fd, name);
-            ws_notify(fd, "Недопустимое имя");
-            return;
-        }
-        client_set_name(fd, name);
-        ESP_LOGI(TAG, "Client %d set name to %s", fd, name);
-        return;
-    }
-
-    if (strncmp(payload, "msg:", 4) != 0) {
-        return;
-    }
-
-    char *frame_name = payload + 4;
-    char *colon = strchr(frame_name, ':');
-    if (!colon) {
-        ESP_LOGW(TAG, "Malformed msg frame, no name separator: %s", payload);
-        return;
-    }
-
-    *colon = '\0';
-    char *text = colon + 1;
-
-    if (strlen(text) == 0) {
-        return;
-    }
-
-    // Имя из setName: надёжнее того, что пришло в кадре
-    char from[WS_NAME_MAX] = {0};
-    if (!client_get_name(fd, from, sizeof(from))) {
-        strlcpy(from, frame_name, sizeof(from));
-    }
-    if (strlen(from) == 0) {
-        strlcpy(from, "Unknown", sizeof(from));
-    }
-
-    if (!s_tx_queue) {
-        ws_notify(fd, "Передатчик недоступен");
-        return;
-    }
-
-    char *msg = strdup(text);
-    if (!msg) {
-        ws_notify(fd, "Недостаточно памяти");
-        return;
-    }
-
-    if (xQueueSend(s_tx_queue, &msg, pdMS_TO_TICKS(100)) != pdPASS) {
-        free(msg);
-        ESP_LOGW(TAG, "TX queue full, WS message dropped");
-        ws_notify(fd, "Очередь передачи занята, сообщение не отправлено");
-        return;
-    }
-
-    // Рассылаем всем, включая отправителя: для него это подтверждение,
-    // что сообщение принято в очередь на передачу
-    wifi_link_broadcast(from, text);
-}
-
-static esp_err_t ws_handler(httpd_req_t *req)
-{
-    if (req->method == HTTP_GET) {
-        int fd = httpd_req_to_sockfd(req);
-        ESP_LOGI(TAG, "WS handshake done, fd=%d", fd);
-        client_register(fd);
-        return ESP_OK;
-    }
-
-    httpd_ws_frame_t ws_pkt = {0};
-    ws_pkt.type = HTTPD_WS_TYPE_TEXT;
-
-    // Первый вызов без буфера возвращает длину кадра
-    esp_err_t ret = httpd_ws_recv_frame(req, &ws_pkt, 0);
-    if (ret != ESP_OK) {
-        ESP_LOGE(TAG, "WS frame header recv failed: %d", ret);
-        return ret;
-    }
-
-    if (ws_pkt.len == 0) {
-        return ESP_OK;
-    }
-
-    if (ws_pkt.len > WS_HARD_MAX_LEN) {
-        ESP_LOGE(TAG, "WS frame of %u bytes, closing session",
-                 (unsigned)ws_pkt.len);
-        return ESP_FAIL;
-    }
-
-    uint8_t *buf = (uint8_t *)calloc(1, ws_pkt.len + 1);
-    if (!buf) {
-        ESP_LOGE(TAG, "WS buffer alloc failed");
-        return ESP_ERR_NO_MEM;
-    }
-    ws_pkt.payload = buf;
-
-    // Кадр вычитываем целиком даже если он слишком длинный:
-    // иначе остаток тела примется за заголовок следующего кадра
-    ret = httpd_ws_recv_frame(req, &ws_pkt, ws_pkt.len);
-    if (ret != ESP_OK) {
-        ESP_LOGE(TAG, "WS recv failed: %d", ret);
-        free(buf);
-        return ret;
-    }
-
-    if (ws_pkt.type == HTTPD_WS_TYPE_TEXT) {
-        buf[ws_pkt.len] = '\0';
-
-        if (ws_pkt.len > WS_MAX_FRAME_LEN) {
-            ESP_LOGW(TAG, "WS frame too long (%u bytes), ignored",
-                     (unsigned)ws_pkt.len);
-            ws_notify(httpd_req_to_sockfd(req), "Сообщение слишком длинное");
-        } else {
-            ESP_LOGI(TAG, "WS text from fd %d: %s",
-                     httpd_req_to_sockfd(req), (char *)buf);
-            ws_handle_frame(req, (char *)buf);
-        }
-    }
-
-    free(buf);
-    return ESP_OK;
-}
-
-// Сокет закрывает httpd, но имя клиента нужно снять самим:
-// номера дескрипторов переиспользуются
-static void ws_close_fn(httpd_handle_t hd, int sockfd)
-{
-    (void)hd;
-    client_forget(sockfd);
-    close(sockfd);
-}
-
-// ============================
-// Wi-Fi и запуск серверов
-// ============================
-
-static void wifi_event_handler(void *arg, esp_event_base_t event_base,
-                               int32_t event_id, void *event_data)
-{
-    if (event_base != WIFI_EVENT) {
-        return;
-    }
-
-    if (event_id == WIFI_EVENT_AP_STACONNECTED) {
-        wifi_event_ap_staconnected_t *evt = (wifi_event_ap_staconnected_t *)event_data;
-        ESP_LOGI(TAG, "Station "MACSTR" connected, AID=%d", MAC2STR(evt->mac), evt->aid);
-    } else if (event_id == WIFI_EVENT_AP_STADISCONNECTED) {
-        wifi_event_ap_stadisconnected_t *evt = (wifi_event_ap_stadisconnected_t *)event_data;
-        ESP_LOGI(TAG, "Station "MACSTR" disconnected, AID=%d", MAC2STR(evt->mac), evt->aid);
-    }
-}
-
-static esp_err_t start_http_server(void)
-{
-    httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-    config.server_port = 80;
-    config.keep_alive_enable   = true;  
-    config.keep_alive_idle     = 3;   // сек тишины до первой probe  
-    config.keep_alive_interval = 2;   // интервал между probe  
-    config.keep_alive_count    = 2;   // probe до признания мёртвым (~6 с)
-    config.core_id = 0;
-    config.max_open_sockets = 4;
-    config.max_uri_handlers = 5;
-    config.lru_purge_enable = true;
-
-    if (httpd_start(&s_http_server, &config) != ESP_OK) {
-        ESP_LOGE(TAG, "HTTP server start failed");
-        return ESP_FAIL;
-    }
-
-    httpd_uri_t ping_uri = {
-        .uri = "/ping",
-        .method = HTTP_GET,
-        .handler = ping_get_handler,
-        .user_ctx = NULL,
-    };
-    httpd_uri_t info_uri = {
-        .uri = "/info",
-        .method = HTTP_GET,
-        .handler = info_get_handler,
-        .user_ctx = NULL,
-    };
-    httpd_uri_t send_uri = {
-        .uri = "/send",
-        .method = HTTP_POST,
-        .handler = send_post_handler,
-        .user_ctx = NULL,
-    };
-
-    httpd_register_uri_handler(s_http_server, &ping_uri);
-    httpd_register_uri_handler(s_http_server, &info_uri);
-    httpd_register_uri_handler(s_http_server, &send_uri);
-
-    ESP_LOGI(TAG, "HTTP server started on port 80 (Core 0)");
-    return ESP_OK;
-}
-
-static esp_err_t start_ws_server(void)
-{
-    httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-    config.server_port = 81;
-    config.keep_alive_enable   = true;  
-    config.keep_alive_idle     = 3;  
-    config.keep_alive_interval = 2;  
-    config.keep_alive_count    = 2;
-    config.ctrl_port = 32769;
-    config.core_id = 0;
-    config.max_open_sockets = WS_MAX_CLIENTS;
-    config.max_uri_handlers = 2;
-    config.lru_purge_enable = true;
-    config.close_fn = ws_close_fn;
-
-    if (httpd_start(&s_ws_server, &config) != ESP_OK) {
-        ESP_LOGE(TAG, "WS server start failed");
-        return ESP_FAIL;
-    }
-
-    httpd_uri_t ws_uri = {
-        .uri = "/",
-        .method = HTTP_GET,
-        .handler = ws_handler,
-        .user_ctx = NULL,
-#ifdef CONFIG_HTTPD_WS_SUPPORT
-        .is_websocket = true,
-        .handle_ws_control_frames = false,
-#endif
-    };
-
-    httpd_register_uri_handler(s_ws_server, &ws_uri);
-
-    ESP_LOGI(TAG, "WS server started on port 81 (Core 0)");
-    return ESP_OK;
-}
-
-void wifi_link_init(void)
-{
-    s_tx_queue = xQueueCreate(TX_QUEUE_LEN, sizeof(char *));
-    if (!s_tx_queue) {
-        ESP_LOGE(TAG, "Failed to create TX queue");
-        return;
-    }
-
-    s_ws_mutex = xSemaphoreCreateMutex();
-    if (!s_ws_mutex) {
-        ESP_LOGE(TAG, "Failed to create WS mutex");
-        return;
-    }
-
-    clients_init();
-
-    ESP_ERROR_CHECK(esp_netif_init());
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
-
-    esp_netif_create_default_wifi_ap();
-
-    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
-    ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT,
-                                                         ESP_EVENT_ANY_ID,
-                                                         &wifi_event_handler,
-                                                         NULL, NULL));
-
-    uint8_t mac[6] = {0};
-    ESP_ERROR_CHECK(esp_read_mac(mac, ESP_MAC_WIFI_SOFTAP));
-
-    wifi_config_t wifi_config = {0};
-    int written = snprintf(s_ssid, sizeof(s_ssid), "%s%02X%02X",
-                           WIFI_SSID_PREFIX, mac[4], mac[5]);
-    size_t ssid_len = (written < 0) ? 0 : (size_t)written;
-    if (ssid_len > sizeof(wifi_config.ap.ssid)) {
-        ssid_len = sizeof(wifi_config.ap.ssid);
-    }
-
-    memcpy(wifi_config.ap.ssid, s_ssid, ssid_len);
-    wifi_config.ap.ssid_len = ssid_len;
-    strlcpy((char *)wifi_config.ap.password, WIFI_PASS,
-            sizeof(wifi_config.ap.password));
-    wifi_config.ap.channel = WIFI_CHANNEL;
-    wifi_config.ap.max_connection = WIFI_MAX_STA;
-    wifi_config.ap.authmode = WIFI_AUTH_WPA2_PSK;
-
-    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
-    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &wifi_config));
-    ESP_ERROR_CHECK(esp_wifi_start());
-    ESP_ERROR_CHECK(esp_wifi_set_inactive_time(WIFI_IF_AP, WIFI_INACTIVE_TIME_S));
-
-    ESP_LOGI(TAG, "Wi-Fi AP started: SSID=%s, IP=" WIFI_AP_IP, s_ssid);
-
-    if (start_http_server() != ESP_OK) {
-        ESP_LOGE(TAG, "HTTP server failed to start");
-    }
-    if (start_ws_server() != ESP_OK) {
-        ESP_LOGE(TAG, "WS server failed to start");
-    }
+    return Column(
+      children: [
+        // Кастомный Title Bar для Linux
+        if (widget.isLinux)
+          Container(
+            height: 32,
+            color: Colors.grey[300],
+            child: Row(
+              children: [
+                Expanded(
+                  child: DragToMoveArea(
+                    child: Container(
+                      padding: const EdgeInsets.only(left: 12),
+                      alignment: Alignment.centerLeft,
+                      child: const Text(
+                        'UV-82 Chat',
+                        style: TextStyle(color: Colors.black, fontSize: 14),
+                      ),
+                    ),
+                  ),
+                ),
+                IconButton(
+                  padding: EdgeInsets.zero,
+                  icon: const Icon(Icons.minimize, size: 16),
+                  onPressed: () => windowManager.minimize(),
+                ),
+                IconButton(
+                  padding: EdgeInsets.zero,
+                  icon: const Icon(Icons.close, size: 18),
+                  onPressed: () => windowManager.close(),
+                ),
+              ],
+            ),
+          ),
+
+        // Основной Scaffold
+        Expanded(
+          child: Scaffold(
+            appBar: AppBar(
+              title: const Text('Радиочат', style: TextStyle(color: Colors.white)),
+              backgroundColor: Colors.green[800],
+              actions: [
+                IconButton(
+                  icon: Icon(_soundEnabled
+                      ? Icons.notifications_active
+                      : Icons.notifications_off),
+                  onPressed: _toggleSound,
+                  tooltip: _soundEnabled ? 'Выключить звук' : 'Включить звук',
+                  color: Colors.white,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.edit),
+                  onPressed: _prefs == null ? null : _showChangeNameDialog,
+                  tooltip: 'Изменить имя',
+                  color: Colors.white,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.power_settings_new),
+                  onPressed: _confirmExit,
+                  tooltip: 'Выйти',
+                  color: Colors.white,
+                ),
+              ],
+            ),
+            body: Column(
+              children: [
+                // Панель статуса
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  color: statusColor.withAlpha(26),
+                  child: Row(
+                    children: [
+                      Icon(statusIcon, color: statusColor),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              statusText,
+                              style: TextStyle(
+                                color: statusColor,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              'WiFi: $_currentWifiName • IP: $_deviceIp',
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                            if (_connectionState == ConnectionStatus.connected)
+                              Text(
+                                'Ваше имя: $_myName',
+                                style: const TextStyle(fontSize: 11),
+                              ),
+                          ],
+                        ),
+                      ),
+                      if (_connectionState == ConnectionStatus.error ||
+                          _connectionState == ConnectionStatus.disconnected)
+                        TextButton(
+                          style: TextButton.styleFrom(
+                            foregroundColor: statusColor,
+                            side: BorderSide(color: statusColor),
+                          ),
+                          onPressed: _isConnecting || _isDisconnecting
+                              ? null
+                              : () async {
+                            await _disconnect();
+                            await Future.delayed(const Duration(milliseconds: 100));
+                            _connectToEsp32();
+                          },
+                          child: _isConnecting || _isDisconnecting
+                              ? SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: statusColor,
+                            ),
+                          )
+                              : const Text('Подключить'),
+                        ),
+                    ],
+                  ),
+                ),
+
+                // Список сообщений
+                Expanded(
+                  child: _messages.isEmpty
+                      ? Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _connectionState == ConnectionStatus.connected
+                              ? Icons.chat_bubble_outline
+                              : statusIcon,
+                          size: 64,
+                          color: Colors.grey,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          _connectionState == ConnectionStatus.connected
+                              ? 'Нет сообщений\nОтправьте первое сообщение'
+                              : 'Подключитесь к ESP32',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                  )
+                      : ListView.builder(
+                    controller: _scrollController,
+                    reverse: true,
+                    itemCount: _messages.length,
+                    itemBuilder: (context, index) {
+                      final msg = _messages[_messages.length - 1 - index];
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 8, horizontal: 12),
+                        alignment: msg.isMe
+                            ? Alignment.centerRight
+                            : Alignment.centerLeft,
+                        child: Column(
+                          crossAxisAlignment: msg.isMe
+                              ? CrossAxisAlignment.end
+                              : CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              msg.from,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: msg.isMe
+                                    ? (isDark
+                                        ? Colors.green[200]
+                                        : Colors.green[900])
+                                    : (isDark
+                                        ? Colors.blue[200]
+                                        : Colors.blue[700]),
+                                fontSize: 12,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Container(
+                              constraints: BoxConstraints(
+                                maxWidth: MediaQuery.of(context)
+                                    .size
+                                    .width *
+                                    0.75,
+                              ),
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: msg.isMe
+                                    ? (isDark
+                                        ? Colors.green[800]
+                                        : Colors.green[100])
+                                    : (isDark
+                                        ? Colors.grey[800]
+                                        : Colors.grey[200]),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              // Цвет текста задаём явно: пузыри не следуют
+                              // за темой, поэтому наследованный белый
+                              // на светлом фоне не читался
+                              child: Column(
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    msg.text,
+                                    style: TextStyle(
+                                      color: isDark
+                                          ? Colors.white
+                                          : Colors.black87,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.end,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        _formatTime(msg.timestamp),
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          color: isDark
+                                              ? Colors.white70
+                                              : Colors.black54,
+                                        ),
+                                      ),
+                                      if (msg.isMe) ...[
+                                        const SizedBox(width: 4),
+                                        _buildStatusIcon(msg, isDark),
+                                      ],
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+
+                // Поле ввода. Не убираем из дерева при потере связи, а
+                // блокируем: пересоздание TextField теряло подключение к
+                // клавиатуре, из-за чего первый ввод не доходил до поля
+                Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _textController,
+                          focusNode: _inputFocusNode,
+                          enabled: isConnected,
+                          minLines: 1,
+                          maxLines: 4,
+                          // Кадр длиннее килобайта прошивка не принимает
+                          maxLength: _maxMessageLength,
+                          buildCounter: (
+                            context, {
+                            required currentLength,
+                            required isFocused,
+                            maxLength,
+                          }) {
+                            // Счётчик показываем только когда лимит близко
+                            if (maxLength == null ||
+                                currentLength < maxLength - 50) {
+                              return null;
+                            }
+                            return Text(
+                              '$currentLength/$maxLength',
+                              style: const TextStyle(fontSize: 11),
+                            );
+                          },
+                          textInputAction: TextInputAction.send,
+                          keyboardType: TextInputType.text,
+                          decoration: InputDecoration(
+                            hintText: isConnected
+                                ? 'Введите сообщение...'
+                                : 'Нет связи с ESP32',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            suffixIcon: IconButton(
+                              icon: const Icon(Icons.send),
+                              onPressed: isConnected ? _sendMessage : null,
+                            ),
+                          ),
+                          onSubmitted: (_) => _sendMessage(),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }
