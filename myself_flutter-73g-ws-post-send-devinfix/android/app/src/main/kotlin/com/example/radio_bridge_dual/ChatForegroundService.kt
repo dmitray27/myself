@@ -40,7 +40,19 @@ class ChatForegroundService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (intent?.action == ACTION_EXIT) {
+            stopWithNotifications()
+            return START_NOT_STICKY
+        }
+
         createNotificationChannel()
+        createAlertChannel()
+
+        // intent == null — сервис поднят системой после убийства процесса:
+        // Dart-движка нет, значит и связи нет
+        if (intent == null) {
+            connected = false
+        }
 
         val notification = buildNotification(connected)
 
@@ -64,21 +76,77 @@ class ChatForegroundService : Service() {
     // а вместе с ним и WebSocket — уведомление не должно врать о связи
     override fun onTaskRemoved(rootIntent: Intent?) {
         updateNotification(false)
+        showAlert()
         super.onTaskRemoved(rootIntent)
     }
 
+    // Постоянное уведомление тихое: о разрыве после смахивания сообщаем
+    // отдельным heads-up по каналу с высокой важностью
+    private fun showAlert() {
+        createAlertChannel()
+
+        val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Notification.Builder(this, ALERT_CHANNEL_ID)
+        } else {
+            @Suppress("DEPRECATION")
+            Notification.Builder(this)
+                .setPriority(Notification.PRIORITY_HIGH)
+                .setDefaults(Notification.DEFAULT_SOUND or Notification.DEFAULT_VIBRATE)
+        }
+
+        val notification = builder
+            .setContentTitle("Радиочат прерван")
+            .setContentText("Приложение закрыто, связь приостановлена")
+            .setSmallIcon(android.R.drawable.stat_notify_error)
+            .setContentIntent(openIntent())
+            .setAutoCancel(true)
+            .build()
+
+        notificationManager().notify(ALERT_NOTIFICATION_ID, notification)
+    }
+
+    private fun cancelAlert() {
+        notificationManager().cancel(ALERT_NOTIFICATION_ID)
+    }
+
+    private fun stopWithNotifications() {
+        val manager = notificationManager()
+        manager.cancel(ALERT_NOTIFICATION_ID)
+        manager.cancel(NOTIFICATION_ID)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            stopForeground(STOP_FOREGROUND_REMOVE)
+        } else {
+            @Suppress("DEPRECATION")
+            stopForeground(true)
+        }
+        stopSelf()
+    }
+
+    private fun notificationManager(): NotificationManager =
+        getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+    private fun openIntent(): PendingIntent = PendingIntent.getActivity(
+        this,
+        0,
+        Intent(this, MainActivity::class.java),
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+    )
+
     private fun updateNotification(isConnected: Boolean) {
         connected = isConnected
-        val manager =
-            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        manager.notify(NOTIFICATION_ID, buildNotification(isConnected))
+        if (isConnected) {
+            cancelAlert()
+        }
+        notificationManager().notify(NOTIFICATION_ID, buildNotification(isConnected))
     }
 
     private fun buildNotification(isConnected: Boolean): Notification {
-        val contentIntent = PendingIntent.getActivity(
+        val contentIntent = openIntent()
+
+        val exitIntent = PendingIntent.getService(
             this,
-            0,
-            Intent(this, MainActivity::class.java),
+            1,
+            Intent(this, ChatForegroundService::class.java).setAction(ACTION_EXIT),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
 
@@ -95,17 +163,26 @@ class ChatForegroundService : Service() {
             "Соединение с ESP32 отсутствует — откройте приложение"
         }
 
-        return builder
-            .setContentTitle("Радиочат активен")
+        val title = if (isConnected) "Радиочат активен" else "Радиочат приостановлен"
+
+        builder
+            .setContentTitle(title)
             .setContentText(text)
             .setSmallIcon(android.R.drawable.stat_sys_data_bluetooth)
             .setContentIntent(contentIntent)
             .setOngoing(true)
-            .build()
+
+        @Suppress("DEPRECATION")
+        builder
+            .addAction(android.R.drawable.ic_menu_view, "Открыть", contentIntent)
+            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Выйти", exitIntent)
+
+        return builder.build()
     }
 
     override fun onDestroy() {
         instance = null
+        cancelAlert()
         wifiLock?.let {
             if (it.isHeld) {
                 it.release()
@@ -133,9 +210,28 @@ class ChatForegroundService : Service() {
         manager.createNotificationChannel(channel)
     }
 
+    private fun createAlertChannel() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+
+        val manager = notificationManager()
+        if (manager.getNotificationChannel(ALERT_CHANNEL_ID) != null) return
+
+        val channel = NotificationChannel(
+            ALERT_CHANNEL_ID,
+            "Прерывание радиочата",
+            NotificationManager.IMPORTANCE_HIGH,
+        )
+        channel.description = "Сообщает, что чат перестал принимать сообщения"
+        channel.enableVibration(true)
+        manager.createNotificationChannel(channel)
+    }
+
     companion object {
         private const val CHANNEL_ID = "chat_connection"
+        private const val ALERT_CHANNEL_ID = "chat_alert"
         private const val NOTIFICATION_ID = 1
+        private const val ALERT_NOTIFICATION_ID = 2
+        const val ACTION_EXIT = "com.example.radio_bridge_dual.ACTION_EXIT"
         private const val WIFI_LOCK_TAG = "radio_bridge_dual:wifi"
 
         // Сервис живёт в том же процессе, что и активность: текст уведомления
