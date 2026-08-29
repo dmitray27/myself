@@ -18,7 +18,9 @@ import android.os.IBinder
 class ChatForegroundService : Service() {
 
     private var wifiLock: WifiManager.WifiLock? = null
-    private var connected = true
+    // Связь подтверждает только Dart-движок через setServiceConnected():
+    // до этого уведомление не имеет права обещать работающий чат
+    private var connected = false
 
     override fun onCreate() {
         super.onCreate()
@@ -51,8 +53,12 @@ class ChatForegroundService : Service() {
         // intent == null — сервис поднят системой после убийства процесса:
         // Dart-движка нет, значит и связи нет
         if (intent == null) {
-            connected = false
+            desiredConnected = false
         }
+
+        // Создание сервиса асинхронно: setConnected() мог прийти до onCreate,
+        // когда instance ещё пуст
+        connected = desiredConnected
 
         val notification = buildNotification(connected)
 
@@ -113,6 +119,7 @@ class ChatForegroundService : Service() {
     }
 
     private fun stopWithNotifications() {
+        desiredConnected = false
         val manager = notificationManager()
         manager.cancel(ALERT_NOTIFICATION_ID)
         manager.cancel(NOTIFICATION_ID)
@@ -137,6 +144,7 @@ class ChatForegroundService : Service() {
 
     private fun updateNotification(isConnected: Boolean) {
         connected = isConnected
+        desiredConnected = isConnected
         if (isConnected) {
             cancelAlert()
         }
@@ -241,7 +249,13 @@ class ChatForegroundService : Service() {
         // обновляем напрямую, а не через startService — из фона его не вызвать
         private var instance: ChatForegroundService? = null
 
+        // Последнее состояние, о котором сообщил Dart-движок: сервис может
+        // ещё не существовать, а после запуска уведомление должно совпадать
+        // с реальной связью
+        private var desiredConnected = false
+
         fun setConnected(isConnected: Boolean) {
+            desiredConnected = isConnected
             instance?.updateNotification(isConnected)
         }
     }

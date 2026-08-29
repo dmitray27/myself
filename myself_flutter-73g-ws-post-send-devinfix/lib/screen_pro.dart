@@ -1,49 +1,18 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart'
+    hide Message;
 import 'package:http/http.dart' as http;
-import 'package:web_socket_channel/io.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_manager/window_manager.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/services.dart';
+import 'chat_connection.dart';
 import 'chat_protocol.dart';
+import 'message_store.dart';
 import 'dart:io';
-// Состояния подключения
-enum ConnectionStatus { disconnected, connecting, connected, error }
-
-// Своё сообщение считается доставленным, когда ESP32 вернёт его
-// широковещательно: прошивка рассылает кадр только после того, как
-// поставила текст в очередь на передачу в эфир
-enum MessageStatus { sending, delivered, failed }
-
-class Message {
-  final String from;
-  final String text;
-  final bool isMe;
-  final DateTime timestamp;
-  MessageStatus status;
-
-  Message(
-    this.from,
-    this.text,
-    this.isMe, {
-    DateTime? timestamp,
-    this.status = MessageStatus.delivered,
-  }) : timestamp = timestamp ?? DateTime.now();
-}
-
-// Отправленный кадр, ждущий эха от ESP32
-class _PendingEcho {
-  final String frame;
-  final Message message;
-  Timer? timeout;
-
-  _PendingEcho(this.frame, this.message);
-}
 
 class ChatScreen extends StatefulWidget {
   final bool isLinux;
@@ -57,13 +26,18 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   final TextEditingController _textController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
-  final List<Message> _messages = [];
   String _myName = "User";
   final ScrollController _scrollController = ScrollController();
   final FocusNode _inputFocusNode = FocusNode();
 
-  WebSocketChannel? _webSocketChannel;
-  StreamSubscription? _webSocketSubscription;
+  // Соединение и список сообщений живут отдельно от виджета:
+  // без этого сверку эха и дедупликацию истории негде проверить тестами
+  late final ChatConnection _connection;
+  final MessageStore _store = MessageStore(
+    maxMessages: 500,
+    maxPendingEcho: 16,
+    echoTimeout: _echoTimeout,
+  );
 
   // Загружается асинхронно: до этого диалог смены имени открывать нельзя
   SharedPreferences? _prefs;
@@ -76,25 +50,22 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   final FlutterLocalNotificationsPlugin _notifications =
       FlutterLocalNotificationsPlugin();
   bool _notificationsReady = false;
+  // Android 13+: без разрешения уведомления молча не показываются,
+  // и в фоне пользователь просто не узнаёт о сообщениях
+  bool _notificationsDenied = false;
 
   // На переднем плане звучит AudioPlayer, в фоне — канал уведомлений:
   // иначе на одно сообщение слышны два звука
   bool _isForeground = true;
 
-  ConnectionStatus _connectionState = ConnectionStatus.disconnected;
   String _currentWifiName = 'Не подключено';
-  String _lastError = '';
-  bool _isConnecting = false;
-  bool _isDisconnecting = false;
+  // Подсказка про сеть, когда само соединение ещё не пробовало подняться
+  String _networkHint = '';
   Timer? _connectionTimer;
-
-  // Эхо собственных сообщений, пришедшее обратно с ESP32, показывать не нужно:
-  // оно уже добавлено в список локально при отправке.
-  final List<_PendingEcho> _pendingEcho = [];
+  final PollBackoff _pollBackoff = PollBackoff();
+  bool _isConnectAttemptRunning = false;
 
   static const String _esp32Address = '192.168.4.1';
-  static const Duration _pollInterval = Duration(seconds: 2);
-  static const int _maxPendingEcho = 16;
   static const Duration _echoTimeout = Duration(seconds: 6);
   // Ограничение поля ввода в символах; фактический лимит прошивки —
   // kMaxFrameBytes байт на весь кадр, он проверяется при отправке
@@ -119,6 +90,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _connection = ChatConnection(
+      socketFactory: () => WebSocketChatSocket('ws://$_esp32Address:81'),
+    )
+      ..onFrame = _processIncomingMessage
+      ..onChanged = _onConnectionChanged
+      ..onConnected = _onConnectionEstablished
+      ..onDisconnected = _onConnectionClosed;
     _initPreferences();
     _initNotifications();
   }
@@ -135,10 +113,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _stopForegroundService();
     _unbindWifi();
     _connectionTimer?.cancel();
-    for (final pending in _pendingEcho) {
-      pending.timeout?.cancel();
-    }
-    _disconnect();
+    _connection.disconnect();
     _textController.dispose();
     _nameController.dispose();
     _inputFocusNode.dispose();
@@ -213,10 +188,19 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
       if (Platform.isAndroid) {
         // Android 13+: без явного разрешения уведомления не показываются
-        await _notifications
+        final granted = await _notifications
             .resolvePlatformSpecificImplementation<
                 AndroidFlutterLocalNotificationsPlugin>()
             ?.requestNotificationsPermission();
+
+        // Отказ не мешает чату работать, но в фоне сообщения становятся
+        // невидимыми — об этом надо сказать явно
+        if (granted == false && mounted) {
+          setState(() {
+            _notificationsDenied = true;
+          });
+          _showSnackBar('Без разрешения на уведомления сообщения в фоне не видны');
+        }
       }
 
       _notificationsReady = true;
@@ -270,18 +254,36 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   // Мониторинг WiFi
   // ============================
 
+  // Перевзвод вместо Timer.periodic: после нескольких неудач интервал
+  // растёт, и ping с таймаутом не будит Wi-Fi каждые две секунды там,
+  // где сети ESP32 просто нет
   void _startConnectionMonitoring() {
-    _connectionTimer = Timer.periodic(_pollInterval, (timer) {
-      _checkConnection();
-    });
+    _scheduleConnectionCheck();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkConnection();
     });
   }
 
+  void _scheduleConnectionCheck() {
+    if (!mounted) return;
+    _connectionTimer?.cancel();
+    _connectionTimer = Timer(_pollBackoff.interval, () {
+      _checkConnection();
+    });
+  }
+
   Future<void> _checkConnection() async {
-    if (_isConnecting || _isDisconnecting) return;
+    if (_isConnectAttemptRunning || _connection.isBusy) {
+      _scheduleConnectionCheck();
+      return;
+    }
+
+    // Подтверждения по сообщениям ждём в том же такте, что и связь:
+    // отдельный Timer на каждое сообщение переживал dispose()
+    if (_store.expirePending() && mounted) {
+      setState(() {});
+    }
 
     try {
       final deviceIp = await _wifiIp();
@@ -302,22 +304,24 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       // и на части Android getWifiIP() не отдаёт адрес подсети ESP32, хотя
       // плата доступна, и подключение по кнопке сносилось этой же проверкой
       // на следующем тике
-      final reachable = _connectionState == ConnectionStatus.connected ||
-          await _pingEsp32();
+      final reachable = _connection.isConnected || await _pingEsp32();
 
       if (!reachable) {
-        if (_connectionState != ConnectionStatus.disconnected) {
-          await _disconnect();
+        _pollBackoff.onFailure();
+        if (_connection.status != ConnectionStatus.disconnected) {
+          await _connection.disconnect();
         }
         if (mounted) {
           setState(() {
             _currentWifiName = 'Не подключено';
-            _connectionState = ConnectionStatus.disconnected;
-            _lastError = 'Подключитесь к WiFi ESP32';
+            _networkHint = 'Подключитесь к WiFi ESP32';
           });
         }
         return;
       }
+
+      _pollBackoff.onSuccess();
+      _networkHint = '';
 
       // Имя сети спрашиваем у самой платы: при смене IP и после того,
       // как плата впервые ответила
@@ -327,8 +331,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
       // Повтор попытки после разрыва идёт по этому же таймеру,
       // отдельный _reconnectTimer не нужен
-      if (_connectionState == ConnectionStatus.disconnected ||
-          _connectionState == ConnectionStatus.error) {
+      if (_connection.status == ConnectionStatus.disconnected ||
+          _connection.status == ConnectionStatus.error) {
         _connectToEsp32();
       }
     } catch (e) {
@@ -338,6 +342,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           _currentWifiName = 'Ошибка получения WiFi';
         });
       }
+    } finally {
+      _scheduleConnectionCheck();
     }
   }
 
@@ -422,171 +428,68 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   // Подключение / отключение
   // ============================
 
+  // Гарантирует одну попытку за раз вместе с bind и ping: во время их
+  // само соединение ещё не считается занятым, а повторный bindToWifi
+  // снимает предыдущий колбек и оставляет его вызов без ответа
   Future<void> _connectToEsp32() async {
-    if (_isConnecting) {
+    if (_isConnectAttemptRunning || _connection.isConnecting) {
       debugPrint('⚠️ Уже подключаюсь, пропускаю');
       return;
     }
-
-    _isConnecting = true;
-    // Заставляем ОС гнать трафик через Wi-Fi ESP32 (сеть без интернета)
-    await _bindToWifi();
-    if (mounted) {
-      setState(() {
-        _connectionState = ConnectionStatus.connecting;
-        _lastError = 'Подключение...';
-      });
-    }
-
-    debugPrint('Подключаюсь к ESP32 на $_esp32Address...');
+    _setConnectAttemptRunning(true);
 
     try {
-      await _disconnect();
+      // Заставляем ОС гнать трафик через Wi-Fi ESP32 (сеть без интернета)
+      await _bindToWifi();
 
       debugPrint('Проверяю ping ESP32...');
       if (!await _pingEsp32()) {
-        throw Exception('ESP32 не отвечает на ping');
+        debugPrint('❌ ESP32 не отвечает на ping');
+        return;
       }
 
       debugPrint('ESP32 доступен, подключаю WebSocket...');
-
-      _webSocketChannel = IOWebSocketChannel.connect(
-        'ws://$_esp32Address:81',
-        pingInterval: const Duration(seconds: 5),
-      );
-
-      _webSocketSubscription = _webSocketChannel!.stream.listen(
-            (message) {
-          debugPrint('📥 WebSocket: $message');
-          _processIncomingMessage(message.toString());
-        },
-        onError: (error) {
-          debugPrint('❌ WebSocket ошибка: $error');
-          if (_connectionState != ConnectionStatus.disconnected) {
-            _handleConnectionError('WebSocket ошибка');
-          }
-        },
-        onDone: () {
-          debugPrint('🔌 WebSocket закрыт');
-          if (_connectionState != ConnectionStatus.disconnected) {
-            _handleConnectionError('Соединение закрыто сервером');
-          }
-        },
-        cancelOnError: true,
-      );
-
-      // Ждём рукопожатия, но не дольше 8 с: на мёртвой сети .ready
-      // может висеть до системного TCP-таймаута и держать _isConnecting
-      await _webSocketChannel!.ready.timeout(const Duration(seconds: 8));
-
-      if (_webSocketChannel == null) {
-        throw Exception('WebSocket не создан');
-      }
-
-      if (mounted) {
-        setState(() {
-          _connectionState = ConnectionStatus.connected;
-          _lastError = '';
-        });
-      }
-
-      debugPrint('✅ Успешно подключено к ESP32');
-
-      await _startForegroundService();
-      await _setServiceConnected(true);
-
-      // Имя отправляем на каждом подключении: ESP32 не хранит его между сессиями
-      _sendUserName();
-    } catch (e) {
-      debugPrint('❌ Ошибка подключения: $e');
-      _handleConnectionError('Не удалось подключиться');
+      await _connection.connect();
     } finally {
-      _isConnecting = false;
+      _setConnectAttemptRunning(false);
     }
   }
 
-  Future<void> _disconnect() async {
-    if (_isDisconnecting) return;
-    _isDisconnecting = true;
+  void _setConnectAttemptRunning(bool running) {
+    _isConnectAttemptRunning = running;
+    // Индикатор на кнопке «Подключить» живёт на этом флаге, а до сокета
+    // дело может и не дойти: onChanged соединения тогда не срабатывает
+    if (mounted) setState(() {});
+  }
 
-    // Сервис здесь не гасим: _disconnect() вызывается и перед каждым
-    // переподключением, а с Android 12 запустить foreground-сервис из фона
-    // уже нельзя — после разрыва со свёрнутым приложением он бы не вернулся.
-    // Остановка — только в dispose(), здесь лишь меняем текст его уведомления
+  void _onConnectionChanged() {
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _onConnectionEstablished() async {
+    debugPrint('✅ Успешно подключено к ESP32');
+    await _startForegroundService();
+    await _setServiceConnected(true);
+
+    // Имя отправляем на каждом подключении: ESP32 не хранит его между сессиями
+    _sendUserName();
+  }
+
+  Future<void> _onConnectionClosed() async {
+    // Сервис здесь не гасим: разрыв бывает и перед каждым переподключением,
+    // а с Android 12 запустить foreground-сервис из фона уже нельзя —
+    // после разрыва со свёрнутым приложением он бы не вернулся.
+    // Остановка — только в dispose() и по кнопке «Выйти»
     await _setServiceConnected(false);
 
-    _failPendingEcho();
-
-    // Снимаем ссылки ДО ожиданий, чтобы новая попытка подключения
-    // не зацепилась за мёртвый канал
-    final subscription = _webSocketSubscription;
-    final channel = _webSocketChannel;
-    _webSocketSubscription = null;
-    _webSocketChannel = null;
-
-    try {
-      if (subscription != null) {
-        try {
-          await subscription.cancel().timeout(const Duration(seconds: 2));
-        } catch (e) {
-          debugPrint('Ошибка/таймаут отписки: $e');
-        }
-      }
-
-      if (channel != null) {
-        try {
-          await channel.sink.close().timeout(const Duration(seconds: 8));
-        } catch (e) {
-          debugPrint('Ошибка/таймаут при закрытии канала: $e');
-        }
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _connectionState = ConnectionStatus.disconnected;
-          _lastError = '';
-        });
-      }
-      _isDisconnecting = false;
-    }
-  }
-
-  void _handleConnectionError(String error) {
-    if (_connectionState == ConnectionStatus.disconnected || _isDisconnecting) return;
-
-    if (mounted) {
-      setState(() {
-        _connectionState = ConnectionStatus.error;
-        _lastError = error;
-      });
-    }
-
-    // Повторную попытку сделает _checkConnection по своему таймеру
-  }
-
-  // Подтверждения по оборванному соединению уже не придут
-  void _failPendingEcho() {
-    if (_pendingEcho.isEmpty) return;
-
-    for (final pending in _pendingEcho) {
-      pending.timeout?.cancel();
-      pending.message.status = MessageStatus.failed;
-    }
-    _pendingEcho.clear();
-
-    if (mounted) {
+    if (_store.failAllPending() && mounted) {
       setState(() {});
     }
   }
 
   void _sendUserName() {
-    if (_webSocketChannel != null && _connectionState == ConnectionStatus.connected) {
-      try {
-        _webSocketChannel!.sink.add(buildSetNameFrame(_myName));
-        debugPrint('Отправлено имя: $_myName');
-      } catch (e) {
-        debugPrint('Ошибка отправки имени: $e');
-      }
+    if (_connection.send(buildSetNameFrame(_myName))) {
+      debugPrint('Отправлено имя: $_myName');
     }
   }
 
@@ -596,6 +499,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   void _processIncomingMessage(String message) {
     if (!mounted) return;
+    debugPrint('📥 WebSocket: $message');
 
     final frame = parseIncomingFrame(message);
 
@@ -603,10 +507,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       case IncomingKind.ignore:
         return;
       case IncomingKind.ping:
-        if (_webSocketChannel != null &&
-            _connectionState == ConnectionStatus.connected) {
-          _webSocketChannel!.sink.add("pong");
-        }
+        _connection.send('pong');
         return;
       case IncomingKind.system:
         _showSnackBar(frame.text);
@@ -615,39 +516,26 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         break;
     }
 
-    // Своё сообщение, вернувшееся широковещательно. Сверяем с очередью
-    // отправленных, а не с именем: у собеседника имя может совпадать
-    final echoIndex = _pendingEcho.indexWhere((p) => p.frame == frame.echoKey);
-    if (echoIndex >= 0) {
-      final pending = _pendingEcho.removeAt(echoIndex);
-      pending.timeout?.cancel();
-      setState(() {
-        pending.message.status = MessageStatus.delivered;
-      });
-      return;
+    final outcome = _store.ingest(frame, myName: _myName);
+
+    switch (outcome) {
+      case IngestOutcome.duplicateIgnored:
+        return;
+      case IngestOutcome.echoConfirmed:
+        setState(() {});
+        return;
+      case IngestOutcome.addedHistory:
+        // История из буфера прошивки доезжает после переподключения:
+        // сообщение уже не новое, звук и уведомление по нему только мешают
+        setState(() {});
+        _scrollToBottom();
+        return;
+      case IngestOutcome.addedNew:
+        break;
     }
 
-    // В истории собственные сообщения не отличить по очереди эха (она очищена
-    // при разрыве), поэтому опираемся на имя
-    final isMine = frame.isHistory && frame.from == _myName;
-
-    // Прошивка отдаёт последние 20 кадров при каждом рукопожатии: после
-    // переподключения те же сообщения приходят повторно
-    if (frame.isHistory && _alreadyShown(frame.from, frame.text, isMine)) {
-      return;
-    }
-
-    setState(() {
-      _messages.add(Message(frame.from, frame.text, isMine));
-      if (_messages.length > 500) {
-        _messages.removeAt(0);
-      }
-    });
+    setState(() {});
     _scrollToBottom();
-
-    // История из буфера прошивки доезжает после переподключения: сообщение
-    // уже не новое, звук и уведомление по нему только мешают
-    if (frame.isHistory) return;
 
     // Только чужие сообщения: ping, System: и собственное эхо ушли по return выше
     if (_isForeground || !Platform.isAndroid) {
@@ -657,18 +545,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
   }
 
-  bool _alreadyShown(String from, String text, bool isMe) {
-    for (final message in _messages.reversed) {
-      if (message.from == from && message.text == text && message.isMe == isMe) {
-        return true;
-      }
-    }
-    return false;
-  }
-
   Future<void> _sendMessage() async {
     final text = _textController.text.trim();
-    if (text.isEmpty || _connectionState != ConnectionStatus.connected) return;
+    if (text.isEmpty || !_connection.isConnected) return;
 
     // Прошивка режет кадр по байтам, а не по символам: 300 символов
     // кириллицы вместе с "msg:<имя>:" уже близко к её лимиту
@@ -677,14 +556,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       return;
     }
 
-    // Добавляем в UI мгновенно, но помечаем как неподтверждённое
-    final message = Message(_myName, text, true, status: MessageStatus.sending);
-    setState(() {
-      _messages.add(message);
-      if (_messages.length > 500) {
-        _messages.removeAt(0);
-      }
-    });
+    // Добавляем в UI мгновенно, но помечаем как неподтверждённое:
+    // доставкой считается только возврат кадра прошивкой
+    final message = _store.addOutgoing(_myName, text);
+    setState(() {});
 
     _textController.clear();
     _scrollToBottom();
@@ -692,49 +567,17 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     // требует повторного тапа
     _inputFocusNode.requestFocus();
 
-    if (_webSocketChannel == null) {
-      setState(() {
-        message.status = MessageStatus.failed;
-      });
-      _showSnackBar('Нет подключения к WebSocket');
-      return;
-    }
-
     // Формат кадра: msg:<имя>:<текст>
     final outgoing = buildMessageFrame(_myName, text);
-    try {
-      _webSocketChannel!.sink.add(outgoing);
-      debugPrint('Отправлено через WS: $outgoing');
-    } catch (e) {
-      // sink.add обычно не бросает: ошибка мёртвого сокета приходит
-      // асинхронно в onError, поэтому подтверждением служит только эхо
-      debugPrint('Ошибка отправки WS: $e');
+    if (!_connection.send(outgoing)) {
       setState(() {
-        message.status = MessageStatus.failed;
+        _store.markFailed(message);
       });
       _showSnackBar('Не удалось отправить');
       return;
     }
 
-    final pending = _PendingEcho(echoKeyFor(_myName, text), message);
-    pending.timeout = Timer(_echoTimeout, () {
-      _pendingEcho.remove(pending);
-      if (!mounted) return;
-      setState(() {
-        message.status = MessageStatus.failed;
-      });
-    });
-    _pendingEcho.add(pending);
-
-    if (_pendingEcho.length > _maxPendingEcho) {
-      final evicted = _pendingEcho.removeAt(0);
-      evicted.timeout?.cancel();
-      // Через setState: иначе галочка "отправляется" висела до следующей
-      // перерисовки по другому поводу
-      setState(() {
-        evicted.message.status = MessageStatus.failed;
-      });
-    }
+    debugPrint('Отправлено через WS: $outgoing');
   }
 
   String _formatTime(DateTime time) {
@@ -851,7 +694,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   setState(() {
                     _myName = newName;
                   });
-                  if (_connectionState == ConnectionStatus.connected) {
+                  if (_connection.isConnected) {
                     _sendUserName();
                   }
                   if (!context.mounted) return;
@@ -897,7 +740,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (confirmed != true) return;
 
     _connectionTimer?.cancel();
-    await _disconnect();
+    await _connection.disconnect();
     await _stopForegroundService();
     await _unbindWifi();
 
@@ -915,15 +758,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isConnected = _connectionState == ConnectionStatus.connected;
+    final isConnected = _connection.isConnected;
+    final messages = _store.messages;
 
     String statusText = '';
     Color statusColor = Colors.grey;
     IconData statusIcon = Icons.wifi_off;
 
-    switch (_connectionState) {
+    switch (_connection.status) {
       case ConnectionStatus.disconnected:
-        statusText = _lastError.isNotEmpty ? _lastError : 'Нет подключения';
+        statusText = _networkHint.isNotEmpty ? _networkHint : 'Нет подключения';
         statusColor = Colors.red;
         statusIcon = Icons.wifi_off;
         break;
@@ -938,7 +782,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         statusIcon = Icons.wifi;
         break;
       case ConnectionStatus.error:
-        statusText = _lastError;
+        statusText = _connection.lastError;
         statusColor = Colors.red;
         statusIcon = Icons.error;
         break;
@@ -1033,29 +877,34 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                               'WiFi: $_currentWifiName • IP: $_deviceIp',
                               style: const TextStyle(fontSize: 12),
                             ),
-                            if (_connectionState == ConnectionStatus.connected)
+                            if (isConnected)
                               Text(
                                 'Ваше имя: $_myName',
                                 style: const TextStyle(fontSize: 11),
                               ),
+                            if (_notificationsDenied)
+                              const Text(
+                                'Уведомления запрещены: в фоне сообщения не видны',
+                                style: TextStyle(fontSize: 11),
+                              ),
                           ],
                         ),
                       ),
-                      if (_connectionState == ConnectionStatus.error ||
-                          _connectionState == ConnectionStatus.disconnected)
+                      if (_connection.status == ConnectionStatus.error ||
+                          _connection.status == ConnectionStatus.disconnected)
                         TextButton(
                           style: TextButton.styleFrom(
                             foregroundColor: statusColor,
                             side: BorderSide(color: statusColor),
                           ),
-                          onPressed: _isConnecting || _isDisconnecting
+                          onPressed: _isConnectAttemptRunning || _connection.isBusy
                               ? null
                               : () async {
-                            await _disconnect();
+                            await _connection.disconnect();
                             await Future.delayed(const Duration(milliseconds: 100));
                             _connectToEsp32();
                           },
-                          child: _isConnecting || _isDisconnecting
+                          child: _isConnectAttemptRunning || _connection.isBusy
                               ? SizedBox(
                             width: 16,
                             height: 16,
@@ -1072,21 +921,19 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
                 // Список сообщений
                 Expanded(
-                  child: _messages.isEmpty
+                  child: messages.isEmpty
                       ? Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
-                          _connectionState == ConnectionStatus.connected
-                              ? Icons.chat_bubble_outline
-                              : statusIcon,
+                          isConnected ? Icons.chat_bubble_outline : statusIcon,
                           size: 64,
                           color: Colors.grey,
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          _connectionState == ConnectionStatus.connected
+                          isConnected
                               ? 'Нет сообщений\nОтправьте первое сообщение'
                               : 'Подключитесь к ESP32',
                           textAlign: TextAlign.center,
@@ -1098,9 +945,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       : ListView.builder(
                     controller: _scrollController,
                     reverse: true,
-                    itemCount: _messages.length,
+                    itemCount: messages.length,
                     itemBuilder: (context, index) {
-                      final msg = _messages[_messages.length - 1 - index];
+                      final msg = messages[messages.length - 1 - index];
                       return Container(
                         padding: const EdgeInsets.symmetric(
                             vertical: 8, horizontal: 12),
