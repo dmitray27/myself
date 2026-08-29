@@ -63,6 +63,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   String _networkHint = '';
   Timer? _connectionTimer;
   final PollBackoff _pollBackoff = PollBackoff();
+  bool _isConnectAttemptRunning = false;
 
   static const String _esp32Address = '192.168.4.1';
   static const Duration _echoTimeout = Duration(seconds: 6);
@@ -273,7 +274,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _checkConnection() async {
-    if (_connection.isBusy) {
+    if (_isConnectAttemptRunning || _connection.isBusy) {
       _scheduleConnectionCheck();
       return;
     }
@@ -427,23 +428,38 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   // Подключение / отключение
   // ============================
 
+  // Гарантирует одну попытку за раз вместе с bind и ping: во время их
+  // само соединение ещё не считается занятым, а повторный bindToWifi
+  // снимает предыдущий колбек и оставляет его вызов без ответа
   Future<void> _connectToEsp32() async {
-    if (_connection.isConnecting) {
+    if (_isConnectAttemptRunning || _connection.isConnecting) {
       debugPrint('⚠️ Уже подключаюсь, пропускаю');
       return;
     }
+    _setConnectAttemptRunning(true);
 
-    // Заставляем ОС гнать трафик через Wi-Fi ESP32 (сеть без интернета)
-    await _bindToWifi();
+    try {
+      // Заставляем ОС гнать трафик через Wi-Fi ESP32 (сеть без интернета)
+      await _bindToWifi();
 
-    debugPrint('Проверяю ping ESP32...');
-    if (!await _pingEsp32()) {
-      debugPrint('❌ ESP32 не отвечает на ping');
-      return;
+      debugPrint('Проверяю ping ESP32...');
+      if (!await _pingEsp32()) {
+        debugPrint('❌ ESP32 не отвечает на ping');
+        return;
+      }
+
+      debugPrint('ESP32 доступен, подключаю WebSocket...');
+      await _connection.connect();
+    } finally {
+      _setConnectAttemptRunning(false);
     }
+  }
 
-    debugPrint('ESP32 доступен, подключаю WebSocket...');
-    await _connection.connect();
+  void _setConnectAttemptRunning(bool running) {
+    _isConnectAttemptRunning = running;
+    // Индикатор на кнопке «Подключить» живёт на этом флаге, а до сокета
+    // дело может и не дойти: onChanged соединения тогда не срабатывает
+    if (mounted) setState(() {});
   }
 
   void _onConnectionChanged() {
@@ -881,14 +897,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                             foregroundColor: statusColor,
                             side: BorderSide(color: statusColor),
                           ),
-                          onPressed: _connection.isBusy
+                          onPressed: _isConnectAttemptRunning || _connection.isBusy
                               ? null
                               : () async {
                             await _connection.disconnect();
                             await Future.delayed(const Duration(milliseconds: 100));
                             _connectToEsp32();
                           },
-                          child: _connection.isBusy
+                          child: _isConnectAttemptRunning || _connection.isBusy
                               ? SizedBox(
                             width: 16,
                             height: 16,
