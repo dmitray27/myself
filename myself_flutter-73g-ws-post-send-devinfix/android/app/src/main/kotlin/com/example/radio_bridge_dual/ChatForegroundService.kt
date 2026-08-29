@@ -18,7 +18,9 @@ import android.os.IBinder
 class ChatForegroundService : Service() {
 
     private var wifiLock: WifiManager.WifiLock? = null
-    private var connected = true
+    // Связь подтверждает только Dart-движок через setServiceConnected():
+    // до этого уведомление не имеет права обещать работающий чат
+    private var connected = false
 
     override fun onCreate() {
         super.onCreate()
