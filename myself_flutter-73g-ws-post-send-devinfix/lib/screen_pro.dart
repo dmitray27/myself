@@ -868,6 +868,46 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
   }
 
+  // Без этого на Android из приложения нет выхода: сворачивание оставляет
+  // foreground-сервис с WifiLock жить дальше
+  Future<void> _confirmExit() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Выйти из радиочата?'),
+          content: const Text(
+            'Соединение с ESP32 будет закрыто, уведомления сняты, '
+            'новые сообщения приходить не будут.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Отмена'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Выйти'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) return;
+
+    _connectionTimer?.cancel();
+    await _disconnect();
+    await _stopForegroundService();
+    await _unbindWifi();
+
+    if (Platform.isAndroid) {
+      await SystemNavigator.pop();
+    } else {
+      await windowManager.close();
+    }
+  }
+
   // ============================
   // UI
   // ============================
@@ -958,6 +998,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   icon: const Icon(Icons.edit),
                   onPressed: _prefs == null ? null : _showChangeNameDialog,
                   tooltip: 'Изменить имя',
+                  color: Colors.white,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.power_settings_new),
+                  onPressed: _confirmExit,
+                  tooltip: 'Выйти',
                   color: Colors.white,
                 ),
               ],
