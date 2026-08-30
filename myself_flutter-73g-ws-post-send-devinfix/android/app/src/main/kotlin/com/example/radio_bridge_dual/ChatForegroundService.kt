@@ -107,7 +107,6 @@ class ChatForegroundService : Service() {
             .setContentTitle("Радиочат прерван")
             .setContentText("Приложение закрыто, связь приостановлена")
             .setSmallIcon(android.R.drawable.stat_notify_error)
-            .setContentIntent(openIntent())
             .setAutoCancel(true)
 
         // Статус в шторке несёт постоянное уведомление, поэтому heads-up
