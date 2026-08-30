@@ -126,6 +126,9 @@ class ChatForegroundService : Service() {
 
     private fun stopWithNotifications() {
         desiredConnected = false
+        // Сначала гасим экран приложения: живой Dart-движок продолжал бы
+        // опрос платы и поднял бы сервис обратно
+        MainActivity.closeApp()
         val manager = notificationManager()
         manager.cancel(ALERT_NOTIFICATION_ID)
         manager.cancel(NOTIFICATION_ID)

@@ -7,6 +7,7 @@ import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import android.os.Build
+import android.os.Bundle
 import androidx.annotation.NonNull
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -17,6 +18,11 @@ class MainActivity : FlutterActivity() {
 
     private var connectivityManager: ConnectivityManager? = null
     private var networkCallback: ConnectivityManager.NetworkCallback? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        instance = this
+    }
 
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -128,7 +134,20 @@ class MainActivity : FlutterActivity() {
     }
 
     override fun onDestroy() {
+        if (instance === this) {
+            instance = null
+        }
         unbind()
         super.onDestroy()
+    }
+
+    companion object {
+        private var instance: MainActivity? = null
+
+        // «Выйти» в уведомлении гасит и приложение: иначе экран остался бы
+        // жив, а его опрос платы через пару секунд поднял бы сервис заново
+        fun closeApp() {
+            instance?.finishAndRemoveTask()
+        }
     }
 }
