@@ -103,13 +103,20 @@ class ChatForegroundService : Service() {
                 .setDefaults(Notification.DEFAULT_SOUND or Notification.DEFAULT_VIBRATE)
         }
 
-        val notification = builder
+        builder
             .setContentTitle("Радиочат прерван")
             .setContentText("Приложение закрыто, связь приостановлена")
             .setSmallIcon(android.R.drawable.stat_notify_error)
             .setContentIntent(openIntent())
             .setAutoCancel(true)
-            .build()
+
+        // Статус в шторке несёт постоянное уведомление, поэтому heads-up
+        // снимается сам, успев показаться и прозвенеть
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            builder.setTimeoutAfter(ALERT_TIMEOUT_MS)
+        }
+
+        val notification = builder.build()
 
         notificationManager().notify(ALERT_NOTIFICATION_ID, notification)
     }
@@ -242,6 +249,7 @@ class ChatForegroundService : Service() {
         private const val ALERT_CHANNEL_ID = "chat_alert"
         private const val NOTIFICATION_ID = 1
         private const val ALERT_NOTIFICATION_ID = 2
+        private const val ALERT_TIMEOUT_MS = 7_000L
         const val ACTION_EXIT = "com.example.radio_bridge_dual.ACTION_EXIT"
         private const val WIFI_LOCK_TAG = "radio_bridge_dual:wifi"
 
