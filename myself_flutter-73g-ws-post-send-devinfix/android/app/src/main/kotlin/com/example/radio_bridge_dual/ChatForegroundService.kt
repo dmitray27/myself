@@ -43,12 +43,23 @@ class ChatForegroundService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == ACTION_EXIT) {
+            exiting = true
             stopWithNotifications()
             return START_NOT_STICKY
         }
 
         createNotificationChannel()
         createAlertChannel()
+
+        // Умирающий Dart-движок (опрос платы раз в 2 с) успевает поднять сервис
+        // уже после «Выйти» — тогда сразу гасим его снова. startForeground
+        // обязателен: иначе система убьёт процесс за неответ на
+        // startForegroundService()
+        if (exiting) {
+            startForegroundNotification(false)
+            stopWithNotifications()
+            return START_NOT_STICKY
+        }
 
         // intent == null — сервис поднят системой после убийства процесса:
         // Dart-движка нет, значит и связи нет
@@ -60,7 +71,14 @@ class ChatForegroundService : Service() {
         // когда instance ещё пуст
         connected = desiredConnected
 
-        val notification = buildNotification(connected)
+        startForegroundNotification(connected)
+
+        // Если систему всё же заставят убить процесс, сервис поднимется снова
+        return START_STICKY
+    }
+
+    private fun startForegroundNotification(isConnected: Boolean) {
+        val notification = buildNotification(isConnected)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             startForeground(
@@ -71,9 +89,6 @@ class ChatForegroundService : Service() {
         } else {
             startForeground(NOTIFICATION_ID, notification)
         }
-
-        // Если систему всё же заставят убить процесс, сервис поднимется снова
-        return START_STICKY
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -152,6 +167,9 @@ class ChatForegroundService : Service() {
     )
 
     private fun updateNotification(isConnected: Boolean) {
+        // После «Выйти» уведомление возвращать нельзя: закрываемый Dart-движок
+        // ещё присылает setServiceConnected(false) из своего dispose()
+        if (exiting) return
         connected = isConnected
         desiredConnected = isConnected
         if (isConnected) {
@@ -264,7 +282,16 @@ class ChatForegroundService : Service() {
         // с реальной связью
         private var desiredConnected = false
 
+        // Выход по кнопке «Выйти» уже начат
+        private var exiting = false
+
+        // Новый запуск приложения отменяет режим выхода
+        fun clearExitState() {
+            exiting = false
+        }
+
         fun setConnected(isConnected: Boolean) {
+            if (exiting) return
             desiredConnected = isConnected
             instance?.updateNotification(isConnected)
         }

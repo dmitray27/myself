@@ -22,6 +22,7 @@ class MainActivity : FlutterActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         instance = this
+        ChatForegroundService.clearExitState()
     }
 
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
