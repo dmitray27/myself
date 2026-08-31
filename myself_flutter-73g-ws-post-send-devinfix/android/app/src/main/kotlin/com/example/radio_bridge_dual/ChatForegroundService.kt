@@ -96,8 +96,9 @@ class ChatForegroundService : Service() {
     // Смахнули из недавних: Dart-движок уничтожен вместе с активностью,
     // а вместе с ним и WebSocket — уведомление не должно врать о связи
     override fun onTaskRemoved(rootIntent: Intent?) {
-        // Если связи и так не было, heads-up был бы ложной тревогой
-        if (connected) {
+        // Задача снимается и по кнопке «Выйти» — там пользователь ушёл
+        // сознательно; heads-up без связи тоже был бы ложной тревогой
+        if (connected && !exiting) {
             updateNotification(false)
             showAlert()
         }
