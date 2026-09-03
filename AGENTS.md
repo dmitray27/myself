@@ -128,7 +128,7 @@ cd /home/dima/DevProjectNew/myself-myself_200_640
 - **`UnicodeDecodeError` в `afsk_cyr600_test.py`.** Пофикшено `errors="replace"` в `codecs.getincrementaldecoder`.
 - **Android APK в headless-эмуляторе не показывал Flutter-логи.** Решение — `pm grant android.permission.POST_NOTIFICATIONS` перед `am start`, чтобы не было runtime permission dialog, и debug-сборка (`flutter build apk --debug`).
 - **Python WS-тест поначалу не ловил эхо.** Пофикшено: отправляем `msg:<name>:<id>:<text>`, ожидаем `<name>:<id>:<text>`; `ws_system` помечаем `NOT_EXPECTED` для реальной платы.
-- **AppBar «Выйти» не закрывал foreground-сервис полностью.** Пофикшено: добавлен `closeApp` в MethodChannel, который запускает `ChatForegroundService` с `ACTION_EXIT` (аналогично кнопке «Выйти» в уведомлении) и вызывает `finishAndRemoveTask()`.
+- **AppBar «Выйти» не закрывал foreground-сервис полностью.** Пофикшено: добавлен `closeApp` в MethodChannel, который запускает `ChatForegroundService` с `ACTION_EXIT` (аналогично кнопке «Выйти» в уведомлении) и вызывает `finishAndRemoveTask()`. После остановки сервиса вызывается `Process.killProcess(Process.myPid())`, чтобы Android не держал приложение в кэше.
 
 ## Заметки по железу
 

@@ -155,6 +155,9 @@ class ChatForegroundService : Service() {
             stopForeground(true)
         }
         stopSelf()
+        // Полностью уничтожаем процесс, иначе Android держит его в кэше
+        // и "Выйти" выглядит как сворачивание, а не закрытие.
+        android.os.Process.killProcess(android.os.Process.myPid())
     }
 
     private fun notificationManager(): NotificationManager =
