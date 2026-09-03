@@ -93,14 +93,29 @@ idf.py -p /dev/ttyUSB1 flash   # RX
 cd flutter
 flutter build linux --release
 flutter build apk --debug   # для тестов/эмулятора
+flutter build apk --release # production APK → radiochat.apk
+```
+
+После `flutter build apk --release` готовый релизный APK копируется в:
+
+```text
+/home/dima/DevProjectNew/myself-myself_200_640/radiochat.apk
 ```
 
 ## 6. Ручной Android-запуск
+
+Для ручного теста (debug):
 
 ```bash
 adb install -t flutter/build/app/outputs/flutter-apk/app-debug.apk
 adb shell am start -n com.example.radio_bridge_dual/.MainActivity
 adb logcat -s flutter:I
+```
+
+Для установки релизного APK:
+
+```bash
+adb install -t radiochat.apk
 ```
 
 ## Быстрый старт после прошивки

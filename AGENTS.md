@@ -97,7 +97,10 @@ cd /home/dima/DevProjectNew/myself-myself_200_640
 cd flutter
 flutter build linux --release
 flutter build apk --debug   # для эмулятора/теста
+flutter build apk --release # production APK → /radiochat.apk
 ```
+
+Готовый релизный APK копируется в `/home/dima/DevProjectNew/myself-myself_200_640/radiochat.apk`.
 
 ### Автоматический Wi-Fi + WS + Android тест
 

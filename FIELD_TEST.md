@@ -134,7 +134,10 @@ Report written to: afsk_test_report.txt
 
 - Убедиться, что APK — debug, а не release: `flutter build apk --debug`.
 - Проверить, что в скрипте есть `pm grant android.permission.POST_NOTIFICATIONS`.
-- Для реального телефона вместо эмулятора: `adb install -t build/app/outputs/flutter-apk/app-debug.apk && adb shell am start -n com.example.radio_bridge_dual/.MainActivity`, затем `adb logcat -s flutter:I`.
+- Для реального телефона вместо эмулятора можно использовать debug или release APK:
+  - debug: `adb install -t build/app/outputs/flutter-apk/app-debug.apk`
+  - release: `adb install -t radiochat.apk`
+  - затем `adb shell am start -n com.example.radio_bridge_dual/.MainActivity` и `adb logcat -s flutter:I`.
 
 ### Шаг 4: Ручной тест Android на телефоне
 
@@ -207,7 +210,7 @@ idf.py -p /dev/ttyUSB1 -C tx_rx_mes_200b_filter_verbose_wifi flash
 ./ws_real_hw_all.sh
 
 # 4. Android-ручник на телефоне
-adb install -t flutter/build/app/outputs/flutter-apk/app-debug.apk
+adb install -t radiochat.apk
 adb shell am start -n com.example.radio_bridge_dual/.MainActivity
 adb logcat -s flutter:I
 ```
