@@ -52,6 +52,18 @@ class MainActivity : FlutterActivity() {
                         ChatForegroundService.setConnected(connected)
                         result.success(true)
                     }
+                    "closeApp" -> {
+                        // Та же цепочка, что и «Выйти» из уведомления:
+                        // снимаем Wi-Fi, останавливаем foreground-сервис с удалением
+                        // уведомления и закрываем активность полностью.
+                        unbind()
+                        startService(
+                            Intent(this, ChatForegroundService::class.java)
+                                .setAction(ChatForegroundService.ACTION_EXIT)
+                        )
+                        closeApp()
+                        result.success(true)
+                    }
                     else -> result.notImplemented()
                 }
             }

@@ -283,6 +283,15 @@ class ChatController extends ChangeNotifier {
     }
   }
 
+  Future<void> _closeApp() async {
+    if (!Platform.isAndroid) return;
+    try {
+      await _networkChannel.invokeMethod('closeApp');
+    } catch (e) {
+      debugPrint('closeApp error: $e');
+    }
+  }
+
   // ---------------- Lifecycle ----------------
 
   void setForeground(bool isForeground) {
@@ -558,11 +567,12 @@ class ChatController extends ChangeNotifier {
     return null;
   }
 
-  /// Закрывает соединения и сервисы перед выходом из приложения.
+  /// Закрывает соединения, сервисы, уведомления и активность при выходе.
   Future<void> exit() async {
     _connectionTimer?.cancel();
     await _connection.disconnect();
     await _stopForegroundService();
     await _unbindWifi();
+    await _closeApp();
   }
 }
