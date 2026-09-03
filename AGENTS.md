@@ -67,6 +67,10 @@ cd /home/dima/DevProjectNew/myself-myself_200_640
   - Flutter Android (headless emulator + debug APK): приложение подключилось к ESP32, запустило foreground service и отправило имя.
 - Все результаты, артефакты и команды для повторного запуска сведены в `TEST_REPORT.md`.
 
+## Быстрый старт
+
+- `RUN.md` — краткая инструкция по запуску всего: прошивка, AFSK, WebSocket, Linux, Android, `field_test.sh`.
+
 ## Полевые испытания
 
 - `FIELD_TEST.md` — подробный чек-лист и команды для тестов на реальном железе.
