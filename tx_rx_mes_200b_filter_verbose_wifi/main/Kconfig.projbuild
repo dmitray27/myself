@@ -1,0 +1,72 @@
+menu "AFSK Pin Configuration"
+
+    comment "AD9851 DDS control lines (TX)"
+
+    config PIN_FQ_UD
+        int "FQ_UD (AD9851 frequency update)"
+        default 18
+        help
+            GPIO driving the FQ_UD line of the AD9851.
+
+    config PIN_W_CLK
+        int "W_CLK (AD9851 word clock)"
+        default 19
+        help
+            GPIO driving the W_CLK line of the AD9851.
+            On ESP32-S3 GPIO19 belongs to the native USB pair, use another pin.
+
+    config PIN_DATA
+        int "DATA (AD9851 serial data)"
+        default 21
+        help
+            GPIO driving the serial DATA line of the AD9851.
+
+    config PIN_RESET
+        int "RESET (AD9851 reset)"
+        default 16
+        help
+            GPIO driving the RESET line of the AD9851.
+
+    config PIN_PTT
+        int "PTT (radio keying via opto-isolator)"
+        default 15
+        help
+            GPIO keying the radio in place of its PTT button.
+            Used only when TX_PTT_ENABLE is 1 in main/tx_ad9851.h.
+
+    comment "I2S ADC lines (RX)"
+
+    config PIN_I2S_BCK
+        int "I2S BCK (bit clock from the ADC)"
+        default 26
+        help
+            GPIO receiving the I2S bit clock. On ESP32-S3 with octal PSRAM
+            GPIO26 is taken by the PSRAM/flash bus, use another pin.
+
+    config PIN_I2S_WS
+        int "I2S WS (word select / LRCK)"
+        default 25
+        help
+            GPIO receiving the I2S word select. GPIO25 does not exist on
+            ESP32-S3.
+
+    config PIN_I2S_DATA
+        int "I2S DATA (audio samples from the ADC)"
+        default 22
+        help
+            GPIO receiving I2S audio data. GPIO22 does not exist on ESP32-S3.
+
+endmenu
+
+menu "AFSK Wi-Fi Access Point"
+
+    config AFSK_AP_PASSWORD
+        string "Access point password (WPA2, 8..63 characters)"
+        default "afsk12345"
+        help
+            WPA2 password of the AFSK-TRX-xxxx access point. Anyone joining
+            the AP can key the transmitter through /send, so change this from
+            the default (and keep it out of the repository) before taking the
+            board on the air.
+
+endmenu

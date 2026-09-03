@@ -1,0 +1,1241 @@
+=== WS real hardware + Android emulator test started: Чт 03 сен 2026 19:54:09 MSK ===
+Original active connection: Tattelecom_2529
+Step 1: disabling original autoconnect and disconnecting Tattelecom_2529
+Подключение «Tattelecom_2529» успешно деактивировано (активный путь D-Bus: /org/freedesktop/NetworkManager/ActiveConnection/10)
+Step 2: connecting to AFSK AP
+Rescanning and trying to connect to AFSK-TRX-8045 (00:4B:12:2F:80:45) ...
+Подключение успешно активировано (активный путь D-Bus: /org/freedesktop/NetworkManager/ActiveConnection/12)
+AFSK IP obtained: 192.168.4.2/24
+Connected to AFSK AP. Verifying reachability ...
+PING 192.168.4.1 (192.168.4.1) 56(84) bytes of data.
+64 bytes from 192.168.4.1: icmp_seq=1 ttl=64 time=1.76 ms
+64 bytes from 192.168.4.1: icmp_seq=2 ttl=64 time=1.68 ms
+
+--- 192.168.4.1 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1002ms
+rtt min/avg/max/mdev = 1.681/1.718/1.756/0.037 ms
+Step 3: starting Android emulator headless
+Emulator PID: 91738
+Step 4: Python WS/HTTP test on 192.168.4.1
+INFO         | Android emulator version 36.5.11.0 (build_id 15261927) (CL:N/A)
+INFO         | Graphics backend: gfxstream
+INFO         | Found systemPath /home/dima/Android/Sdk/system-images/android-36/google_apis_playstore/x86_64/
+WARNING      | Please update the emulator to one that supports the feature(s): VulkanVirtualQueue
+INFO         | Feature 'GLDirectMem' (53) is overridden to 'enabled'
+INFO         | Feature 'Vulkan' (21) is overridden to 'disabled'
+INFO         | Guest GLES Driver: Auto (ext controls)
+INFO         | emuglConfig_init: vulkan_mode_selected:swiftshader gles_mode_selected:swiftshader
+INFO         | Checking system compatibility:
+INFO         |   Checking: hasSufficientDiskSpace
+INFO         |      Ok: Disk space requirements to run avd: `flutter_emulator` are met
+INFO         |   Checking: hasSufficientHwGpu
+INFO         |      Ok: Hardware GPU compatibility checks are not required
+INFO         |   Checking: hasSufficientSystem
+INFO         |      Ok: System requirements to run avd: `flutter_emulator` are met
+INFO         | Storing crashdata in: /tmp/android-dima/emu-crash-36.5.11.db, detection is enabled for process: 91738
+INFO         | Initializing gfxstream backend
+INFO         | android_startOpenglesRenderer: gpu info
+INFO         | 
+INFO         | SharedLibrary::open for [libX11]
+INFO         | SharedLibrary::open for [libX11-xcb]
+INFO         | Graphics Adapter Vendor Google (Google Inc.)
+INFO         | Graphics Adapter Android Emulator OpenGL ES Translator (Google SwiftShader)
+INFO         | Graphics API Version OpenGL ES 3.0 (OpenGL ES 3.0 SwiftShader 4.0.0.1)
+INFO         | Graphics API Extensions GL_OES_EGL_sync GL_OES_EGL_image GL_OES_EGL_image_external GL_OES_depth24 GL_OES_depth32 GL_OES_element_index_uint GL_OES_texture_float GL_OES_texture_float_linear GL_OES_compressed_paletted_texture GL_OES_compressed_ETC1_RGB8_texture GL_OES_depth_texture GL_OES_texture_half_float GL_OES_texture_half_float_linear GL_OES_packed_depth_stencil GL_OES_vertex_half_float GL_OES_standard_derivatives GL_OES_texture_npot GL_OES_rgb8_rgba8 GL_EXT_color_buffer_float GL_EXT_color_buffer_half_float GL_EXT_texture_format_BGRA8888 GL_APPLE_texture_format_BGRA8888 
+INFO         | Graphics Device Extensions N/A
+INFO         | Sending adb public key [QAAAAKNaknf11tlXqAMDa74ioM5eT8yjgWgVlIG0AxkWo/NFkMljC0kIEKHub1kJDwtR3G/4mUSX3hs7wtEaaEYmXREC4AccEgvJegQESK3MMAn9dG05kxgQDusMRA/Ah83uXLHCcwmMbGg56khg6K9q0/dyUsMFR2+xtLFOywsHpCesc0gCsCpWpsSwm42ceb2UB04b8UlZ2h5o7sIRVF7hLSKpLAeUs6nUtdwJBIaennzdlwwsxNe25VzzHFTYKS1H2eJ923e1he6oRb8xETVP7TtqJYlXPkZ5Z1qZoeROFrtgqJRGy7CyJBnsk8/UoNqrYV7U3yov72o8HjHBWqpUcNg7eRbtEjk2FwanKDABToHL76857TMUEvFsyKH6dEys01zfppIE956/tASVnu6uBHma/eER80aH7qRN4zBBTDEI4sFnll1fASrO0dxwmv459IxDz/HcnxVLktTHHycTGCxAPHr3C+qcVNYhulX/2C6CxjQIJ8KtJ2TVZaI+c1zs8BXsNED1BAzVf7M9eJvsQRCVz4JTlx4IuKWlSfB24ic0wNorJeoF4Hz4gapeelioTcRXkSwuQOpxBZX1gjwvjc/DcvOKXiz5ceSZhAKGuG4TR18GSkxJ79N3lJbWmevr+SsjIczTl45+97od7pBKvFLpBOmi6XadcP6tueXr8wYT0RjljAEAAQA= dima@unknown]
+INFO         | Userspace boot properties:
+INFO         |   androidboot.boot_devices=pci0000:00/0000:00:03.0 pci0000:00/0000:00:06.0
+INFO         |   androidboot.dalvik.vm.heapsize=512m
+INFO         |   androidboot.debug.hwui.renderer=skiagl
+INFO         |   androidboot.debug.sf.nobootanimation=1
+INFO         |   androidboot.hardware=ranchu
+INFO         |   androidboot.hardware.gltransport=pipe
+INFO         |   androidboot.logcat=*:V
+INFO         |   androidboot.opengles.version=196608
+INFO         |   androidboot.qemu=1
+INFO         |   androidboot.qemu.adb.pubkey=QAAAAKNaknf11tlXqAMDa74ioM5eT8yjgWgVlIG0AxkWo/NFkMljC0kIEKHub1kJDwtR3G/4mUSX3hs7wtEaaEYmXREC4AccEgvJegQESK3MMAn9dG05kxgQDusMRA/Ah83uXLHCcwmMbGg56khg6K9q0/dyUsMFR2+xtLFOywsHpCesc0gCsCpWpsSwm42ceb2UB04b8UlZ2h5o7sIRVF7hLSKpLAeUs6nUtdwJBIaennzdlwwsxNe25VzzHFTYKS1H2eJ923e1he6oRb8xETVP7TtqJYlXPkZ5Z1qZoeROFrtgqJRGy7CyJBnsk8/UoNqrYV7U3yov72o8HjHBWqpUcNg7eRbtEjk2FwanKDABToHL76857TMUEvFsyKH6dEys01zfppIE956/tASVnu6uBHma/eER80aH7qRN4zBBTDEI4sFnll1fASrO0dxwmv459IxDz/HcnxVLktTHHycTGCxAPHr3C+qcVNYhulX/2C6CxjQIJ8KtJ2TVZaI+c1zs8BXsNED1BAzVf7M9eJvsQRCVz4JTlx4IuKWlSfB24ic0wNorJeoF4Hz4gapeelioTcRXkSwuQOpxBZX1gjwvjc/DcvOKXiz5ceSZhAKGuG4TR18GSkxJ79N3lJbWmevr+SsjIczTl45+97od7pBKvFLpBOmi6XadcP6tueXr8wYT0RjljAEAAQA= dima@unknown
+INFO         |   androidboot.qemu.avd_name=flutter_emulator
+INFO         |   androidboot.qemu.camera_hq_edge_processing=0
+INFO         |   androidboot.qemu.camera_protocol_ver=1
+INFO         |   androidboot.qemu.cpuvulkan.version=4202496
+INFO         |   androidboot.qemu.gltransport.drawFlushInterval=800
+INFO         |   androidboot.qemu.gltransport.name=pipe
+INFO         |   androidboot.qemu.hwcodec.avcdec=2
+INFO         |   androidboot.qemu.hwcodec.hevcdec=2
+INFO         |   androidboot.qemu.hwcodec.vpxdec=2
+INFO         |   androidboot.qemu.settings.system.screen_off_timeout=2147483647
+INFO         |   androidboot.qemu.skin=1080x1920
+INFO         |   androidboot.qemu.virtiowifi=1
+INFO         |   androidboot.qemu.vsync=60
+INFO         |   androidboot.serialno=EMULATOR36X5X11X0
+INFO         |   androidboot.vbmeta.digest=43d61dbc053c8dbf3adaff951e5bdfcf174ece9dd24ffe8e6120f951cb412b2a
+INFO         |   androidboot.vbmeta.hash_alg=sha256
+INFO         |   androidboot.vbmeta.size=6784
+INFO         |   androidboot.veritymode=enforcing
+INFO         | Monitoring duration of emulator setup.
+WARNING      | The emulator now requires a signed jwt token for gRPC access! Use the -grpc flag if you really want an open unprotected grpc port
+INFO         | Using security allow list from: /home/dima/Android/Sdk/emulator/lib/emulator_access.json
+WARNING      | *** Basic token auth should only be used by android-studio ***
+INFO         | The active JSON Web Key Sets can be found here: /run/user/1000/avd/running/91738/jwks/a238d48f-4cd8-49ab-b1fd-1be378b6f740/active.jwk
+INFO         | Scanning /run/user/1000/avd/running/91738/jwks/a238d48f-4cd8-49ab-b1fd-1be378b6f740 for jwk keys.
+INFO         | Started GRPC server at 127.0.0.1:8554, security: Local, auth: +token
+INFO         | Advertising in: /run/user/1000/avd/running/pid_91738.ini
+INFO         | Successfully initialized netsim WiFi
+INFO         | Activated packet streamer for bluetooth emulation
+INFO         | Activated packet streamer for uwb emulation
+INFO         | Setting display: 0 configuration to: 1080x1920, dpi: 420x420 
+INFO         | setDisplayActiveConfig: id:0, 1080x1920
+INFO         | emulatorSetupEnvironment: Setting up screen background view and display layout at env:1080x1920, lcd:1080x1920
+INFO         | emulatorSetupEnvironment: Environment scene is not required
+USER_INFO    | Emulator is performing a full startup. This may take upto two minutes, or more.
+[TEST] Connecting to ws://192.168.4.1:81/ and http://192.168.4.1:80
+WebSocket/HTTP test report
+============================================================
+Target: 192.168.4.1:81 (WS), 80 (HTTP)
+
+http_ping: OK
+http_send: OK (200)
+ws_connect: OK
+ws_system: NOT_EXPECTED (no greeting from real board)
+ws_echo: UNEXPECTED: 'TestUser:Hello from ws test'
+ws_name: SENT
+
+Overall: FAIL
+Report written to: /tmp/ws_real_hw_all_report.txt
+Step 5: Linux bundle runtime smoke test
+Xvfb not installed; running app directly (it will likely ignore --help and start)
+Gdk-Message: 19:54:25.179: Unable to load  from the cursor theme
+Не удалось инициализировать уведомления: Invalid argument(s): Linux settings must be set when targeting Linux platform.
+Проверяю ping ESP32...
+ESP32 доступен, подключаю WebSocket...
+✅ Успешно подключено к ESP32
+Отправлено имя: Linux
+WARNING      | Downloaded protobuf file is corrupt.
+WARNING      | UpdateCheck: Failure: Error
+WARNING      | UpdateCheck: failed to get the latest version, skipping check (current version '36.5.11-15261927')
+Step 6: Android APK runtime smoke test
+Waiting for emulator to boot and adb ...
+Emulator ready: emulator-5554
+Installing APK on emulator-5554
+Performing Streamed Install
+adb: failed to install /home/dima/DevProjectNew/myself-myself_200_640/flutter/build/app/outputs/flutter-apk/app-release.apk: cmd: Can't find service: package
+
+Starting main activity on emulator-5554
+INFO         | Boot completed in 58754 ms
+INFO         | Increasing screen off timeout, logcat buffer size to 2M.
+Relevant logcat from emulator-5554:
+09-03 19:55:17.070   685   991 D MultiInternetWifiNetworkFactory: got request NetworkRequest [ REQUEST id=28, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10187 RequestorUid: 10187 RequestorPkg: com.android.systemui UnderlyingNetworks: Null] ]
+09-03 19:55:17.078   685   989 W BestClock: java.time.DateTimeException: No network time available
+09-03 19:55:17.084   685   991 I WifiManager: OnDriverCountryCodeChangedProxy: receive onDriverCountryCodeChanged: US
+09-03 19:55:17.087   685  1069 D UwbCountryCode: Set wifi country code to: US
+09-03 19:55:17.089   685   989 W BestClock: java.time.DateTimeException: No network time available
+09-03 19:55:17.089   685   989 W BestClock: java.time.DateTimeException: No network time available
+09-03 19:55:17.090   685   989 W BestClock: java.time.DateTimeException: No network time available
+09-03 19:55:17.261  1622  1622 D vold_prepare_subdirs: Setting up mode 771 uid 0 gid 1000 context u:object_r:apex_module_data_file:s0 on path: /data/misc_ce/0/apexdata/com.android.hardware.neuralnetworks
+09-03 19:55:17.262  1622  1622 D vold_prepare_subdirs: Setting up mode 771 uid 0 gid 1000 context u:object_r:apex_module_data_file:s0 on path: /data/misc_ce/0/apexdata/com.android.hardware.threadnetwork
+09-03 19:55:17.266  1622  1622 D vold_prepare_subdirs: Setting up mode 771 uid 0 gid 1000 context u:object_r:apex_module_data_file:s0 on path: /data/misc_ce/0/apexdata/com.android.neuralnetworks
+09-03 19:55:17.273  1622  1622 D vold_prepare_subdirs: Setting up mode 771 uid 0 gid 1000 context u:object_r:apex_system_server_data_file:s0 on path: /data/misc_ce/0/apexdata/com.android.wifi
+09-03 19:55:17.292   685   707 W PackageManager: Skipping preparing app data for com.android.hardware.threadnetwork
+09-03 19:55:17.294   685   707 W PackageManager: Skipping preparing app data for com.android.hardware.neuralnetworks
+09-03 19:55:17.295   685   707 W PackageManager: Skipping preparing app data for com.google.android.neuralnetworks
+09-03 19:55:17.295   685   707 W PackageManager: Skipping preparing app data for com.google.android.wifi
+09-03 19:55:17.334  1619  1619 D nativeloader: InitLlndkLibrariesProduct: libEGL.so:libGLESv1_CM.so:libGLESv2.so:libGLESv3.so:libRS.so:libandroid_net.so:libapexsupport.so:libavf.so:libbinder_ndk.so:libc.so:libcgrouprc.so:libclang_rt.asan-x86_64-android.so:libcom.android.tethering.connectivity_native.so:libdl.so:libft2.so:liblog.so:libm.so:libmediandk.so:libnativewindow.so:libneuralnetworks.so:libselinux.so:libsync.so:libvendorsupport.so:libvndksupport.so:libvulkan.so
+09-03 19:55:17.376  1608  1608 D nativeloader:   com_android_wifi: libservice-wifi-jni.so
+09-03 19:55:17.579  1637  1637 D nativeloader: InitLlndkLibrariesProduct: libEGL.so:libGLESv1_CM.so:libGLESv2.so:libGLESv3.so:libRS.so:libandroid_net.so:libapexsupport.so:libavf.so:libbinder_ndk.so:libc.so:libcgrouprc.so:libclang_rt.asan-x86_64-android.so:libcom.android.tethering.connectivity_native.so:libdl.so:libft2.so:liblog.so:libm.so:libmediandk.so:libnativewindow.so:libneuralnetworks.so:libselinux.so:libsync.so:libvendorsupport.so:libvndksupport.so:libvulkan.so
+09-03 19:55:17.580   685  1331 I ExplicitHealthCheckController: Explicit health check supported packages [PackageConfig{com.google.android.networkstack, 86400000}]
+09-03 19:55:17.581   685  1331 D PackageWatchdog: Received supported packages [PackageConfig{com.google.android.networkstack, 86400000}]
+09-03 19:55:17.762   685   716 D SystemServerTimingAsync: ssm.onUnlockingUser-0_com.android.server.net.watchlist.NetworkWatchlistService$Lifecycle
+09-03 19:55:18.101  1669  1669 D nativeloader:   com_android_wifi: libservice-wifi-jni.so
+09-03 19:55:18.199   685   716 D SystemServerTimingAsync: ssm.onUnlockingUser-0_com.android.server.NetworkScoreService$Lifecycle
+09-03 19:55:18.199   685   716 D SystemServerTimingAsync: ssm.onUnlockingUser-0_com.android.server.NetworkStatsServiceInitializer
+09-03 19:55:18.199   685   716 D SystemServerTimingAsync: ssm.onUnlockingUser-0_com.android.server.wifi.WifiService
+09-03 19:55:18.199   685   716 D WifiService: Handle user unlock 0
+09-03 19:55:18.199   685   716 D SystemServerTimingAsync: ssm.onUnlockingUser-0_com.android.server.wifi.scanner.WifiScanningService
+09-03 19:55:18.199   685   716 D SystemServerTimingAsync: ssm.onUnlockingUser-0_com.android.server.wifi.p2p.WifiP2pService
+09-03 19:55:18.200   685   991 D WakeupConfigStoreData: WifiWake user data has been read
+09-03 19:55:18.200   685   991 D WifiConfigStore: Reading from user stores completed in 0 ms.
+09-03 19:55:18.317   685   991 W FileUtils: Failed to chmod(/data/misc/apexdata/com.android.wifi/WifiConfigStore.xml, 384): 
+09-03 19:55:18.317   685   991 W FileUtils: 	at com.android.server.wifi.util.FileUtils.chmod(FileUtils.java:44)
+09-03 19:55:18.317   685   991 W FileUtils: 	at com.android.server.wifi.WifiConfigStore$StoreFile.writeBufferedRawData(WifiConfigStore.java:864)
+09-03 19:55:18.317   685   991 W FileUtils: 	at com.android.server.wifi.WifiConfigStore.writeBufferedData(WifiConfigStore.java:431)
+09-03 19:55:18.317   685   991 W FileUtils: 	at com.android.server.wifi.WifiConfigStore.write(WifiConfigStore.java:386)
+09-03 19:55:18.317   685   991 W FileUtils: 	at com.android.server.wifi.WifiConfigManager.writeBufferedData(WifiConfigManager.java:3895)
+09-03 19:55:18.317   685   991 W FileUtils: 	at com.android.server.wifi.WifiConfigManager.handleUserUnlockOrSwitch(WifiConfigManager.java:3409)
+09-03 19:55:18.317   685   991 W FileUtils: 	at com.android.server.wifi.WifiConfigManager.handleUserUnlock(WifiConfigManager.java:3488)
+09-03 19:55:18.317   685   991 W FileUtils: 	at com.android.server.wifi.WifiServiceImpl.lambda$handleUserUnlock$5(WifiServiceImpl.java:1159)
+09-03 19:55:18.317   685   991 W FileUtils: 	at com.android.server.wifi.WifiServiceImpl.$r8$lambda$-FC5J8xiq5Hk4pzP5gWhBOEmwh4(WifiServiceImpl.java:0)
+09-03 19:55:18.317   685   991 W FileUtils: 	at com.android.server.wifi.WifiServiceImpl$$ExternalSyntheticLambda74.run(R8$$SyntheticClass:0)
+09-03 19:55:18.317   685   991 W FileUtils: 	at com.android.server.wifi.RunnerHandler.dispatchMessage(RunnerHandler.java:131)
+09-03 19:55:18.321   685   991 W FileUtils: Failed to chmod(/data/misc_ce/0/apexdata/com.android.wifi/WifiConfigStore.xml, 384): 
+09-03 19:55:18.321   685   991 W FileUtils: 	at com.android.server.wifi.util.FileUtils.chmod(FileUtils.java:44)
+09-03 19:55:18.321   685   991 W FileUtils: 	at com.android.server.wifi.WifiConfigStore$StoreFile.writeBufferedRawData(WifiConfigStore.java:864)
+09-03 19:55:18.321   685   991 W FileUtils: 	at com.android.server.wifi.WifiConfigStore.writeBufferedData(WifiConfigStore.java:435)
+09-03 19:55:18.321   685   991 W FileUtils: 	at com.android.server.wifi.WifiConfigStore.write(WifiConfigStore.java:386)
+09-03 19:55:18.321   685   991 W FileUtils: 	at com.android.server.wifi.WifiConfigManager.writeBufferedData(WifiConfigManager.java:3895)
+09-03 19:55:18.321   685   991 W FileUtils: 	at com.android.server.wifi.WifiConfigManager.handleUserUnlockOrSwitch(WifiConfigManager.java:3409)
+09-03 19:55:18.321   685   991 W FileUtils: 	at com.android.server.wifi.WifiConfigManager.handleUserUnlock(WifiConfigManager.java:3488)
+09-03 19:55:18.321   685   991 W FileUtils: 	at com.android.server.wifi.WifiServiceImpl.lambda$handleUserUnlock$5(WifiServiceImpl.java:1159)
+09-03 19:55:18.321   685   991 W FileUtils: 	at com.android.server.wifi.WifiServiceImpl.$r8$lambda$-FC5J8xiq5Hk4pzP5gWhBOEmwh4(WifiServiceImpl.java:0)
+09-03 19:55:18.321   685   991 W FileUtils: 	at com.android.server.wifi.WifiServiceImpl$$ExternalSyntheticLambda74.run(R8$$SyntheticClass:0)
+09-03 19:55:18.321   685   991 W FileUtils: 	at com.android.server.wifi.RunnerHandler.dispatchMessage(RunnerHandler.java:131)
+09-03 19:55:18.325   685   991 W FileUtils: Failed to chmod(/data/misc_ce/0/apexdata/com.android.wifi/WifiConfigStoreNetworkSuggestions.xml, 384): 
+09-03 19:55:18.325   685   991 W FileUtils: 	at com.android.server.wifi.util.FileUtils.chmod(FileUtils.java:44)
+09-03 19:55:18.325   685   991 W FileUtils: 	at com.android.server.wifi.WifiConfigStore$StoreFile.writeBufferedRawData(WifiConfigStore.java:864)
+09-03 19:55:18.325   685   991 W FileUtils: 	at com.android.server.wifi.WifiConfigStore.writeBufferedData(WifiConfigStore.java:435)
+09-03 19:55:18.325   685   991 W FileUtils: 	at com.android.server.wifi.WifiConfigStore.write(WifiConfigStore.java:386)
+09-03 19:55:18.325   685   991 W FileUtils: 	at com.android.server.wifi.WifiConfigManager.writeBufferedData(WifiConfigManager.java:3895)
+09-03 19:55:18.325   685   991 W FileUtils: 	at com.android.server.wifi.WifiConfigManager.handleUserUnlockOrSwitch(WifiConfigManager.java:3409)
+09-03 19:55:18.325   685   991 W FileUtils: 	at com.android.server.wifi.WifiConfigManager.handleUserUnlock(WifiConfigManager.java:3488)
+09-03 19:55:18.325   685   991 W FileUtils: 	at com.android.server.wifi.WifiServiceImpl.lambda$handleUserUnlock$5(WifiServiceImpl.java:1159)
+09-03 19:55:18.325   685   991 W FileUtils: 	at com.android.server.wifi.WifiServiceImpl.$r8$lambda$-FC5J8xiq5Hk4pzP5gWhBOEmwh4(WifiServiceImpl.java:0)
+09-03 19:55:18.325   685   991 W FileUtils: 	at com.android.server.wifi.WifiServiceImpl$$ExternalSyntheticLambda74.run(R8$$SyntheticClass:0)
+09-03 19:55:18.325   685   991 W FileUtils: 	at com.android.server.wifi.RunnerHandler.dispatchMessage(RunnerHandler.java:131)
+09-03 19:55:18.326   685   991 D WifiConfigStore: Writing to stores completed in 54 ms.
+09-03 19:55:18.373  1707  1707 D nativeloader: InitLlndkLibrariesProduct: libEGL.so:libGLESv1_CM.so:libGLESv2.so:libGLESv3.so:libRS.so:libandroid_net.so:libapexsupport.so:libavf.so:libbinder_ndk.so:libc.so:libcgrouprc.so:libclang_rt.asan-x86_64-android.so:libcom.android.tethering.connectivity_native.so:libdl.so:libft2.so:liblog.so:libm.so:libmediandk.so:libnativewindow.so:libneuralnetworks.so:libselinux.so:libsync.so:libvendorsupport.so:libvndksupport.so:libvulkan.so
+09-03 19:55:18.382   685  1735 D BackupManagerConstants: getKeyValueBackupRequiredNetworkType(...) returns 1
+09-03 19:55:18.411   685  1735 D ConnectivityService: requestNetwork for uid/pid:1000/685 activeRequest: null callbackRequest: 45 [NetworkRequest [ REQUEST id=46, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 1000 RequestorUid: 1000 RequestorPkg: android UnderlyingNetworks: Null] ]] callback flags: 0 order: 2147483647 isUidTracked: false declaredMethods: AVAIL|LOST|BLK
+09-03 19:55:18.411   685   991 D WifiNetworkFactory: got request NetworkRequest [ REQUEST id=46, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 1000 RequestorUid: 1000 RequestorPkg: android UnderlyingNetworks: Null] ]
+09-03 19:55:18.411   685   991 D UntrustedWifiNetworkFactory: got request NetworkRequest [ REQUEST id=46, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 1000 RequestorUid: 1000 RequestorPkg: android UnderlyingNetworks: Null] ]
+09-03 19:55:18.412   685   991 D OemPaidWifiNetworkFactory: got request NetworkRequest [ REQUEST id=46, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 1000 RequestorUid: 1000 RequestorPkg: android UnderlyingNetworks: Null] ]
+09-03 19:55:18.412   685   991 D MultiInternetWifiNetworkFactory: got request NetworkRequest [ REQUEST id=46, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 1000 RequestorUid: 1000 RequestorPkg: android UnderlyingNetworks: Null] ]
+09-03 19:55:18.504  1755  1755 D nativeloader: InitLlndkLibrariesProduct: libEGL.so:libGLESv1_CM.so:libGLESv2.so:libGLESv3.so:libRS.so:libandroid_net.so:libapexsupport.so:libavf.so:libbinder_ndk.so:libc.so:libcgrouprc.so:libclang_rt.asan-x86_64-android.so:libcom.android.tethering.connectivity_native.so:libdl.so:libft2.so:liblog.so:libm.so:libmediandk.so:libnativewindow.so:libneuralnetworks.so:libselinux.so:libsync.so:libvendorsupport.so:libvndksupport.so:libvulkan.so
+09-03 19:55:19.006   685   707 I ServiceWatcher: [network] chose new implementation 10148/com.google.android.gms/com.google.android.location.network.NetworkLocationService@2
+09-03 19:55:19.046   685  1735 D BackupManagerConstants: getKeyValueBackupRequiredNetworkType(...) returns 1
+09-03 19:55:19.197  1184  1252 E SystemServiceRegistry: 	at com.android.networkstack.tethering.Tethering.isEthernetSupported(Tethering.java:1862)
+09-03 19:55:19.197  1184  1252 E SystemServiceRegistry: 	at com.android.networkstack.tethering.Tethering.makeSupportedDownstreams(Tethering.java:2843)
+09-03 19:55:19.197  1184  1252 E SystemServiceRegistry: 	at com.android.networkstack.tethering.Tethering.updateSupportedDownstreams(Tethering.java:2817)
+09-03 19:55:19.197  1184  1252 E SystemServiceRegistry: 	at com.android.networkstack.tethering.Tethering.updateConfiguration(Tethering.java:564)
+09-03 19:55:19.197  1184  1252 E SystemServiceRegistry: 	at com.android.networkstack.tethering.Tethering.-$$Nest$mupdateConfiguration(Tethering.java:0)
+09-03 19:55:19.197  1184  1252 E SystemServiceRegistry: 	at com.android.networkstack.tethering.Tethering$StateReceiver.onReceive(Tethering.java:1396)
+09-03 19:55:19.218  1584  1584 I DeviceStatusMonitor: DeviceStatusMonitor.getCurrentNetworkState():195 getCurrentNetworkState(): no networks
+09-03 19:55:19.247  1584  1584 I DeviceStatusMonitor: DeviceStatusMonitor.notifyIfNetworkChanged():180 notifyIfNetworkChanged: newState = NO_CONNECTION, airplaneModeOn = false, notifyAnyway = true
+09-03 19:55:19.337   685   989 W BestClock: java.time.DateTimeException: No network time available
+09-03 19:55:19.349   685   989 W BestClock: java.time.DateTimeException: No network time available
+09-03 19:55:19.382   685  1412 D ConnectivityService: requestNetwork for uid/pid:1000/685 asUid: 10147 activeRequest: null callbackRequest: 47 [NetworkRequest [ REQUEST id=48, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10147 RequestorUid: 1000 RequestorPkg: android UnderlyingNetworks: Null] ]] callback flags: 0 order: 2147483647 isUidTracked: false declaredMethods: AVAIL|LOST|BLK
+09-03 19:55:19.386   685   991 D WifiNetworkFactory: got request NetworkRequest [ REQUEST id=48, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10147 RequestorUid: 1000 RequestorPkg: android UnderlyingNetworks: Null] ]
+09-03 19:55:19.388   685   991 D UntrustedWifiNetworkFactory: got request NetworkRequest [ REQUEST id=48, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10147 RequestorUid: 1000 RequestorPkg: android UnderlyingNetworks: Null] ]
+09-03 19:55:19.388   685   991 D OemPaidWifiNetworkFactory: got request NetworkRequest [ REQUEST id=48, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10147 RequestorUid: 1000 RequestorPkg: android UnderlyingNetworks: Null] ]
+09-03 19:55:19.389   685   991 D MultiInternetWifiNetworkFactory: got request NetworkRequest [ REQUEST id=48, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10147 RequestorUid: 1000 RequestorPkg: android UnderlyingNetworks: Null] ]
+09-03 19:55:19.584  1851  1851 D nativeloader:   com_android_wifi: libservice-wifi-jni.so
+09-03 19:55:19.672   685   707 I ServiceWatcher: [network] chose new implementation 10148/com.google.android.gms/com.google.android.location.network.NetworkLocationService@2
+09-03 19:55:19.675   685   707 I ServiceWatcher: [network] chose new implementation 10148/com.google.android.gms/com.google.android.location.network.NetworkLocationService@2
+09-03 19:55:19.685  1872  1872 D nativeloader: InitLlndkLibrariesProduct: libEGL.so:libGLESv1_CM.so:libGLESv2.so:libGLESv3.so:libRS.so:libandroid_net.so:libapexsupport.so:libavf.so:libbinder_ndk.so:libc.so:libcgrouprc.so:libclang_rt.asan-x86_64-android.so:libcom.android.tethering.connectivity_native.so:libdl.so:libft2.so:liblog.so:libm.so:libmediandk.so:libnativewindow.so:libneuralnetworks.so:libselinux.so:libsync.so:libvendorsupport.so:libvndksupport.so:libvulkan.so
+09-03 19:55:20.074   685   707 I ServiceWatcher: [network] chose new implementation 10148/com.google.android.gms/com.google.android.location.network.NetworkLocationService@2
+09-03 19:55:20.075   685   707 I ServiceWatcher: [network] chose new implementation 10148/com.google.android.gms/com.google.android.location.network.NetworkLocationService@2
+09-03 19:55:20.624  1584  1857 I NetworkInfoNotification: NetworkInfoNotification$Listener.onReceive():112 onNetworkLost: networkState = NO_CONNECTION, isAirplaneModeOn = false
+09-03 19:55:20.699  1851  1851 D CellBroadcastReceiver: networkOperator: 310260
+Stopping emulator
+INFO         | Wait for emulator (pid 91738) 20 seconds to shutdown gracefully before kill;you can set environment variable ANDROID_EMULATOR_WAIT_TIME_BEFORE_KILL(in seconds) to change the default value (20 seconds)
+
+WARNING      | Not saving state: RAM not mapped as shared
+INFO         | Saving snapshot 'default_boot' using 1 ms
+ERROR        | stop: Not implemented
+WARNING      | Netsim Wifi localhost:44683 is gone due to CANCELLED
+Step 7: restoring original Wi-Fi
+Подключение «AFSK-TRX-8045» успешно деактивировано (активный путь D-Bus: /org/freedesktop/NetworkManager/ActiveConnection/12)
+Подключение успешно активировано (активный путь D-Bus: /org/freedesktop/NetworkManager/ActiveConnection/13)
+Original IP restored: 192.168.1.7/24
+Final active connection:
+NAME             UUID                                  TYPE      DEVICE 
+Tattelecom_2529  b1b8b883-5d2d-4c90-968a-c9843fdf64a2  wifi      wlp4s0 
+tun0             482a0516-c407-4362-aa7b-42e0623ad64d  tun       tun0   
+lo               8eb2cdfb-5282-4b81-8194-e1edfe7099c9  loopback  lo     
+=== WS real hardware + Android emulator test finished: Чт 03 сен 2026 19:55:28 MSK ===
+=== WS real hardware + Android emulator test started: Чт 03 сен 2026 19:57:17 MSK ===
+Original active connection: Tattelecom_2529
+Step 1: disabling original autoconnect and disconnecting Tattelecom_2529
+Подключение «Tattelecom_2529» успешно деактивировано (активный путь D-Bus: /org/freedesktop/NetworkManager/ActiveConnection/13)
+Step 2: connecting to AFSK AP
+Rescanning and trying to connect to AFSK-TRX-8045 (00:4B:12:2F:80:45) ...
+Подключение успешно активировано (активный путь D-Bus: /org/freedesktop/NetworkManager/ActiveConnection/15)
+AFSK IP obtained: 192.168.4.2/24
+Connected to AFSK AP. Verifying reachability ...
+PING 192.168.4.1 (192.168.4.1) 56(84) bytes of data.
+64 bytes from 192.168.4.1: icmp_seq=1 ttl=64 time=3.11 ms
+64 bytes from 192.168.4.1: icmp_seq=2 ttl=64 time=1.93 ms
+
+--- 192.168.4.1 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1001ms
+rtt min/avg/max/mdev = 1.929/2.519/3.109/0.590 ms
+Step 3: starting Android emulator headless
+Emulator PID: 93470
+Step 4: Python WS/HTTP test on 192.168.4.1
+INFO         | Android emulator version 36.5.11.0 (build_id 15261927) (CL:N/A)
+INFO         | Graphics backend: gfxstream
+INFO         | Found systemPath /home/dima/Android/Sdk/system-images/android-36/google_apis_playstore/x86_64/
+WARNING      | Please update the emulator to one that supports the feature(s): VulkanVirtualQueue
+INFO         | Feature 'GLDirectMem' (53) is overridden to 'enabled'
+INFO         | Feature 'Vulkan' (21) is overridden to 'disabled'
+INFO         | Guest GLES Driver: Auto (ext controls)
+INFO         | emuglConfig_init: vulkan_mode_selected:swiftshader gles_mode_selected:swiftshader
+INFO         | Checking system compatibility:
+INFO         |   Checking: hasSufficientDiskSpace
+INFO         |      Ok: Disk space requirements to run avd: `flutter_emulator` are met
+INFO         |   Checking: hasSufficientHwGpu
+INFO         |      Ok: Hardware GPU compatibility checks are not required
+INFO         |   Checking: hasSufficientSystem
+INFO         |      Ok: System requirements to run avd: `flutter_emulator` are met
+INFO         | Storing crashdata in: /tmp/android-dima/emu-crash-36.5.11.db, detection is enabled for process: 93470
+INFO         | Initializing gfxstream backend
+INFO         | android_startOpenglesRenderer: gpu info
+INFO         | 
+INFO         | SharedLibrary::open for [libX11]
+INFO         | SharedLibrary::open for [libX11-xcb]
+INFO         | Graphics Adapter Vendor Google (Google Inc.)
+INFO         | Graphics Adapter Android Emulator OpenGL ES Translator (Google SwiftShader)
+INFO         | Graphics API Version OpenGL ES 3.0 (OpenGL ES 3.0 SwiftShader 4.0.0.1)
+INFO         | Graphics API Extensions GL_OES_EGL_sync GL_OES_EGL_image GL_OES_EGL_image_external GL_OES_depth24 GL_OES_depth32 GL_OES_element_index_uint GL_OES_texture_float GL_OES_texture_float_linear GL_OES_compressed_paletted_texture GL_OES_compressed_ETC1_RGB8_texture GL_OES_depth_texture GL_OES_texture_half_float GL_OES_texture_half_float_linear GL_OES_packed_depth_stencil GL_OES_vertex_half_float GL_OES_standard_derivatives GL_OES_texture_npot GL_OES_rgb8_rgba8 GL_EXT_color_buffer_float GL_EXT_color_buffer_half_float GL_EXT_texture_format_BGRA8888 GL_APPLE_texture_format_BGRA8888 
+INFO         | Graphics Device Extensions N/A
+INFO         | Sending adb public key [QAAAAKNaknf11tlXqAMDa74ioM5eT8yjgWgVlIG0AxkWo/NFkMljC0kIEKHub1kJDwtR3G/4mUSX3hs7wtEaaEYmXREC4AccEgvJegQESK3MMAn9dG05kxgQDusMRA/Ah83uXLHCcwmMbGg56khg6K9q0/dyUsMFR2+xtLFOywsHpCesc0gCsCpWpsSwm42ceb2UB04b8UlZ2h5o7sIRVF7hLSKpLAeUs6nUtdwJBIaennzdlwwsxNe25VzzHFTYKS1H2eJ923e1he6oRb8xETVP7TtqJYlXPkZ5Z1qZoeROFrtgqJRGy7CyJBnsk8/UoNqrYV7U3yov72o8HjHBWqpUcNg7eRbtEjk2FwanKDABToHL76857TMUEvFsyKH6dEys01zfppIE956/tASVnu6uBHma/eER80aH7qRN4zBBTDEI4sFnll1fASrO0dxwmv459IxDz/HcnxVLktTHHycTGCxAPHr3C+qcVNYhulX/2C6CxjQIJ8KtJ2TVZaI+c1zs8BXsNED1BAzVf7M9eJvsQRCVz4JTlx4IuKWlSfB24ic0wNorJeoF4Hz4gapeelioTcRXkSwuQOpxBZX1gjwvjc/DcvOKXiz5ceSZhAKGuG4TR18GSkxJ79N3lJbWmevr+SsjIczTl45+97od7pBKvFLpBOmi6XadcP6tueXr8wYT0RjljAEAAQA= dima@unknown]
+INFO         | Userspace boot properties:
+INFO         |   androidboot.boot_devices=pci0000:00/0000:00:03.0 pci0000:00/0000:00:06.0
+INFO         |   androidboot.dalvik.vm.heapsize=512m
+INFO         |   androidboot.debug.hwui.renderer=skiagl
+INFO         |   androidboot.debug.sf.nobootanimation=1
+INFO         |   androidboot.hardware=ranchu
+INFO         |   androidboot.hardware.gltransport=pipe
+INFO         |   androidboot.logcat=*:V
+INFO         |   androidboot.opengles.version=196608
+INFO         |   androidboot.qemu=1
+INFO         |   androidboot.qemu.adb.pubkey=QAAAAKNaknf11tlXqAMDa74ioM5eT8yjgWgVlIG0AxkWo/NFkMljC0kIEKHub1kJDwtR3G/4mUSX3hs7wtEaaEYmXREC4AccEgvJegQESK3MMAn9dG05kxgQDusMRA/Ah83uXLHCcwmMbGg56khg6K9q0/dyUsMFR2+xtLFOywsHpCesc0gCsCpWpsSwm42ceb2UB04b8UlZ2h5o7sIRVF7hLSKpLAeUs6nUtdwJBIaennzdlwwsxNe25VzzHFTYKS1H2eJ923e1he6oRb8xETVP7TtqJYlXPkZ5Z1qZoeROFrtgqJRGy7CyJBnsk8/UoNqrYV7U3yov72o8HjHBWqpUcNg7eRbtEjk2FwanKDABToHL76857TMUEvFsyKH6dEys01zfppIE956/tASVnu6uBHma/eER80aH7qRN4zBBTDEI4sFnll1fASrO0dxwmv459IxDz/HcnxVLktTHHycTGCxAPHr3C+qcVNYhulX/2C6CxjQIJ8KtJ2TVZaI+c1zs8BXsNED1BAzVf7M9eJvsQRCVz4JTlx4IuKWlSfB24ic0wNorJeoF4Hz4gapeelioTcRXkSwuQOpxBZX1gjwvjc/DcvOKXiz5ceSZhAKGuG4TR18GSkxJ79N3lJbWmevr+SsjIczTl45+97od7pBKvFLpBOmi6XadcP6tueXr8wYT0RjljAEAAQA= dima@unknown
+INFO         |   androidboot.qemu.avd_name=flutter_emulator
+INFO         |   androidboot.qemu.camera_hq_edge_processing=0
+INFO         |   androidboot.qemu.camera_protocol_ver=1
+INFO         |   androidboot.qemu.cpuvulkan.version=4202496
+INFO         |   androidboot.qemu.gltransport.drawFlushInterval=800
+INFO         |   androidboot.qemu.gltransport.name=pipe
+INFO         |   androidboot.qemu.hwcodec.avcdec=2
+INFO         |   androidboot.qemu.hwcodec.hevcdec=2
+INFO         |   androidboot.qemu.hwcodec.vpxdec=2
+INFO         |   androidboot.qemu.settings.system.screen_off_timeout=2147483647
+INFO         |   androidboot.qemu.skin=1080x1920
+INFO         |   androidboot.qemu.virtiowifi=1
+INFO         |   androidboot.qemu.vsync=60
+INFO         |   androidboot.serialno=EMULATOR36X5X11X0
+INFO         |   androidboot.vbmeta.digest=43d61dbc053c8dbf3adaff951e5bdfcf174ece9dd24ffe8e6120f951cb412b2a
+INFO         |   androidboot.vbmeta.hash_alg=sha256
+INFO         |   androidboot.vbmeta.size=6784
+INFO         |   androidboot.veritymode=enforcing
+INFO         | Monitoring duration of emulator setup.
+WARNING      | The emulator now requires a signed jwt token for gRPC access! Use the -grpc flag if you really want an open unprotected grpc port
+INFO         | Using security allow list from: /home/dima/Android/Sdk/emulator/lib/emulator_access.json
+WARNING      | *** Basic token auth should only be used by android-studio ***
+INFO         | The active JSON Web Key Sets can be found here: /run/user/1000/avd/running/93470/jwks/79a6db28-aed3-4bb8-b04d-3847bd49b101/active.jwk
+INFO         | Scanning /run/user/1000/avd/running/93470/jwks/79a6db28-aed3-4bb8-b04d-3847bd49b101 for jwk keys.
+INFO         | Started GRPC server at 127.0.0.1:8554, security: Local, auth: +token
+INFO         | Advertising in: /run/user/1000/avd/running/pid_93470.ini
+INFO        INFO         | Activated packet streamer for bluetooth emulation
+ | Successfully initialized netsim WiFi
+INFO         | Activated packet streamer for uwb emulation
+INFO         | Setting display: 0 configuration to: 1080x1920, dpi: 420x420 
+INFO         | setDisplayActiveConfig: id:0, 1080x1920
+INFO         | emulatorSetupEnvironment: Setting up screen background view and display layout at env:1080x1920, lcd:1080x1920
+INFO         | emulatorSetupEnvironment: Environment scene is not required
+USER_INFO    | Emulator is performing a full startup. This may take upto two minutes, or more.
+[TEST] Connecting to ws://192.168.4.1:81/ and http://192.168.4.1:80
+WebSocket/HTTP test report
+============================================================
+Target: 192.168.4.1:81 (WS), 80 (HTTP)
+
+http_ping: OK
+http_send: OK (200)
+ws_connect: OK
+ws_system: NOT_EXPECTED (no greeting from real board)
+ws_echo: OK ('TestUser:t1788454653630:Hello from ws test')
+ws_name: SENT
+
+Overall: OK
+Report written to: /tmp/ws_real_hw_all_report.txt
+Step 5: Linux bundle runtime smoke test
+Xvfb not installed; running app directly (it will likely ignore --help and start)
+Gdk-Message: 19:57:34.008: Unable to load  from the cursor theme
+Не удалось инициализировать уведомления: Invalid argument(s): Linux settings must be set when targeting Linux platform.
+Проверяю ping ESP32...
+ESP32 доступен, подключаю WebSocket...
+✅ Успешно подключено к ESP32
+Отправлено имя: Linux
+WARNING      | Downloaded protobuf file is corrupt.
+WARNING      | UpdateCheck: Failure: Error
+WARNING      | UpdateCheck: failed to get the latest version, skipping check (current version '36.5.11-15261927')
+Step 6: Android APK runtime smoke test
+Waiting for emulator to boot and adb ...
+Emulator ready: emulator-5554
+Waiting for emulator-5554 to finish booting ...
+emulator-5554 boot completed
+INFO         | Boot completed in 59253 ms
+INFO         | Increasing screen off timeout, logcat buffer size to 2M.
+Installing APK on emulator-5554
+Performing Streamed Install
+Success
+Starting main activity on emulator-5554
+Starting: Intent { cmp=com.example.radio_bridge_dual/.MainActivity }
+ERROR        | bad color buffer handle 206
+Relevant logcat from emulator-5554:
+09-03 19:58:56.709   673  1002 W BestClock: java.time.DateTimeException: No network time available
+09-03 19:58:56.709   673  1002 W BestClock: java.time.DateTimeException: No network time available
+09-03 19:58:56.841  1212  2412 D NetworkMonitor/100: isCaptivePortal: isSuccessful()=false isPortal()=false RedirectUrl=null isPartialConnectivity()=false Time=20460ms
+09-03 19:58:56.855  2521  3807 I MagicTether: [LaunchUtils] No accounts found for enabling Instant Wifi. [CONTEXT service_id=276 ]
+09-03 19:58:56.944   673  1008 D ConnectivityService: [100 WIFI] validation failed
+09-03 19:58:56.946  3783  3783 D nativeloader: InitLlndkLibrariesProduct: libEGL.so:libGLESv1_CM.so:libGLESv2.so:libGLESv3.so:libRS.so:libandroid_net.so:libapexsupport.so:libavf.so:libbinder_ndk.so:libc.so:libcgrouprc.so:libclang_rt.asan-x86_64-android.so:libcom.android.tethering.connectivity_native.so:libdl.so:libft2.so:liblog.so:libm.so:libmediandk.so:libnativewindow.so:libneuralnetworks.so:libselinux.so:libsync.so:libvendorsupport.so:libvndksupport.so:libvulkan.so
+09-03 19:58:56.956   673  1002 D WifiClientModeImpl[51326:wlan0]: NETWORK_STATUS_UNWANTED_VALIDATION_FAILED
+09-03 19:58:56.963   673  1892 D ConnectivityService: requestNetwork for uid/pid:1000/673 asUid: 10145 activeRequest: null callbackRequest: 113 [NetworkRequest [ REQUEST id=114, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10145 RequestorUid: 1000 RequestorPkg: android UnderlyingNetworks: Null] ]] callback flags: 0 order: 2147483647 isUidTracked: false declaredMethods: AVAIL|LOST|BLK
+09-03 19:58:56.972  3777  3777 D nativeloader: InitLlndkLibrariesProduct: libEGL.so:libGLESv1_CM.so:libGLESv2.so:libGLESv3.so:libRS.so:libandroid_net.so:libapexsupport.so:libavf.so:libbinder_ndk.so:libc.so:libcgrouprc.so:libclang_rt.asan-x86_64-android.so:libcom.android.tethering.connectivity_native.so:libdl.so:libft2.so:liblog.so:libm.so:libmediandk.so:libnativewindow.so:libneuralnetworks.so:libselinux.so:libsync.so:libvendorsupport.so:libvndksupport.so:libvulkan.so
+09-03 19:58:56.994   673  1002 W LastMileLogger: Failed to stop event tracing: /sys/kernel/debug/tracing/instances/wifi/tracing_on: open failed: ENOENT (No such file or directory)
+09-03 19:58:56.995   673  1002 W LastMileLogger: Failed to read event trace: /sys/kernel/debug/tracing/instances/wifi/trace
+09-03 19:58:57.087   673  1002 D WifiNetworkFactory: got request NetworkRequest [ REQUEST id=114, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10145 RequestorUid: 1000 RequestorPkg: android UnderlyingNetworks: Null] ]
+09-03 19:58:57.087   673  1002 D UntrustedWifiNetworkFactory: got request NetworkRequest [ REQUEST id=114, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10145 RequestorUid: 1000 RequestorPkg: android UnderlyingNetworks: Null] ]
+09-03 19:58:57.087   673  1002 D OemPaidWifiNetworkFactory: got request NetworkRequest [ REQUEST id=114, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10145 RequestorUid: 1000 RequestorPkg: android UnderlyingNetworks: Null] ]
+09-03 19:58:57.087   673  1002 D MultiInternetWifiNetworkFactory: got request NetworkRequest [ REQUEST id=114, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10145 RequestorUid: 1000 RequestorPkg: android UnderlyingNetworks: Null] ]
+09-03 19:58:57.127   673  1206 W WifiService: Attempt to retrieve WifiConfiguration with invalid scanResult List
+09-03 19:58:57.152   673  1892 W WifiService: Attempt to retrieve WifiConfiguration with invalid scanResult List
+09-03 19:58:57.152   673  1892 E WifiService: Attempt to retrieve passpoint with invalid scanResult List
+09-03 19:58:57.153   673  2204 W WifiService: Attempt to retrieve OsuProviders with invalid scanResult List
+09-03 19:58:57.160  1444  2126 I MagicTether: [LaunchUtils] No accounts found for enabling Instant Wifi. [CONTEXT service_id=276 ]
+09-03 19:58:57.168  1444  2126 I MagicTether: [LaunchUtils] No accounts found for enabling Instant Wifi. [CONTEXT service_id=276 ]
+09-03 19:58:57.192   673  1892 W BestClock: java.time.DateTimeException: No network time available
+09-03 19:58:57.192   673  1892 W BestClock: java.time.DateTimeException: No network time available
+09-03 19:58:57.192   673  1892 W BestClock: java.time.DateTimeException: No network time available
+09-03 19:58:57.192   673  1892 W BestClock: java.time.DateTimeException: No network time available
+09-03 19:58:57.192   673  1892 W BestClock: java.time.DateTimeException: No network time available
+09-03 19:58:57.380   673  1142 D ConnectivityService: requestNetwork for uid/pid:1000/673 asUid: 10144 activeRequest: null callbackRequest: 115 [NetworkRequest [ TRACK_DEFAULT id=116, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10144 RequestorUid: 1000 RequestorPkg: android UnderlyingNetworks: Null] ], NetworkRequest [ REQUEST id=117, [ Transports: SATELLITE Capabilities: INTERNET&TRUSTED&NOT_VCN_MANAGED Uid: 10144 RequestorUid: 1000 RequestorPkg: android UnderlyingNetworks: Null] ]] callback flags: 0 order: 2147483647 isUidTracked: false declaredMethods: AVAIL|LOST|BLK
+09-03 19:58:57.622   673  1898 D ConnectivityService: requestNetwork for uid/pid:1000/673 asUid: 10143 activeRequest: null callbackRequest: 118 [NetworkRequest [ REQUEST id=119, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10143 RequestorUid: 1000 RequestorPkg: android UnderlyingNetworks: Null] ]] callback flags: 0 order: 2147483647 isUidTracked: false declaredMethods: AVAIL|LOST|BLK
+09-03 19:58:57.636  1212  1212 W DnsResolver: resNetworkResult:android.system.ErrnoException: resNetworkResult failed: ETIMEDOUT (Connection timed out)
+09-03 19:58:57.636  1212  1212 W DnsResolver: resNetworkResult:android.system.ErrnoException: resNetworkResult failed: ETIMEDOUT (Connection timed out)
+09-03 19:58:57.636  1212  1212 W DnsResolver: resNetworkResult:android.system.ErrnoException: resNetworkResult failed: ETIMEDOUT (Connection timed out)
+09-03 19:58:57.638   673  1002 D WifiNetworkFactory: got request NetworkRequest [ REQUEST id=119, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10143 RequestorUid: 1000 RequestorPkg: android UnderlyingNetworks: Null] ]
+09-03 19:58:57.639   673  1002 D UntrustedWifiNetworkFactory: got request NetworkRequest [ REQUEST id=119, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10143 RequestorUid: 1000 RequestorPkg: android UnderlyingNetworks: Null] ]
+09-03 19:58:57.639   673  1002 D OemPaidWifiNetworkFactory: got request NetworkRequest [ REQUEST id=119, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10143 RequestorUid: 1000 RequestorPkg: android UnderlyingNetworks: Null] ]
+09-03 19:58:57.639   673  1002 D MultiInternetWifiNetworkFactory: got request NetworkRequest [ REQUEST id=119, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10143 RequestorUid: 1000 RequestorPkg: android UnderlyingNetworks: Null] ]
+09-03 19:58:57.645  1212  1212 W DnsResolver: resNetworkResult:android.system.ErrnoException: resNetworkResult failed: ETIMEDOUT (Connection timed out)
+09-03 19:58:57.646  1212  3168 D NetworkMonitor/101: PROBE_DNS www.google.com 10034ms FAIL in type ADDRCONFIG android.net.DnsResolver$DnsException: android.system.ErrnoException: resNetworkResult failed: ETIMEDOUT (Connection timed out)
+09-03 19:58:57.647  1212  3169 D NetworkMonitor/101: PROBE_DNS connectivitycheck.gstatic.com 10036ms FAIL in type ADDRCONFIG android.net.DnsResolver$DnsException: android.system.ErrnoException: resNetworkResult failed: ETIMEDOUT (Connection timed out)
+09-03 19:58:57.677  2521  3810 I MagicTether: [LaunchUtils] No accounts found for enabling Instant Wifi. [CONTEXT service_id=276 ]
+09-03 19:58:57.937   673  1205 D ConnectivityService: requestNetwork for uid/pid:10143/3783 activeRequest: null callbackRequest: 120 [NetworkRequest [ REQUEST id=121, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10143 RequestorUid: 10143 RequestorPkg: com.google.android.apps.safetyhub UnderlyingNetworks: Null] ]] callback flags: 0 order: 2147483647 isUidTracked: false declaredMethods: AVAIL|LOST|NC
+09-03 19:58:57.945   673  1002 D WifiNetworkFactory: got request NetworkRequest [ REQUEST id=121, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10143 RequestorUid: 10143 RequestorPkg: com.google.android.apps.safetyhub UnderlyingNetworks: Null] ]
+09-03 19:58:57.945   673  1002 D UntrustedWifiNetworkFactory: got request NetworkRequest [ REQUEST id=121, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10143 RequestorUid: 10143 RequestorPkg: com.google.android.apps.safetyhub UnderlyingNetworks: Null] ]
+09-03 19:58:57.945   673  1002 D OemPaidWifiNetworkFactory: got request NetworkRequest [ REQUEST id=121, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10143 RequestorUid: 10143 RequestorPkg: com.google.android.apps.safetyhub UnderlyingNetworks: Null] ]
+09-03 19:58:57.945   673  1002 D MultiInternetWifiNetworkFactory: got request NetworkRequest [ REQUEST id=121, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10143 RequestorUid: 10143 RequestorPkg: com.google.android.apps.safetyhub UnderlyingNetworks: Null] ]
+09-03 19:58:58.165  3782  3847 I Bugle   : CountryCodeDetector: updateSmsNetworkCountry from default subscription network country. detected country: us
+09-03 19:58:58.354  3605  3674 W IndexDataConverter: Skipping index for null-key item IndexData.Builder {title: Extends battery life and improves device performance by automatically managing your network connections,package: com.android.settings}
+09-03 19:58:58.501   673  1000 W BestClock: java.time.DateTimeException: No network time available
+09-03 19:58:58.501   673  1000 W BestClock: java.time.DateTimeException: No network time available
+09-03 19:58:58.953  1359  3699 W SliceData: Highlight menu key res is empty: com.android.settings.network.telephony.VideoCallingPreferenceController
+09-03 19:58:59.199  1359  3699 D SubscriptionRepository: getSelectableSubscriptionInfoList: [[SubscriptionInfo: id=1 iccId=898603186[****] simSlotIndex=0 portIndex=0 isEmbedded=false carrierId=1 displayName=T-Mobile carrierName=T-Mobile isOpportunistic=false groupUuid=null groupOwner= isGroupDisabled=false displayNameSource=CARRIER iconTint=-15502541 number=[****] dataRoaming=0 mcc=310 mnc=260 ehplmns=[] hplmns=[] cardString=898603186[****] cardId=0 nativeAccessRules=null carrierConfigAccessRules=[cert: 92B5F8117FBD9BD5738FF168A4FA12CBE284BE834EDE1A7BB44DD8455BA15920 pkg: com.tmobile.rsuapp access: 0, cert: 92B5F8117FBD9BD5738FF168A4FA12CBE284BE834EDE1A7BB44DD8455BA15920 pkg: com.tmobile.echolocate access: 0, cert: 92B5F8117FBD9BD5738FF168A4FA12CBE284BE834EDE1A7BB44DD8455BA15920 pkg: com.tmobile.services.nameid access: 0, cert: 92B5F8117FBD9BD5738FF168A4FA12CBE284BE834EDE1A7BB44DD8455BA15920 pkg: com.tmobile.pr.mytmobile access: 0, cert: 92B5F8117FBD9BD5738FF168A4FA12CBE284BE834EDE1A7BB44DD8455BA15920 pkg: com.tmobile.vvm.application access: 0, cert: 3D1A4BEF6EE7AF7D34D120E7B1AAC0DD245585DE6237CF100F68333AFACFF562 pkg: com.tmobile.rsuapp access: 0, cert: 3D1A4BEF6EE7AF7D34D120E7B1AAC0DD245585DE6237CF100F68333AFACFF562 pkg: com.tmobile.echolocate access: 0, cert: 3D1A4BEF6EE7AF7D34D120E7B1AAC0DD245585DE6237CF100F68333AFACFF562 pkg: com.tmobile.services.nameid access: 0, cert: 3D1A4BEF6EE7AF7D34D120E7B1AAC0DD245585DE6237CF100F68333AFACFF562 pkg: com.tmobile.pr.mytmobile access: 0, cert: 3D1A4BEF6EE7AF7D34D120E7B1AAC0DD245585DE6237CF100F68333AFACFF562 pkg: com.tmobile.vvm.application access: 0, cert: 6892793FC413019D2DF609DFED7AF622D0F2D8FCF96EFA7E3FB87EEA34E10B93 pkg: com.tmobile.rsuapp access: 0, cert: 6892793FC413019D2DF609DFED7AF622D0F2D8FCF96EFA7E3FB87EEA34E10B93 pkg: com.tmobile.echolocate access: 0, cert: 6892793FC413019D2DF609DFED7AF622D0F2D8FCF96EFA7E3FB87EEA34E10B93 pkg: com.tmobile.services.nameid access: 0, cert: 6892793FC413019D2DF609DFED7AF622D0F2D8FCF96EFA7E3FB87EEA34E10B93 pkg: com.tmobile.pr.mytmobile access: 0, cert: 6892793FC413019D2DF609DFED7AF622D0F2D8FCF96EFA7E3FB87EEA34E10B93 pkg: com.tmobile.vvm.application access: 0, cert: 7B68FD9D4E7610C9CB35FC0C6CC06EA04C6906E3DFA9F48F9A05460AF36BFFFC pkg: com.tmobile.rsuapp access: 0, cert: 7B68FD9D4E7610C9CB35FC0C6CC06EA04C6906E3DFA9F48F9A05460AF36BFFFC pkg: com.tmobile.echolocate access: 0, cert: 7B68FD9D4E7610C9CB35FC0C6CC06EA04C6906E3DFA9F48F9A05460AF36BFFFC pkg: com.tmobile.services.nameid access: 0, cert: 7B68FD9D4E7610C9CB35FC0C6CC06EA04C6906E3DFA9F48F9A05460AF36BFFFC pkg: com.tmobile.pr.mytmobile access: 0, cert: 7B68FD9D4E7610C9CB35FC0C6CC06EA04C6906E3DFA9F48F9A05460AF36BFFFC pkg: com.tmobile.vvm.application access: 0] countryIso=us profileClass=-1 mType=LOCAL_SIM areUiccApplicationsEnabled=true usageSetting=DEFAULT isOnlyNonTerrestrialNetwork=false serviceCapabilities=[1, 2, 3] transferStatus=0 isSatelliteESOSSupported=false]]
+09-03 19:58:59.200  1359  3699 D SubscriptionRepository: getSelectableSubscriptionInfoList: [[SubscriptionInfo: id=1 iccId=898603186[****] simSlotIndex=0 portIndex=0 isEmbedded=false carrierId=1 displayName=T-Mobile carrierName=T-Mobile isOpportunistic=false groupUuid=null groupOwner= isGroupDisabled=false displayNameSource=CARRIER iconTint=-15502541 number=[****] dataRoaming=0 mcc=310 mnc=260 ehplmns=[] hplmns=[] cardString=898603186[****] cardId=0 nativeAccessRules=null carrierConfigAccessRules=[cert: 92B5F8117FBD9BD5738FF168A4FA12CBE284BE834EDE1A7BB44DD8455BA15920 pkg: com.tmobile.rsuapp access: 0, cert: 92B5F8117FBD9BD5738FF168A4FA12CBE284BE834EDE1A7BB44DD8455BA15920 pkg: com.tmobile.echolocate access: 0, cert: 92B5F8117FBD9BD5738FF168A4FA12CBE284BE834EDE1A7BB44DD8455BA15920 pkg: com.tmobile.services.nameid access: 0, cert: 92B5F8117FBD9BD5738FF168A4FA12CBE284BE834EDE1A7BB44DD8455BA15920 pkg: com.tmobile.pr.mytmobile access: 0, cert: 92B5F8117FBD9BD5738FF168A4FA12CBE284BE834EDE1A7BB44DD8455BA15920 pkg: com.tmobile.vvm.application access: 0, cert: 3D1A4BEF6EE7AF7D34D120E7B1AAC0DD245585DE6237CF100F68333AFACFF562 pkg: com.tmobile.rsuapp access: 0, cert: 3D1A4BEF6EE7AF7D34D120E7B1AAC0DD245585DE6237CF100F68333AFACFF562 pkg: com.tmobile.echolocate access: 0, cert: 3D1A4BEF6EE7AF7D34D120E7B1AAC0DD245585DE6237CF100F68333AFACFF562 pkg: com.tmobile.services.nameid access: 0, cert: 3D1A4BEF6EE7AF7D34D120E7B1AAC0DD245585DE6237CF100F68333AFACFF562 pkg: com.tmobile.pr.mytmobile access: 0, cert: 3D1A4BEF6EE7AF7D34D120E7B1AAC0DD245585DE6237CF100F68333AFACFF562 pkg: com.tmobile.vvm.application access: 0, cert: 6892793FC413019D2DF609DFED7AF622D0F2D8FCF96EFA7E3FB87EEA34E10B93 pkg: com.tmobile.rsuapp access: 0, cert: 6892793FC413019D2DF609DFED7AF622D0F2D8FCF96EFA7E3FB87EEA34E10B93 pkg: com.tmobile.echolocate access: 0, cert: 6892793FC413019D2DF609DFED7AF622D0F2D8FCF96EFA7E3FB87EEA34E10B93 pkg: com.tmobile.services.nameid access: 0, cert: 6892793FC413019D2DF609DFED7AF622D0F2D8FCF96EFA7E3FB87EEA34E10B93 pkg: com.tmobile.pr.mytmobile access: 0, cert: 6892793FC413019D2DF609DFED7AF622D0F2D8FCF96EFA7E3FB87EEA34E10B93 pkg: com.tmobile.vvm.application access: 0, cert: 7B68FD9D4E7610C9CB35FC0C6CC06EA04C6906E3DFA9F48F9A05460AF36BFFFC pkg: com.tmobile.rsuapp access: 0, cert: 7B68FD9D4E7610C9CB35FC0C6CC06EA04C6906E3DFA9F48F9A05460AF36BFFFC pkg: com.tmobile.echolocate access: 0, cert: 7B68FD9D4E7610C9CB35FC0C6CC06EA04C6906E3DFA9F48F9A05460AF36BFFFC pkg: com.tmobile.services.nameid access: 0, cert: 7B68FD9D4E7610C9CB35FC0C6CC06EA04C6906E3DFA9F48F9A05460AF36BFFFC pkg: com.tmobile.pr.mytmobile access: 0, cert: 7B68FD9D4E7610C9CB35FC0C6CC06EA04C6906E3DFA9F48F9A05460AF36BFFFC pkg: com.tmobile.vvm.application access: 0] countryIso=us profileClass=-1 mType=LOCAL_SIM areUiccApplicationsEnabled=true usageSetting=DEFAULT isOnlyNonTerrestrialNetwork=false serviceCapabilities=[1, 2, 3] transferStatus=0 isSatelliteESOSSupported=false]]
+09-03 19:58:59.200  1359  3699 D SubscriptionRepository: getSelectableSubscriptionInfoList: [[SubscriptionInfo: id=1 iccId=898603186[****] simSlotIndex=0 portIndex=0 isEmbedded=false carrierId=1 displayName=T-Mobile carrierName=T-Mobile isOpportunistic=false groupUuid=null groupOwner= isGroupDisabled=false displayNameSource=CARRIER iconTint=-15502541 number=[****] dataRoaming=0 mcc=310 mnc=260 ehplmns=[] hplmns=[] cardString=898603186[****] cardId=0 nativeAccessRules=null carrierConfigAccessRules=[cert: 92B5F8117FBD9BD5738FF168A4FA12CBE284BE834EDE1A7BB44DD8455BA15920 pkg: com.tmobile.rsuapp access: 0, cert: 92B5F8117FBD9BD5738FF168A4FA12CBE284BE834EDE1A7BB44DD8455BA15920 pkg: com.tmobile.echolocate access: 0, cert: 92B5F8117FBD9BD5738FF168A4FA12CBE284BE834EDE1A7BB44DD8455BA15920 pkg: com.tmobile.services.nameid access: 0, cert: 92B5F8117FBD9BD5738FF168A4FA12CBE284BE834EDE1A7BB44DD8455BA15920 pkg: com.tmobile.pr.mytmobile access: 0, cert: 92B5F8117FBD9BD5738FF168A4FA12CBE284BE834EDE1A7BB44DD8455BA15920 pkg: com.tmobile.vvm.application access: 0, cert: 3D1A4BEF6EE7AF7D34D120E7B1AAC0DD245585DE6237CF100F68333AFACFF562 pkg: com.tmobile.rsuapp access: 0, cert: 3D1A4BEF6EE7AF7D34D120E7B1AAC0DD245585DE6237CF100F68333AFACFF562 pkg: com.tmobile.echolocate access: 0, cert: 3D1A4BEF6EE7AF7D34D120E7B1AAC0DD245585DE6237CF100F68333AFACFF562 pkg: com.tmobile.services.nameid access: 0, cert: 3D1A4BEF6EE7AF7D34D120E7B1AAC0DD245585DE6237CF100F68333AFACFF562 pkg: com.tmobile.pr.mytmobile access: 0, cert: 3D1A4BEF6EE7AF7D34D120E7B1AAC0DD245585DE6237CF100F68333AFACFF562 pkg: com.tmobile.vvm.application access: 0, cert: 6892793FC413019D2DF609DFED7AF622D0F2D8FCF96EFA7E3FB87EEA34E10B93 pkg: com.tmobile.rsuapp access: 0, cert: 6892793FC413019D2DF609DFED7AF622D0F2D8FCF96EFA7E3FB87EEA34E10B93 pkg: com.tmobile.echolocate access: 0, cert: 6892793FC413019D2DF609DFED7AF622D0F2D8FCF96EFA7E3FB87EEA34E10B93 pkg: com.tmobile.services.nameid access: 0, cert: 6892793FC413019D2DF609DFED7AF622D0F2D8FCF96EFA7E3FB87EEA34E10B93 pkg: com.tmobile.pr.mytmobile access: 0, cert: 6892793FC413019D2DF609DFED7AF622D0F2D8FCF96EFA7E3FB87EEA34E10B93 pkg: com.tmobile.vvm.application access: 0, cert: 7B68FD9D4E7610C9CB35FC0C6CC06EA04C6906E3DFA9F48F9A05460AF36BFFFC pkg: com.tmobile.rsuapp access: 0, cert: 7B68FD9D4E7610C9CB35FC0C6CC06EA04C6906E3DFA9F48F9A05460AF36BFFFC pkg: com.tmobile.echolocate access: 0, cert: 7B68FD9D4E7610C9CB35FC0C6CC06EA04C6906E3DFA9F48F9A05460AF36BFFFC pkg: com.tmobile.services.nameid access: 0, cert: 7B68FD9D4E7610C9CB35FC0C6CC06EA04C6906E3DFA9F48F9A05460AF36BFFFC pkg: com.tmobile.pr.mytmobile access: 0, cert: 7B68FD9D4E7610C9CB35FC0C6CC06EA04C6906E3DFA9F48F9A05460AF36BFFFC pkg: com.tmobile.vvm.application access: 0] countryIso=us profileClass=-1 mType=LOCAL_SIM areUiccApplicationsEnabled=true usageSetting=DEFAULT isOnlyNonTerrestrialNetwork=false serviceCapabilities=[1, 2, 3] transferStatus=0 isSatelliteESOSSupported=false]]
+09-03 19:58:59.203  1359  3699 D SubscriptionRepository: getSelectableSubscriptionInfoList: [[SubscriptionInfo: id=1 iccId=898603186[****] simSlotIndex=0 portIndex=0 isEmbedded=false carrierId=1 displayName=T-Mobile carrierName=T-Mobile isOpportunistic=false groupUuid=null groupOwner= isGroupDisabled=false displayNameSource=CARRIER iconTint=-15502541 number=[****] dataRoaming=0 mcc=310 mnc=260 ehplmns=[] hplmns=[] cardString=898603186[****] cardId=0 nativeAccessRules=null carrierConfigAccessRules=[cert: 92B5F8117FBD9BD5738FF168A4FA12CBE284BE834EDE1A7BB44DD8455BA15920 pkg: com.tmobile.rsuapp access: 0, cert: 92B5F8117FBD9BD5738FF168A4FA12CBE284BE834EDE1A7BB44DD8455BA15920 pkg: com.tmobile.echolocate access: 0, cert: 92B5F8117FBD9BD5738FF168A4FA12CBE284BE834EDE1A7BB44DD8455BA15920 pkg: com.tmobile.services.nameid access: 0, cert: 92B5F8117FBD9BD5738FF168A4FA12CBE284BE834EDE1A7BB44DD8455BA15920 pkg: com.tmobile.pr.mytmobile access: 0, cert: 92B5F8117FBD9BD5738FF168A4FA12CBE284BE834EDE1A7BB44DD8455BA15920 pkg: com.tmobile.vvm.application access: 0, cert: 3D1A4BEF6EE7AF7D34D120E7B1AAC0DD245585DE6237CF100F68333AFACFF562 pkg: com.tmobile.rsuapp access: 0, cert: 3D1A4BEF6EE7AF7D34D120E7B1AAC0DD245585DE6237CF100F68333AFACFF562 pkg: com.tmobile.echolocate access: 0, cert: 3D1A4BEF6EE7AF7D34D120E7B1AAC0DD245585DE6237CF100F68333AFACFF562 pkg: com.tmobile.services.nameid access: 0, cert: 3D1A4BEF6EE7AF7D34D120E7B1AAC0DD245585DE6237CF100F68333AFACFF562 pkg: com.tmobile.pr.mytmobile access: 0, cert: 3D1A4BEF6EE7AF7D34D120E7B1AAC0DD245585DE6237CF100F68333AFACFF562 pkg: com.tmobile.vvm.application access: 0, cert: 6892793FC413019D2DF609DFED7AF622D0F2D8FCF96EFA7E3FB87EEA34E10B93 pkg: com.tmobile.rsuapp access: 0, cert: 6892793FC413019D2DF609DFED7AF622D0F2D8FCF96EFA7E3FB87EEA34E10B93 pkg: com.tmobile.echolocate access: 0, cert: 6892793FC413019D2DF609DFED7AF622D0F2D8FCF96EFA7E3FB87EEA34E10B93 pkg: com.tmobile.services.nameid access: 0, cert: 6892793FC413019D2DF609DFED7AF622D0F2D8FCF96EFA7E3FB87EEA34E10B93 pkg: com.tmobile.pr.mytmobile access: 0, cert: 6892793FC413019D2DF609DFED7AF622D0F2D8FCF96EFA7E3FB87EEA34E10B93 pkg: com.tmobile.vvm.application access: 0, cert: 7B68FD9D4E7610C9CB35FC0C6CC06EA04C6906E3DFA9F48F9A05460AF36BFFFC pkg: com.tmobile.rsuapp access: 0, cert: 7B68FD9D4E7610C9CB35FC0C6CC06EA04C6906E3DFA9F48F9A05460AF36BFFFC pkg: com.tmobile.echolocate access: 0, cert: 7B68FD9D4E7610C9CB35FC0C6CC06EA04C6906E3DFA9F48F9A05460AF36BFFFC pkg: com.tmobile.services.nameid access: 0, cert: 7B68FD9D4E7610C9CB35FC0C6CC06EA04C6906E3DFA9F48F9A05460AF36BFFFC pkg: com.tmobile.pr.mytmobile access: 0, cert: 7B68FD9D4E7610C9CB35FC0C6CC06EA04C6906E3DFA9F48F9A05460AF36BFFFC pkg: com.tmobile.vvm.application access: 0] countryIso=us profileClass=-1 mType=LOCAL_SIM areUiccApplicationsEnabled=true usageSetting=DEFAULT isOnlyNonTerrestrialNetwork=false serviceCapabilities=[1, 2, 3] transferStatus=0 isSatelliteESOSSupported=false]]
+09-03 19:58:59.272  1359  3699 D WifiCallingSliceHelper: Wifi calling is either not provisioned or not enabled by Platform
+09-03 19:58:59.292  1359  3699 D WifiSlice: calling uid name : com.google.android.settings.intelligence
+09-03 19:58:59.738   673  1002 W BestClock: java.time.DateTimeException: No network time available
+09-03 19:58:59.739   673  1002 W BestClock: java.time.DateTimeException: No network time available
+09-03 19:58:59.739   673  1002 W BestClock: java.time.DateTimeException: No network time available
+09-03 19:58:59.740   673  1002 W BestClock: java.time.DateTimeException: No network time available
+09-03 19:58:59.740   673  1002 W BestClock: java.time.DateTimeException: No network time available
+09-03 19:59:00.360  4002  4002 D nativeloader: InitLlndkLibrariesProduct: libEGL.so:libGLESv1_CM.so:libGLESv2.so:libGLESv3.so:libRS.so:libandroid_net.so:libapexsupport.so:libavf.so:libbinder_ndk.so:libc.so:libcgrouprc.so:libclang_rt.asan-x86_64-android.so:libcom.android.tethering.connectivity_native.so:libdl.so:libft2.so:liblog.so:libm.so:libmediandk.so:libnativewindow.so:libneuralnetworks.so:libselinux.so:libsync.so:libvendorsupport.so:libvndksupport.so:libvulkan.so
+09-03 19:59:00.489  1392  1392 D AlphabeticalAppsList: addAppsWithSections: adding sectionName: R with appInfoTitle: radio_bridge_dual
+09-03 19:59:00.489  1392  1392 D AlphabeticalAppsList: addAppsWithSections: adding sectionName: R with appInfoTitle: radio_bridge_dual
+09-03 19:59:00.511   673  1884 D ConnectivityService: requestNetwork for uid/pid:10144/4002 activeRequest: null callbackRequest: 123 [NetworkRequest [ TRACK_DEFAULT id=124, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10144 RequestorUid: 10144 RequestorPkg: com.google.android.apps.messaging UnderlyingNetworks: Null] ], NetworkRequest [ REQUEST id=125, [ Transports: SATELLITE Capabilities: INTERNET&TRUSTED&NOT_VCN_MANAGED Uid: 10144 RequestorUid: 10144 RequestorPkg: com.google.android.apps.messaging UnderlyingNetworks: Null] ]] callback flags: 0 order: 2147483647 isUidTracked: false declaredMethods: AVAIL|LOSING|LOST|UNAVAIL|NC|LP|BLK
+09-03 19:59:00.536  1392  1392 D AlphabeticalAppsList: addAppsWithSections: adding sectionName: R with appInfoTitle: radio_bridge_dual
+09-03 19:59:00.537  1392  1392 D AlphabeticalAppsList: addAppsWithSections: adding sectionName: R with appInfoTitle: radio_bridge_dual
+09-03 19:59:00.570  1392  1392 D AlphabeticalAppsList: addAppsWithSections: adding sectionName: R with appInfoTitle: radio_bridge_dual
+09-03 19:59:00.571  1392  1392 D AlphabeticalAppsList: addAppsWithSections: adding sectionName: R with appInfoTitle: radio_bridge_dual
+09-03 19:59:00.623  1392  1392 D AlphabeticalAppsList: addAppsWithSections: adding sectionName: R with appInfoTitle: radio_bridge_dual
+09-03 19:59:00.624  1392  1392 D AlphabeticalAppsList: addAppsWithSections: adding sectionName: R with appInfoTitle: radio_bridge_dual
+09-03 19:59:00.688  1392  1392 D AlphabeticalAppsList: addAppsWithSections: adding sectionName: R with appInfoTitle: radio_bridge_dual
+09-03 19:59:00.688  1392  1392 D AlphabeticalAppsList: addAppsWithSections: adding sectionName: R with appInfoTitle: radio_bridge_dual
+09-03 19:59:00.708   673  1070 D ConnectivityService: requestNetwork for uid/pid:10144/4002 activeRequest: null callbackRequest: 126 [NetworkRequest [ TRACK_DEFAULT id=127, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10144 RequestorUid: 10144 RequestorPkg: com.google.android.apps.messaging UnderlyingNetworks: Null] ], NetworkRequest [ REQUEST id=128, [ Transports: SATELLITE Capabilities: INTERNET&TRUSTED&NOT_VCN_MANAGED Uid: 10144 RequestorUid: 10144 RequestorPkg: com.google.android.apps.messaging UnderlyingNetworks: Null] ]] callback flags: 0 order: 2147483647 isUidTracked: false declaredMethods: AVAIL|LOSING|LOST|NC
+09-03 19:59:00.713  4002  4031 I BugleRcsEngine: Connected state: [1], networkType: [WIFI] [CONTEXT thread_id=57 ]
+09-03 19:59:00.717  4002  4031 I BugleRcsEngine: Connected state: [1], networkType: [WIFI] [CONTEXT thread_id=57 ]
+09-03 19:59:00.743  1392  1392 D AlphabeticalAppsList: addAppsWithSections: adding sectionName: R with appInfoTitle: radio_bridge_dual
+09-03 19:59:00.743  1392  1392 D AlphabeticalAppsList: addAppsWithSections: adding sectionName: R with appInfoTitle: radio_bridge_dual
+09-03 19:59:01.714  1444  2339 W NetworkScheduler.TED: Enforcing binder timeout for ComponentInfo{com.google.android.gms/com.google.android.gms.phenotype.service.sync.PhenotypeConfigurator}
+09-03 19:59:01.715  1444  2339 E NetworkScheduler.TED: Dropping task as app's play services SDK version does not support Android O. Either update the SDK or lower your app's target SDK version. Canceling all tasks for the service: ComponentInfo{com.google.android.gms/com.google.android.gms.phenotype.service.sync.PhenotypeConfigurator}
+09-03 19:59:01.869  1444  3234 I NetworkScheduler.Stats: (REDACTED) Task %s/%s started execution. cause:%s exec_start_elapsed_seconds: %s
+09-03 19:59:01.909  1444  2339 I NetworkScheduler.Stats: (REDACTED) Task %s/%s finished executing. cause:%s result: %s elapsed_millis: %s uptime_millis: %s exec_start_elapsed_seconds: %s
+09-03 19:59:01.947  1971  2699 E Finsky  : [67] uyn.a(19): HC: Failed to preload experiments flags: java.util.concurrent.ExecutionException: com.google.android.libraries.phenotype.client.api.PhenotypeRuntimeException: 29504: 29504: Network error
+09-03 19:59:01.953  1444  3234 I NetworkScheduler.Stats: (REDACTED) Task %s/%s started execution. cause:%s exec_start_elapsed_seconds: %s
+09-03 19:59:01.994  1444  2339 I NetworkScheduler.Stats: (REDACTED) Task %s/%s finished executing. cause:%s result: %s elapsed_millis: %s uptime_millis: %s exec_start_elapsed_seconds: %s
+09-03 19:59:02.014  3705  4076 E RkpdRegistrationBinder: com.android.rkpdapp.RkpdException: No network detected.
+09-03 19:59:02.015   673   673 E RemoteProvisionSysSvc: RKP error fetching key for client 45610971: ERROR_PENDING_INTERNET_CONNECTIVITY: No network detected.
+09-03 19:59:02.018   248   262 E keystore2: system/security/keystore2/rkpd_client/src/lib.rs:193 - IGetKeyCallback failed: ERROR_PENDING_INTERNET_CONNECTIVITY: No network detected.
+09-03 19:59:02.018   248   263 E keystore2: system/security/keystore2/src/remote_provisioning.rs:94 - Error occurred: system/security/keystore2/rkpd_client/src/lib.rs:194: GetKeyCallback failed: r#ERROR_PENDING_INTERNET_CONNECTIVITY "ERROR_PENDING_INTERNET_CONNECTIVITY: No network detected."
+09-03 19:59:02.021   248   263 E keystore2:     1: system/security/keystore2/rkpd_client/src/lib.rs:194: GetKeyCallback failed: r#ERROR_PENDING_INTERNET_CONNECTIVITY "ERROR_PENDING_INTERNET_CONNECTIVITY: No network detected."
+09-03 19:59:02.047  1444  3234 I NetworkScheduler.Stats: (REDACTED) Task %s/%s started execution. cause:%s exec_start_elapsed_seconds: %s
+09-03 19:59:02.078  3705  4077 E RkpdRegistrationBinder: com.android.rkpdapp.RkpdException: No network detected.
+09-03 19:59:02.078   673   673 E RemoteProvisionSysSvc: RKP error fetching key for client 165183519: ERROR_PENDING_INTERNET_CONNECTIVITY: No network detected.
+09-03 19:59:02.078   248   262 E keystore2: system/security/keystore2/rkpd_client/src/lib.rs:193 - IGetKeyCallback failed: ERROR_PENDING_INTERNET_CONNECTIVITY: No network detected.
+09-03 19:59:02.078   248   263 E keystore2: system/security/keystore2/src/remote_provisioning.rs:94 - Error occurred: system/security/keystore2/rkpd_client/src/lib.rs:194: GetKeyCallback failed: r#ERROR_PENDING_INTERNET_CONNECTIVITY "ERROR_PENDING_INTERNET_CONNECTIVITY: No network detected."
+09-03 19:59:02.079   248   263 E keystore2:     1: system/security/keystore2/rkpd_client/src/lib.rs:194: GetKeyCallback failed: r#ERROR_PENDING_INTERNET_CONNECTIVITY "ERROR_PENDING_INTERNET_CONNECTIVITY: No network detected."
+09-03 19:59:02.761   673  1002 W BestClock: java.time.DateTimeException: No network time available
+09-03 19:59:02.763   673  1002 W BestClock: java.time.DateTimeException: No network time available
+09-03 19:59:02.763   673  1002 W BestClock: java.time.DateTimeException: No network time available
+09-03 19:59:02.767   673  1002 W BestClock: java.time.DateTimeException: No network time available
+09-03 19:59:02.767   673  1002 W BestClock: java.time.DateTimeException: No network time available
+Stopping emulator
+INFO         | Wait for emulator (pid 93470) 20 seconds to shutdown gracefully before kill;you can set environment variable ANDROID_EMULATOR_WAIT_TIME_BEFORE_KILL(in seconds) to change the default value (20 seconds)
+
+WARNING      | Not saving state: RAM not mapped as shared
+INFO         | Saving snapshot 'default_boot' using 1 ms
+ERROR        | stop: Not implemented
+WARNING      | Netsim Wifi localhost:37475 is gone due to CANCELLED
+Step 7: restoring original Wi-Fi
+Подключение «AFSK-TRX-8045» успешно деактивировано (активный путь D-Bus: /org/freedesktop/NetworkManager/ActiveConnection/15)
+Подключение успешно активировано (активный путь D-Bus: /org/freedesktop/NetworkManager/ActiveConnection/16)
+Original IP restored: 192.168.1.7/24
+Final active connection:
+NAME             UUID                                  TYPE      DEVICE 
+Tattelecom_2529  b1b8b883-5d2d-4c90-968a-c9843fdf64a2  wifi      wlp4s0 
+tun0             482a0516-c407-4362-aa7b-42e0623ad64d  tun       tun0   
+lo               8eb2cdfb-5282-4b81-8194-e1edfe7099c9  loopback  lo     
+=== WS real hardware + Android emulator test finished: Чт 03 сен 2026 19:59:10 MSK ===
+=== WS real hardware + Android emulator test started: Чт 03 сен 2026 20:03:02 MSK ===
+Original active connection: Tattelecom_2529
+Step 1: disabling original autoconnect and disconnecting Tattelecom_2529
+Подключение «Tattelecom_2529» успешно деактивировано (активный путь D-Bus: /org/freedesktop/NetworkManager/ActiveConnection/16)
+Step 2: connecting to AFSK AP
+Rescanning and trying to connect to AFSK-TRX-8045 (00:4B:12:2F:80:45) ...
+Подключение успешно активировано (активный путь D-Bus: /org/freedesktop/NetworkManager/ActiveConnection/18)
+AFSK IP obtained: 192.168.4.2/24
+Connected to AFSK AP. Verifying reachability ...
+PING 192.168.4.1 (192.168.4.1) 56(84) bytes of data.
+64 bytes from 192.168.4.1: icmp_seq=1 ttl=64 time=5.60 ms
+64 bytes from 192.168.4.1: icmp_seq=2 ttl=64 time=2.83 ms
+
+--- 192.168.4.1 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1002ms
+rtt min/avg/max/mdev = 2.833/4.218/5.603/1.385 ms
+Step 3: starting Android emulator headless
+Emulator PID: 96172
+Step 4: Python WS/HTTP test on 192.168.4.1
+INFO         | Android emulator version 36.5.11.0 (build_id 15261927) (CL:N/A)
+INFO         | Graphics backend: gfxstream
+INFO         | Found systemPath /home/dima/Android/Sdk/system-images/android-36/google_apis_playstore/x86_64/
+WARNING      | Please update the emulator to one that supports the feature(s): VulkanVirtualQueue
+INFO         | Feature 'GLDirectMem' (53) is overridden to 'enabled'
+INFO         | Feature 'Vulkan' (21) is overridden to 'disabled'
+INFO         | Guest GLES Driver: Auto (ext controls)
+INFO         | emuglConfig_init: vulkan_mode_selected:swiftshader gles_mode_selected:swiftshader
+INFO         | Checking system compatibility:
+INFO         |   Checking: hasSufficientDiskSpace
+INFO         |      Ok: Disk space requirements to run avd: `flutter_emulator` are met
+INFO         |   Checking: hasSufficientHwGpu
+INFO         |      Ok: Hardware GPU compatibility checks are not required
+INFO         |   Checking: hasSufficientSystem
+INFO         |      Ok: System requirements to run avd: `flutter_emulator` are met
+INFO         | Storing crashdata in: /tmp/android-dima/emu-crash-36.5.11.db, detection is enabled for process: 96172
+INFO         | Initializing gfxstream backend
+INFO         | android_startOpenglesRenderer: gpu info
+INFO         | 
+INFO         | SharedLibrary::open for [libX11]
+INFO         | SharedLibrary::open for [libX11-xcb]
+INFO         | Graphics Adapter Vendor Google (Google Inc.)
+INFO         | Graphics Adapter Android Emulator OpenGL ES Translator (Google SwiftShader)
+INFO         | Graphics API Version OpenGL ES 3.0 (OpenGL ES 3.0 SwiftShader 4.0.0.1)
+INFO         | Graphics API Extensions GL_OES_EGL_sync GL_OES_EGL_image GL_OES_EGL_image_external GL_OES_depth24 GL_OES_depth32 GL_OES_element_index_uint GL_OES_texture_float GL_OES_texture_float_linear GL_OES_compressed_paletted_texture GL_OES_compressed_ETC1_RGB8_texture GL_OES_depth_texture GL_OES_texture_half_float GL_OES_texture_half_float_linear GL_OES_packed_depth_stencil GL_OES_vertex_half_float GL_OES_standard_derivatives GL_OES_texture_npot GL_OES_rgb8_rgba8 GL_EXT_color_buffer_float GL_EXT_color_buffer_half_float GL_EXT_texture_format_BGRA8888 GL_APPLE_texture_format_BGRA8888 
+INFO         | Graphics Device Extensions N/A
+INFO         | Sending adb public key [QAAAAKNaknf11tlXqAMDa74ioM5eT8yjgWgVlIG0AxkWo/NFkMljC0kIEKHub1kJDwtR3G/4mUSX3hs7wtEaaEYmXREC4AccEgvJegQESK3MMAn9dG05kxgQDusMRA/Ah83uXLHCcwmMbGg56khg6K9q0/dyUsMFR2+xtLFOywsHpCesc0gCsCpWpsSwm42ceb2UB04b8UlZ2h5o7sIRVF7hLSKpLAeUs6nUtdwJBIaennzdlwwsxNe25VzzHFTYKS1H2eJ923e1he6oRb8xETVP7TtqJYlXPkZ5Z1qZoeROFrtgqJRGy7CyJBnsk8/UoNqrYV7U3yov72o8HjHBWqpUcNg7eRbtEjk2FwanKDABToHL76857TMUEvFsyKH6dEys01zfppIE956/tASVnu6uBHma/eER80aH7qRN4zBBTDEI4sFnll1fASrO0dxwmv459IxDz/HcnxVLktTHHycTGCxAPHr3C+qcVNYhulX/2C6CxjQIJ8KtJ2TVZaI+c1zs8BXsNED1BAzVf7M9eJvsQRCVz4JTlx4IuKWlSfB24ic0wNorJeoF4Hz4gapeelioTcRXkSwuQOpxBZX1gjwvjc/DcvOKXiz5ceSZhAKGuG4TR18GSkxJ79N3lJbWmevr+SsjIczTl45+97od7pBKvFLpBOmi6XadcP6tueXr8wYT0RjljAEAAQA= dima@unknown]
+INFO         | Userspace boot properties:
+INFO         |   androidboot.boot_devices=pci0000:00/0000:00:03.0 pci0000:00/0000:00:06.0
+INFO         |   androidboot.dalvik.vm.heapsize=512m
+INFO         |   androidboot.debug.hwui.renderer=skiagl
+INFO         |   androidboot.debug.sf.nobootanimation=1
+INFO         |   androidboot.hardware=ranchu
+INFO         |   androidboot.hardware.gltransport=pipe
+INFO         |   androidboot.logcat=*:V
+INFO         |   androidboot.opengles.version=196608
+INFO         |   androidboot.qemu=1
+INFO         |   androidboot.qemu.adb.pubkey=QAAAAKNaknf11tlXqAMDa74ioM5eT8yjgWgVlIG0AxkWo/NFkMljC0kIEKHub1kJDwtR3G/4mUSX3hs7wtEaaEYmXREC4AccEgvJegQESK3MMAn9dG05kxgQDusMRA/Ah83uXLHCcwmMbGg56khg6K9q0/dyUsMFR2+xtLFOywsHpCesc0gCsCpWpsSwm42ceb2UB04b8UlZ2h5o7sIRVF7hLSKpLAeUs6nUtdwJBIaennzdlwwsxNe25VzzHFTYKS1H2eJ923e1he6oRb8xETVP7TtqJYlXPkZ5Z1qZoeROFrtgqJRGy7CyJBnsk8/UoNqrYV7U3yov72o8HjHBWqpUcNg7eRbtEjk2FwanKDABToHL76857TMUEvFsyKH6dEys01zfppIE956/tASVnu6uBHma/eER80aH7qRN4zBBTDEI4sFnll1fASrO0dxwmv459IxDz/HcnxVLktTHHycTGCxAPHr3C+qcVNYhulX/2C6CxjQIJ8KtJ2TVZaI+c1zs8BXsNED1BAzVf7M9eJvsQRCVz4JTlx4IuKWlSfB24ic0wNorJeoF4Hz4gapeelioTcRXkSwuQOpxBZX1gjwvjc/DcvOKXiz5ceSZhAKGuG4TR18GSkxJ79N3lJbWmevr+SsjIczTl45+97od7pBKvFLpBOmi6XadcP6tueXr8wYT0RjljAEAAQA= dima@unknown
+INFO         |   androidboot.qemu.avd_name=flutter_emulator
+INFO         |   androidboot.qemu.camera_hq_edge_processing=0
+INFO         |   androidboot.qemu.camera_protocol_ver=1
+INFO         |   androidboot.qemu.cpuvulkan.version=4202496
+INFO         |   androidboot.qemu.gltransport.drawFlushInterval=800
+INFO         |   androidboot.qemu.gltransport.name=pipe
+INFO         |   androidboot.qemu.hwcodec.avcdec=2
+INFO         |   androidboot.qemu.hwcodec.hevcdec=2
+INFO         |   androidboot.qemu.hwcodec.vpxdec=2
+INFO         |   androidboot.qemu.settings.system.screen_off_timeout=2147483647
+INFO         |   androidboot.qemu.skin=1080x1920
+INFO         |   androidboot.qemu.virtiowifi=1
+INFO         |   androidboot.qemu.vsync=60
+INFO         |   androidboot.serialno=EMULATOR36X5X11X0
+INFO         |   androidboot.vbmeta.digest=43d61dbc053c8dbf3adaff951e5bdfcf174ece9dd24ffe8e6120f951cb412b2a
+INFO         |   androidboot.vbmeta.hash_alg=sha256
+INFO         |   androidboot.vbmeta.size=6784
+INFO         |   androidboot.veritymode=enforcing
+INFO         | Monitoring duration of emulator setup.
+WARNING      | The emulator now requires a signed jwt token for gRPC access! Use the -grpc flag if you really want an open unprotected grpc port
+INFO         | Using security allow list from: /home/dima/Android/Sdk/emulator/lib/emulator_access.json
+WARNING      | *** Basic token auth should only be used by android-studio ***
+INFO         | The active JSON Web Key Sets can be found here: /run/user/1000/avd/running/96172/jwks/53735590-4edd-4a88-9ea9-67b9d1fc2e81/active.jwk
+INFO         | Scanning /run/user/1000/avd/running/96172/jwks/53735590-4edd-4a88-9ea9-67b9d1fc2e81 for jwk keys.
+INFO         | Started GRPC server at 127.0.0.1:8554, security: Local, auth: +token
+INFO         | Advertising in: /run/user/1000/avd/running/pid_96172.ini
+INFO        INFO        INFO         | Activated packet streamer for uwb emulation
+ | Activated packet streamer for bluetooth emulation
+ | Successfully initialized netsim WiFi
+INFO         | Setting display: 0 configuration to: 1080x1920, dpi: 420x420 
+INFO         | setDisplayActiveConfig: id:0, 1080x1920
+INFO         | emulatorSetupEnvironment: Setting up screen background view and display layout at env:1080x1920, lcd:1080x1920
+INFO         | emulatorSetupEnvironment: Environment scene is not required
+USER_INFO    | Emulator is performing a full startup. This may take upto two minutes, or more.
+[TEST] Connecting to ws://192.168.4.1:81/ and http://192.168.4.1:80
+WebSocket/HTTP test report
+============================================================
+Target: 192.168.4.1:81 (WS), 80 (HTTP)
+
+http_ping: OK
+http_send: OK (200)
+ws_connect: OK
+ws_system: NOT_EXPECTED (no greeting from real board)
+ws_echo: OK ('TestUser:t1788454997686:Hello from ws test')
+ws_name: SENT
+
+Overall: OK
+Report written to: /tmp/ws_real_hw_all_report.txt
+Step 5: Linux bundle runtime smoke test
+Xvfb not installed; running app directly (it will likely ignore --help and start)
+Gdk-Message: 20:03:18.080: Unable to load  from the cursor theme
+Не удалось инициализировать уведомления: Invalid argument(s): Linux settings must be set when targeting Linux platform.
+Проверяю ping ESP32...
+ESP32 доступен, подключаю WebSocket...
+✅ Успешно подключено к ESP32
+Отправлено имя: Linux
+WARNING      | Downloaded protobuf file is corrupt.
+WARNING      | UpdateCheck: Failure: Error
+WARNING      | UpdateCheck: failed to get the latest version, skipping check (current version '36.5.11-15261927')
+Step 6: Android APK runtime smoke test
+Waiting for emulator to boot and adb ...
+Emulator ready: emulator-5554
+Waiting for emulator-5554 to finish booting ...
+INFO         | Boot completed in 59043 ms
+INFO         | Increasing screen off timeout, logcat buffer size to 2M.
+emulator-5554 boot completed
+Installing APK on emulator-5554
+Performing Streamed Install
+Success
+Starting main activity on emulator-5554
+Starting: Intent { cmp=com.example.radio_bridge_dual/.MainActivity }
+ERROR        | bad color buffer handle 312
+Relevant logcat from emulator-5554:
+09-03 20:04:41.273  1331  3776 D PrefCtrlListHelper: Could not find Context-only controller for pref: com.google.android.settings.network.ConnectivityHelperDeviceToDevicePreferenceController
+09-03 20:04:41.335   674  1911 I AppsFilter: interaction: PackageSetting{b1703e3 com.example.radio_bridge_dual/10217} -> PackageSetting{37a1b9d com.google.android.apps.messaging/10146} BLOCKED
+09-03 20:04:41.346   674  1166 I AppsFilter: interaction: PackageSetting{b1703e3 com.example.radio_bridge_dual/10217} -> PackageSetting{75a500e com.google.android.apps.safetyhub/10143} BLOCKED
+09-03 20:04:41.638  3830  3830 D nativeloader: InitLlndkLibrariesProduct: libEGL.so:libGLESv1_CM.so:libGLESv2.so:libGLESv3.so:libRS.so:libandroid_net.so:libapexsupport.so:libavf.so:libbinder_ndk.so:libc.so:libcgrouprc.so:libclang_rt.asan-x86_64-android.so:libcom.android.tethering.connectivity_native.so:libdl.so:libft2.so:liblog.so:libm.so:libmediandk.so:libnativewindow.so:libneuralnetworks.so:libselinux.so:libsync.so:libvendorsupport.so:libvndksupport.so:libvulkan.so
+09-03 20:04:41.710  3842  3842 D nativeloader: InitLlndkLibrariesProduct: libEGL.so:libGLESv1_CM.so:libGLESv2.so:libGLESv3.so:libRS.so:libandroid_net.so:libapexsupport.so:libavf.so:libbinder_ndk.so:libc.so:libcgrouprc.so:libclang_rt.asan-x86_64-android.so:libcom.android.tethering.connectivity_native.so:libdl.so:libft2.so:liblog.so:libm.so:libmediandk.so:libnativewindow.so:libneuralnetworks.so:libselinux.so:libsync.so:libvendorsupport.so:libvndksupport.so:libvulkan.so
+09-03 20:04:41.805  3825  3825 D nativeloader: InitLlndkLibrariesProduct: libEGL.so:libGLESv1_CM.so:libGLESv2.so:libGLESv3.so:libRS.so:libandroid_net.so:libapexsupport.so:libavf.so:libbinder_ndk.so:libc.so:libcgrouprc.so:libclang_rt.asan-x86_64-android.so:libcom.android.tethering.connectivity_native.so:libdl.so:libft2.so:liblog.so:libm.so:libmediandk.so:libnativewindow.so:libneuralnetworks.so:libselinux.so:libsync.so:libvendorsupport.so:libvndksupport.so:libvulkan.so
+09-03 20:04:41.831  3846  3846 D nativeloader:   com_android_wifi: libservice-wifi-jni.so
+09-03 20:04:41.888  3853  3853 D nativeloader: InitLlndkLibrariesProduct: libEGL.so:libGLESv1_CM.so:libGLESv2.so:libGLESv3.so:libRS.so:libandroid_net.so:libapexsupport.so:libavf.so:libbinder_ndk.so:libc.so:libcgrouprc.so:libclang_rt.asan-x86_64-android.so:libcom.android.tethering.connectivity_native.so:libdl.so:libft2.so:liblog.so:libm.so:libmediandk.so:libnativewindow.so:libneuralnetworks.so:libselinux.so:libsync.so:libvendorsupport.so:libvndksupport.so:libvulkan.so
+09-03 20:04:41.932  2290  3847 I MagicTether: [LaunchUtils] No accounts found for enabling Instant Wifi. [CONTEXT service_id=276 ]
+09-03 20:04:42.169  1413  1971 I MagicTether: [LaunchUtils] No accounts found for enabling Instant Wifi. [CONTEXT service_id=276 ]
+09-03 20:04:42.171  1413  1971 I MagicTether: [LaunchUtils] No accounts found for enabling Instant Wifi. [CONTEXT service_id=276 ]
+09-03 20:04:42.228   674  1166 D ConnectivityService: requestNetwork for uid/pid:1000/674 asUid: 10143 activeRequest: null callbackRequest: 115 [NetworkRequest [ REQUEST id=116, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10143 RequestorUid: 1000 RequestorPkg: android UnderlyingNetworks: Null] ]] callback flags: 0 order: 2147483647 isUidTracked: false declaredMethods: AVAIL|LOST|BLK
+09-03 20:04:42.236   674  1003 D WifiNetworkFactory: got request NetworkRequest [ REQUEST id=116, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10143 RequestorUid: 1000 RequestorPkg: android UnderlyingNetworks: Null] ]
+09-03 20:04:42.236   674  1003 D UntrustedWifiNetworkFactory: got request NetworkRequest [ REQUEST id=116, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10143 RequestorUid: 1000 RequestorPkg: android UnderlyingNetworks: Null] ]
+09-03 20:04:42.236   674  1003 D OemPaidWifiNetworkFactory: got request NetworkRequest [ REQUEST id=116, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10143 RequestorUid: 1000 RequestorPkg: android UnderlyingNetworks: Null] ]
+09-03 20:04:42.236   674  1003 D MultiInternetWifiNetworkFactory: got request NetworkRequest [ REQUEST id=116, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10143 RequestorUid: 1000 RequestorPkg: android UnderlyingNetworks: Null] ]
+09-03 20:04:42.333   674  1899 D ConnectivityService: requestNetwork for uid/pid:10143/3842 activeRequest: null callbackRequest: 117 [NetworkRequest [ REQUEST id=118, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10143 RequestorUid: 10143 RequestorPkg: com.google.android.apps.safetyhub UnderlyingNetworks: Null] ]] callback flags: 0 order: 2147483647 isUidTracked: false declaredMethods: AVAIL|LOST|NC
+09-03 20:04:42.337   674  1003 D WifiNetworkFactory: got request NetworkRequest [ REQUEST id=118, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10143 RequestorUid: 10143 RequestorPkg: com.google.android.apps.safetyhub UnderlyingNetworks: Null] ]
+09-03 20:04:42.338   674  1003 D UntrustedWifiNetworkFactory: got request NetworkRequest [ REQUEST id=118, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10143 RequestorUid: 10143 RequestorPkg: com.google.android.apps.safetyhub UnderlyingNetworks: Null] ]
+09-03 20:04:42.341   674  1003 D OemPaidWifiNetworkFactory: got request NetworkRequest [ REQUEST id=118, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10143 RequestorUid: 10143 RequestorPkg: com.google.android.apps.safetyhub UnderlyingNetworks: Null] ]
+09-03 20:04:42.341   674  1003 D MultiInternetWifiNetworkFactory: got request NetworkRequest [ REQUEST id=118, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10143 RequestorUid: 10143 RequestorPkg: com.google.android.apps.safetyhub UnderlyingNetworks: Null] ]
+09-03 20:04:42.426  2290  3856 I MagicTether: [LaunchUtils] No accounts found for enabling Instant Wifi. [CONTEXT service_id=276 ]
+09-03 20:04:42.581   674  1001 W BestClock: java.time.DateTimeException: No network time available
+09-03 20:04:42.581   674  1001 W BestClock: java.time.DateTimeException: No network time available
+09-03 20:04:42.641   674  1910 D ConnectivityService: requestNetwork for uid/pid:1000/674 asUid: 10146 activeRequest: null callbackRequest: 119 [NetworkRequest [ TRACK_DEFAULT id=120, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10146 RequestorUid: 1000 RequestorPkg: android UnderlyingNetworks: Null] ], NetworkRequest [ REQUEST id=121, [ Transports: SATELLITE Capabilities: INTERNET&TRUSTED&NOT_VCN_MANAGED Uid: 10146 RequestorUid: 1000 RequestorPkg: android UnderlyingNetworks: Null] ]] callback flags: 0 order: 2147483647 isUidTracked: false declaredMethods: AVAIL|LOST|BLK
+09-03 20:04:42.720  2025  2163 E Finsky  : [46] uyn.a(19): HC: Failed to preload experiments flags: java.util.concurrent.ExecutionException: com.google.android.libraries.phenotype.client.api.PhenotypeRuntimeException: 29504: 29504: Network error
+09-03 20:04:42.916  3686  4047 E RkpdRegistrationBinder: com.android.rkpdapp.RkpdException: No network detected.
+09-03 20:04:42.916   674   674 E RemoteProvisionSysSvc: RKP error fetching key for client 222506354: ERROR_PENDING_INTERNET_CONNECTIVITY: No network detected.
+09-03 20:04:42.919   248   266 E keystore2: system/security/keystore2/rkpd_client/src/lib.rs:193 - IGetKeyCallback failed: ERROR_PENDING_INTERNET_CONNECTIVITY: No network detected.
+09-03 20:04:42.919   248   265 E keystore2: system/security/keystore2/src/remote_provisioning.rs:94 - Error occurred: system/security/keystore2/rkpd_client/src/lib.rs:194: GetKeyCallback failed: r#ERROR_PENDING_INTERNET_CONNECTIVITY "ERROR_PENDING_INTERNET_CONNECTIVITY: No network detected."
+09-03 20:04:42.919   248   265 E keystore2:     1: system/security/keystore2/rkpd_client/src/lib.rs:194: GetKeyCallback failed: r#ERROR_PENDING_INTERNET_CONNECTIVITY "ERROR_PENDING_INTERNET_CONNECTIVITY: No network detected."
+09-03 20:04:42.943  3686  4048 E RkpdRegistrationBinder: com.android.rkpdapp.RkpdException: No network detected.
+09-03 20:04:42.943   674   674 E RemoteProvisionSysSvc: RKP error fetching key for client 82502051: ERROR_PENDING_INTERNET_CONNECTIVITY: No network detected.
+09-03 20:04:42.943   248   266 E keystore2: system/security/keystore2/rkpd_client/src/lib.rs:193 - IGetKeyCallback failed: ERROR_PENDING_INTERNET_CONNECTIVITY: No network detected.
+09-03 20:04:42.944   248   265 E keystore2: system/security/keystore2/src/remote_provisioning.rs:94 - Error occurred: system/security/keystore2/rkpd_client/src/lib.rs:194: GetKeyCallback failed: r#ERROR_PENDING_INTERNET_CONNECTIVITY "ERROR_PENDING_INTERNET_CONNECTIVITY: No network detected."
+09-03 20:04:42.944   248   265 E keystore2:     1: system/security/keystore2/rkpd_client/src/lib.rs:194: GetKeyCallback failed: r#ERROR_PENDING_INTERNET_CONNECTIVITY "ERROR_PENDING_INTERNET_CONNECTIVITY: No network detected."
+09-03 20:04:43.104   674   729 I AppsFilter: interaction: PackageSetting{b1703e3 com.example.radio_bridge_dual/10217} -> PackageSetting{846df3a com.google.android.apps.messaging/10146} BLOCKED
+09-03 20:04:43.104   674   729 I AppsFilter: interaction: PackageSetting{b1703e3 com.example.radio_bridge_dual/10217} -> PackageSetting{f0ce7eb com.google.android.apps.safetyhub/10143} BLOCKED
+09-03 20:04:43.105   674   729 I AppsFilter: interaction: PackageSetting{b1703e3 com.example.radio_bridge_dual/10217} -> PackageSetting{1ea8948 com.android.camera2/10151} BLOCKED
+09-03 20:04:43.105   674   729 I AppsFilter: interaction: PackageSetting{b1703e3 com.example.radio_bridge_dual/10217} -> PackageSetting{c6093e1 com.google.android.dialer/10142} BLOCKED
+09-03 20:04:43.105   674   729 I AppsFilter: interaction: PackageSetting{b1703e3 com.example.radio_bridge_dual/10217} -> PackageSetting{333b506 com.google.android.rkpdapp/10216} BLOCKED
+09-03 20:04:43.105   674   729 I AppsFilter: interaction: PackageSetting{b1703e3 com.example.radio_bridge_dual/10217} -> PackageSetting{6d017c7 com.google.android.settings.intelligence/10144} BLOCKED
+09-03 20:04:43.250  1359  1359 D AlphabeticalAppsList: addAppsWithSections: adding sectionName: R with appInfoTitle: radio_bridge_dual
+09-03 20:04:43.251  1359  1359 D AlphabeticalAppsList: addAppsWithSections: adding sectionName: R with appInfoTitle: radio_bridge_dual
+09-03 20:04:43.410  1359  1359 D AlphabeticalAppsList: addAppsWithSections: adding sectionName: R with appInfoTitle: radio_bridge_dual
+09-03 20:04:43.410  1359  1359 D AlphabeticalAppsList: addAppsWithSections: adding sectionName: R with appInfoTitle: radio_bridge_dual
+09-03 20:04:43.415   674  1003 W BestClock: java.time.DateTimeException: No network time available
+09-03 20:04:43.416   674  1003 W BestClock: java.time.DateTimeException: No network time available
+09-03 20:04:43.417   674  1003 W BestClock: java.time.DateTimeException: No network time available
+09-03 20:04:43.417  3733  3766 W IndexDataConverter: Skipping index for null-key item IndexData.Builder {title: Extends battery life and improves device performance by automatically managing your network connections,package: com.android.settings}
+09-03 20:04:43.427   674  1003 W BestClock: java.time.DateTimeException: No network time available
+09-03 20:04:43.427   674  1003 W BestClock: java.time.DateTimeException: No network time available
+09-03 20:04:43.504  1359  1359 D AlphabeticalAppsList: addAppsWithSections: adding sectionName: R with appInfoTitle: radio_bridge_dual
+09-03 20:04:43.504  1359  1359 D AlphabeticalAppsList: addAppsWithSections: adding sectionName: R with appInfoTitle: radio_bridge_dual
+09-03 20:04:43.584  1359  1359 D AlphabeticalAppsList: addAppsWithSections: adding sectionName: R with appInfoTitle: radio_bridge_dual
+09-03 20:04:43.584  1359  1359 D AlphabeticalAppsList: addAppsWithSections: adding sectionName: R with appInfoTitle: radio_bridge_dual
+09-03 20:04:43.884  1359  1359 D AlphabeticalAppsList: addAppsWithSections: adding sectionName: R with appInfoTitle: radio_bridge_dual
+09-03 20:04:43.884  1359  1359 D AlphabeticalAppsList: addAppsWithSections: adding sectionName: R with appInfoTitle: radio_bridge_dual
+09-03 20:04:43.929  3830  3991 I Bugle   : CountryCodeDetector: updateSmsNetworkCountry from default subscription network country. detected country: us
+09-03 20:04:43.992  4089  4089 D nativeloader: InitLlndkLibrariesProduct: libEGL.so:libGLESv1_CM.so:libGLESv2.so:libGLESv3.so:libRS.so:libandroid_net.so:libapexsupport.so:libavf.so:libbinder_ndk.so:libc.so:libcgrouprc.so:libclang_rt.asan-x86_64-android.so:libcom.android.tethering.connectivity_native.so:libdl.so:libft2.so:liblog.so:libm.so:libmediandk.so:libnativewindow.so:libneuralnetworks.so:libselinux.so:libsync.so:libvendorsupport.so:libvndksupport.so:libvulkan.so
+09-03 20:04:44.000  1413  1642 I NetworkScheduler.Stats: (REDACTED) Task %s/%s started execution. cause:%s exec_start_elapsed_seconds: %s
+09-03 20:04:44.012   674  1898 W BestClock: java.time.DateTimeException: No network time available
+09-03 20:04:44.048   674  1898 W BestClock: java.time.DateTimeException: No network time available
+09-03 20:04:44.050   674  1001 W BestClock: java.time.DateTimeException: No network time available
+09-03 20:04:44.051   674  1001 W BestClock: java.time.DateTimeException: No network time available
+09-03 20:04:44.056   674  1001 W BestClock: java.time.DateTimeException: No network time available
+09-03 20:04:44.057   674  1001 W BestClock: java.time.DateTimeException: No network time available
+09-03 20:04:44.057   674  1001 W BestClock: java.time.DateTimeException: No network time available
+09-03 20:04:44.057   674  1001 W BestClock: java.time.DateTimeException: No network time available
+09-03 20:04:44.076   674  1001 W BestClock: java.time.DateTimeException: No network time available
+09-03 20:04:44.082   674  1001 W BestClock: java.time.DateTimeException: No network time available
+09-03 20:04:44.082   674  1001 W BestClock: java.time.DateTimeException: No network time available
+09-03 20:04:44.083   674  1001 W BestClock: java.time.DateTimeException: No network time available
+09-03 20:04:44.083   674  1001 W BestClock: java.time.DateTimeException: No network time available
+09-03 20:04:44.083   674  1001 W BestClock: java.time.DateTimeException: No network time available
+09-03 20:04:44.083   674  1001 D NetworkStatsObservers: Registering observer for RequestInfo from pid/uid:674/1000(android) for DataUsageRequest [ requestId=6, networkTemplate=NetworkTemplate: matchRule=MOBILE, matchSubscriberIds=[310260...], matchWifiNetworkKeys=[], metered=YES, defaultNetwork=NO, thresholdInBytes=3563533 ] accessLevel:3
+09-03 20:04:44.083   674  1089 D NetworkStatsObservers: Unregistering RequestInfo from pid/uid:674/1000(android) for DataUsageRequest [ requestId=5, networkTemplate=NetworkTemplate: matchRule=MOBILE, matchSubscriberIds=[310260...], matchWifiNetworkKeys=[], metered=YES, defaultNetwork=NO, thresholdInBytes=3566316 ] accessLevel:3
+09-03 20:04:44.085   674  1000 W BestClock: java.time.DateTimeException: No network time available
+09-03 20:04:44.105   674  1000 W BestClock: java.time.DateTimeException: No network time available
+09-03 20:04:44.110   674  1001 W BestClock: java.time.DateTimeException: No network time available
+09-03 20:04:44.110   674  1001 W BestClock: java.time.DateTimeException: No network time available
+09-03 20:04:44.215   674  1169 D ConnectivityService: requestNetwork for uid/pid:10146/4089 activeRequest: null callbackRequest: 123 [NetworkRequest [ TRACK_DEFAULT id=124, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10146 RequestorUid: 10146 RequestorPkg: com.google.android.apps.messaging UnderlyingNetworks: Null] ], NetworkRequest [ REQUEST id=125, [ Transports: SATELLITE Capabilities: INTERNET&TRUSTED&NOT_VCN_MANAGED Uid: 10146 RequestorUid: 10146 RequestorPkg: com.google.android.apps.messaging UnderlyingNetworks: Null] ]] callback flags: 0 order: 2147483647 isUidTracked: false declaredMethods: AVAIL|LOSING|LOST|NC
+09-03 20:04:44.223  4089  4130 I BugleRcsEngine: Connected state: [1], networkType: [WIFI] [CONTEXT thread_id=65 ]
+09-03 20:04:44.223  4089  4130 I BugleRcsEngine: Connected state: [1], networkType: [WIFI] [CONTEXT thread_id=65 ]
+09-03 20:04:44.626  1331  4022 W SliceData: Highlight menu key res is empty: com.android.settings.network.telephony.VideoCallingPreferenceController
+09-03 20:04:44.781  1331  4022 D SubscriptionRepository: getSelectableSubscriptionInfoList: [[SubscriptionInfo: id=1 iccId=898603186[****] simSlotIndex=0 portIndex=0 isEmbedded=false carrierId=1 displayName=T-Mobile carrierName=T-Mobile isOpportunistic=false groupUuid=null groupOwner= isGroupDisabled=false displayNameSource=CARRIER iconTint=-4716942 number=[****] dataRoaming=0 mcc=310 mnc=260 ehplmns=[] hplmns=[] cardString=898603186[****] cardId=0 nativeAccessRules=null carrierConfigAccessRules=[cert: 92B5F8117FBD9BD5738FF168A4FA12CBE284BE834EDE1A7BB44DD8455BA15920 pkg: com.tmobile.rsuapp access: 0, cert: 92B5F8117FBD9BD5738FF168A4FA12CBE284BE834EDE1A7BB44DD8455BA15920 pkg: com.tmobile.echolocate access: 0, cert: 92B5F8117FBD9BD5738FF168A4FA12CBE284BE834EDE1A7BB44DD8455BA15920 pkg: com.tmobile.services.nameid access: 0, cert: 92B5F8117FBD9BD5738FF168A4FA12CBE284BE834EDE1A7BB44DD8455BA15920 pkg: com.tmobile.pr.mytmobile access: 0, cert: 92B5F8117FBD9BD5738FF168A4FA12CBE284BE834EDE1A7BB44DD8455BA15920 pkg: com.tmobile.vvm.application access: 0, cert: 3D1A4BEF6EE7AF7D34D120E7B1AAC0DD245585DE6237CF100F68333AFACFF562 pkg: com.tmobile.rsuapp access: 0, cert: 3D1A4BEF6EE7AF7D34D120E7B1AAC0DD245585DE6237CF100F68333AFACFF562 pkg: com.tmobile.echolocate access: 0, cert: 3D1A4BEF6EE7AF7D34D120E7B1AAC0DD245585DE6237CF100F68333AFACFF562 pkg: com.tmobile.services.nameid access: 0, cert: 3D1A4BEF6EE7AF7D34D120E7B1AAC0DD245585DE6237CF100F68333AFACFF562 pkg: com.tmobile.pr.mytmobile access: 0, cert: 3D1A4BEF6EE7AF7D34D120E7B1AAC0DD245585DE6237CF100F68333AFACFF562 pkg: com.tmobile.vvm.application access: 0, cert: 6892793FC413019D2DF609DFED7AF622D0F2D8FCF96EFA7E3FB87EEA34E10B93 pkg: com.tmobile.rsuapp access: 0, cert: 6892793FC413019D2DF609DFED7AF622D0F2D8FCF96EFA7E3FB87EEA34E10B93 pkg: com.tmobile.echolocate access: 0, cert: 6892793FC413019D2DF609DFED7AF622D0F2D8FCF96EFA7E3FB87EEA34E10B93 pkg: com.tmobile.services.nameid access: 0, cert: 6892793FC413019D2DF609DFED7AF622D0F2D8FCF96EFA7E3FB87EEA34E10B93 pkg: com.tmobile.pr.mytmobile access: 0, cert: 6892793FC413019D2DF609DFED7AF622D0F2D8FCF96EFA7E3FB87EEA34E10B93 pkg: com.tmobile.vvm.application access: 0, cert: 7B68FD9D4E7610C9CB35FC0C6CC06EA04C6906E3DFA9F48F9A05460AF36BFFFC pkg: com.tmobile.rsuapp access: 0, cert: 7B68FD9D4E7610C9CB35FC0C6CC06EA04C6906E3DFA9F48F9A05460AF36BFFFC pkg: com.tmobile.echolocate access: 0, cert: 7B68FD9D4E7610C9CB35FC0C6CC06EA04C6906E3DFA9F48F9A05460AF36BFFFC pkg: com.tmobile.services.nameid access: 0, cert: 7B68FD9D4E7610C9CB35FC0C6CC06EA04C6906E3DFA9F48F9A05460AF36BFFFC pkg: com.tmobile.pr.mytmobile access: 0, cert: 7B68FD9D4E7610C9CB35FC0C6CC06EA04C6906E3DFA9F48F9A05460AF36BFFFC pkg: com.tmobile.vvm.application access: 0] countryIso=us profileClass=-1 mType=LOCAL_SIM areUiccApplicationsEnabled=true usageSetting=DEFAULT isOnlyNonTerrestrialNetwork=false serviceCapabilities=[1, 2, 3] transferStatus=0 isSatelliteESOSSupported=false]]
+09-03 20:04:44.784  1331  4022 D SubscriptionRepository: getSelectableSubscriptionInfoList: [[SubscriptionInfo: id=1 iccId=898603186[****] simSlotIndex=0 portIndex=0 isEmbedded=false carrierId=1 displayName=T-Mobile carrierName=T-Mobile isOpportunistic=false groupUuid=null groupOwner= isGroupDisabled=false displayNameSource=CARRIER iconTint=-4716942 number=[****] dataRoaming=0 mcc=310 mnc=260 ehplmns=[] hplmns=[] cardString=898603186[****] cardId=0 nativeAccessRules=null carrierConfigAccessRules=[cert: 92B5F8117FBD9BD5738FF168A4FA12CBE284BE834EDE1A7BB44DD8455BA15920 pkg: com.tmobile.rsuapp access: 0, cert: 92B5F8117FBD9BD5738FF168A4FA12CBE284BE834EDE1A7BB44DD8455BA15920 pkg: com.tmobile.echolocate access: 0, cert: 92B5F8117FBD9BD5738FF168A4FA12CBE284BE834EDE1A7BB44DD8455BA15920 pkg: com.tmobile.services.nameid access: 0, cert: 92B5F8117FBD9BD5738FF168A4FA12CBE284BE834EDE1A7BB44DD8455BA15920 pkg: com.tmobile.pr.mytmobile access: 0, cert: 92B5F8117FBD9BD5738FF168A4FA12CBE284BE834EDE1A7BB44DD8455BA15920 pkg: com.tmobile.vvm.application access: 0, cert: 3D1A4BEF6EE7AF7D34D120E7B1AAC0DD245585DE6237CF100F68333AFACFF562 pkg: com.tmobile.rsuapp access: 0, cert: 3D1A4BEF6EE7AF7D34D120E7B1AAC0DD245585DE6237CF100F68333AFACFF562 pkg: com.tmobile.echolocate access: 0, cert: 3D1A4BEF6EE7AF7D34D120E7B1AAC0DD245585DE6237CF100F68333AFACFF562 pkg: com.tmobile.services.nameid access: 0, cert: 3D1A4BEF6EE7AF7D34D120E7B1AAC0DD245585DE6237CF100F68333AFACFF562 pkg: com.tmobile.pr.mytmobile access: 0, cert: 3D1A4BEF6EE7AF7D34D120E7B1AAC0DD245585DE6237CF100F68333AFACFF562 pkg: com.tmobile.vvm.application access: 0, cert: 6892793FC413019D2DF609DFED7AF622D0F2D8FCF96EFA7E3FB87EEA34E10B93 pkg: com.tmobile.rsuapp access: 0, cert: 6892793FC413019D2DF609DFED7AF622D0F2D8FCF96EFA7E3FB87EEA34E10B93 pkg: com.tmobile.echolocate access: 0, cert: 6892793FC413019D2DF609DFED7AF622D0F2D8FCF96EFA7E3FB87EEA34E10B93 pkg: com.tmobile.services.nameid access: 0, cert: 6892793FC413019D2DF609DFED7AF622D0F2D8FCF96EFA7E3FB87EEA34E10B93 pkg: com.tmobile.pr.mytmobile access: 0, cert: 6892793FC413019D2DF609DFED7AF622D0F2D8FCF96EFA7E3FB87EEA34E10B93 pkg: com.tmobile.vvm.application access: 0, cert: 7B68FD9D4E7610C9CB35FC0C6CC06EA04C6906E3DFA9F48F9A05460AF36BFFFC pkg: com.tmobile.rsuapp access: 0, cert: 7B68FD9D4E7610C9CB35FC0C6CC06EA04C6906E3DFA9F48F9A05460AF36BFFFC pkg: com.tmobile.echolocate access: 0, cert: 7B68FD9D4E7610C9CB35FC0C6CC06EA04C6906E3DFA9F48F9A05460AF36BFFFC pkg: com.tmobile.services.nameid access: 0, cert: 7B68FD9D4E7610C9CB35FC0C6CC06EA04C6906E3DFA9F48F9A05460AF36BFFFC pkg: com.tmobile.pr.mytmobile access: 0, cert: 7B68FD9D4E7610C9CB35FC0C6CC06EA04C6906E3DFA9F48F9A05460AF36BFFFC pkg: com.tmobile.vvm.application access: 0] countryIso=us profileClass=-1 mType=LOCAL_SIM areUiccApplicationsEnabled=true usageSetting=DEFAULT isOnlyNonTerrestrialNetwork=false serviceCapabilities=[1, 2, 3] transferStatus=0 isSatelliteESOSSupported=false]]
+09-03 20:04:44.786  1190  1190 W DnsResolver: resNetworkResult:android.system.ErrnoException: resNetworkResult failed: ETIMEDOUT (Connection timed out)
+09-03 20:04:44.786  1331  4022 D SubscriptionRepository: getSelectableSubscriptionInfoList: [[SubscriptionInfo: id=1 iccId=898603186[****] simSlotIndex=0 portIndex=0 isEmbedded=false carrierId=1 displayName=T-Mobile carrierName=T-Mobile isOpportunistic=false groupUuid=null groupOwner= isGroupDisabled=false displayNameSource=CARRIER iconTint=-4716942 number=[****] dataRoaming=0 mcc=310 mnc=260 ehplmns=[] hplmns=[] cardString=898603186[****] cardId=0 nativeAccessRules=null carrierConfigAccessRules=[cert: 92B5F8117FBD9BD5738FF168A4FA12CBE284BE834EDE1A7BB44DD8455BA15920 pkg: com.tmobile.rsuapp access: 0, cert: 92B5F8117FBD9BD5738FF168A4FA12CBE284BE834EDE1A7BB44DD8455BA15920 pkg: com.tmobile.echolocate access: 0, cert: 92B5F8117FBD9BD5738FF168A4FA12CBE284BE834EDE1A7BB44DD8455BA15920 pkg: com.tmobile.services.nameid access: 0, cert: 92B5F8117FBD9BD5738FF168A4FA12CBE284BE834EDE1A7BB44DD8455BA15920 pkg: com.tmobile.pr.mytmobile access: 0, cert: 92B5F8117FBD9BD5738FF168A4FA12CBE284BE834EDE1A7BB44DD8455BA15920 pkg: com.tmobile.vvm.application access: 0, cert: 3D1A4BEF6EE7AF7D34D120E7B1AAC0DD245585DE6237CF100F68333AFACFF562 pkg: com.tmobile.rsuapp access: 0, cert: 3D1A4BEF6EE7AF7D34D120E7B1AAC0DD245585DE6237CF100F68333AFACFF562 pkg: com.tmobile.echolocate access: 0, cert: 3D1A4BEF6EE7AF7D34D120E7B1AAC0DD245585DE6237CF100F68333AFACFF562 pkg: com.tmobile.services.nameid access: 0, cert: 3D1A4BEF6EE7AF7D34D120E7B1AAC0DD245585DE6237CF100F68333AFACFF562 pkg: com.tmobile.pr.mytmobile access: 0, cert: 3D1A4BEF6EE7AF7D34D120E7B1AAC0DD245585DE6237CF100F68333AFACFF562 pkg: com.tmobile.vvm.application access: 0, cert: 6892793FC413019D2DF609DFED7AF622D0F2D8FCF96EFA7E3FB87EEA34E10B93 pkg: com.tmobile.rsuapp access: 0, cert: 6892793FC413019D2DF609DFED7AF622D0F2D8FCF96EFA7E3FB87EEA34E10B93 pkg: com.tmobile.echolocate access: 0, cert: 6892793FC413019D2DF609DFED7AF622D0F2D8FCF96EFA7E3FB87EEA34E10B93 pkg: com.tmobile.services.nameid access: 0, cert: 6892793FC413019D2DF609DFED7AF622D0F2D8FCF96EFA7E3FB87EEA34E10B93 pkg: com.tmobile.pr.mytmobile access: 0, cert: 6892793FC413019D2DF609DFED7AF622D0F2D8FCF96EFA7E3FB87EEA34E10B93 pkg: com.tmobile.vvm.application access: 0, cert: 7B68FD9D4E7610C9CB35FC0C6CC06EA04C6906E3DFA9F48F9A05460AF36BFFFC pkg: com.tmobile.rsuapp access: 0, cert: 7B68FD9D4E7610C9CB35FC0C6CC06EA04C6906E3DFA9F48F9A05460AF36BFFFC pkg: com.tmobile.echolocate access: 0, cert: 7B68FD9D4E7610C9CB35FC0C6CC06EA04C6906E3DFA9F48F9A05460AF36BFFFC pkg: com.tmobile.services.nameid access: 0, cert: 7B68FD9D4E7610C9CB35FC0C6CC06EA04C6906E3DFA9F48F9A05460AF36BFFFC pkg: com.tmobile.pr.mytmobile access: 0, cert: 7B68FD9D4E7610C9CB35FC0C6CC06EA04C6906E3DFA9F48F9A05460AF36BFFFC pkg: com.tmobile.vvm.application access: 0] countryIso=us profileClass=-1 mType=LOCAL_SIM areUiccApplicationsEnabled=true usageSetting=DEFAULT isOnlyNonTerrestrialNetwork=false serviceCapabilities=[1, 2, 3] transferStatus=0 isSatelliteESOSSupported=false]]
+09-03 20:04:44.789  1190  1190 W DnsResolver: resNetworkResult:android.system.ErrnoException: resNetworkResult failed: ETIMEDOUT (Connection timed out)
+09-03 20:04:44.790  1331  4022 D SubscriptionRepository: getSelectableSubscriptionInfoList: [[SubscriptionInfo: id=1 iccId=898603186[****] simSlotIndex=0 portIndex=0 isEmbedded=false carrierId=1 displayName=T-Mobile carrierName=T-Mobile isOpportunistic=false groupUuid=null groupOwner= isGroupDisabled=false displayNameSource=CARRIER iconTint=-4716942 number=[****] dataRoaming=0 mcc=310 mnc=260 ehplmns=[] hplmns=[] cardString=898603186[****] cardId=0 nativeAccessRules=null carrierConfigAccessRules=[cert: 92B5F8117FBD9BD5738FF168A4FA12CBE284BE834EDE1A7BB44DD8455BA15920 pkg: com.tmobile.rsuapp access: 0, cert: 92B5F8117FBD9BD5738FF168A4FA12CBE284BE834EDE1A7BB44DD8455BA15920 pkg: com.tmobile.echolocate access: 0, cert: 92B5F8117FBD9BD5738FF168A4FA12CBE284BE834EDE1A7BB44DD8455BA15920 pkg: com.tmobile.services.nameid access: 0, cert: 92B5F8117FBD9BD5738FF168A4FA12CBE284BE834EDE1A7BB44DD8455BA15920 pkg: com.tmobile.pr.mytmobile access: 0, cert: 92B5F8117FBD9BD5738FF168A4FA12CBE284BE834EDE1A7BB44DD8455BA15920 pkg: com.tmobile.vvm.application access: 0, cert: 3D1A4BEF6EE7AF7D34D120E7B1AAC0DD245585DE6237CF100F68333AFACFF562 pkg: com.tmobile.rsuapp access: 0, cert: 3D1A4BEF6EE7AF7D34D120E7B1AAC0DD245585DE6237CF100F68333AFACFF562 pkg: com.tmobile.echolocate access: 0, cert: 3D1A4BEF6EE7AF7D34D120E7B1AAC0DD245585DE6237CF100F68333AFACFF562 pkg: com.tmobile.services.nameid access: 0, cert: 3D1A4BEF6EE7AF7D34D120E7B1AAC0DD245585DE6237CF100F68333AFACFF562 pkg: com.tmobile.pr.mytmobile access: 0, cert: 3D1A4BEF6EE7AF7D34D120E7B1AAC0DD245585DE6237CF100F68333AFACFF562 pkg: com.tmobile.vvm.application access: 0, cert: 6892793FC413019D2DF609DFED7AF622D0F2D8FCF96EFA7E3FB87EEA34E10B93 pkg: com.tmobile.rsuapp access: 0, cert: 6892793FC413019D2DF609DFED7AF622D0F2D8FCF96EFA7E3FB87EEA34E10B93 pkg: com.tmobile.echolocate access: 0, cert: 6892793FC413019D2DF609DFED7AF622D0F2D8FCF96EFA7E3FB87EEA34E10B93 pkg: com.tmobile.services.nameid access: 0, cert: 6892793FC413019D2DF609DFED7AF622D0F2D8FCF96EFA7E3FB87EEA34E10B93 pkg: com.tmobile.pr.mytmobile access: 0, cert: 6892793FC413019D2DF609DFED7AF622D0F2D8FCF96EFA7E3FB87EEA34E10B93 pkg: com.tmobile.vvm.application access: 0, cert: 7B68FD9D4E7610C9CB35FC0C6CC06EA04C6906E3DFA9F48F9A05460AF36BFFFC pkg: com.tmobile.rsuapp access: 0, cert: 7B68FD9D4E7610C9CB35FC0C6CC06EA04C6906E3DFA9F48F9A05460AF36BFFFC pkg: com.tmobile.echolocate access: 0, cert: 7B68FD9D4E7610C9CB35FC0C6CC06EA04C6906E3DFA9F48F9A05460AF36BFFFC pkg: com.tmobile.services.nameid access: 0, cert: 7B68FD9D4E7610C9CB35FC0C6CC06EA04C6906E3DFA9F48F9A05460AF36BFFFC pkg: com.tmobile.pr.mytmobile access: 0, cert: 7B68FD9D4E7610C9CB35FC0C6CC06EA04C6906E3DFA9F48F9A05460AF36BFFFC pkg: com.tmobile.vvm.application access: 0] countryIso=us profileClass=-1 mType=LOCAL_SIM areUiccApplicationsEnabled=true usageSetting=DEFAULT isOnlyNonTerrestrialNetwork=false serviceCapabilities=[1, 2, 3] transferStatus=0 isSatelliteESOSSupported=false]]
+09-03 20:04:44.791  1190  3414 D NetworkMonitor/101: PROBE_DNS connectivitycheck.gstatic.com 10061ms FAIL in type ADDRCONFIG android.net.DnsResolver$DnsException: android.system.ErrnoException: resNetworkResult failed: ETIMEDOUT (Connection timed out)
+09-03 20:04:44.792  1190  3413 D NetworkMonitor/101: PROBE_DNS www.google.com 10058ms FAIL in type ADDRCONFIG android.net.DnsResolver$DnsException: android.system.ErrnoException: resNetworkResult failed: ETIMEDOUT (Connection timed out)
+09-03 20:04:44.863  1331  4022 D WifiCallingSliceHelper: Wifi calling is either not provisioned or not enabled by Platform
+09-03 20:04:44.875  1331  4022 D WifiSlice: calling uid name : com.google.android.settings.intelligence
+09-03 20:04:46.466   674  1003 W BestClock: java.time.DateTimeException: No network time available
+09-03 20:04:46.467   674  1003 W BestClock: java.time.DateTimeException: No network time available
+09-03 20:04:46.467   674  1003 W BestClock: java.time.DateTimeException: No network time available
+09-03 20:04:46.467   674  1003 W BestClock: java.time.DateTimeException: No network time available
+09-03 20:04:46.467   674  1003 W BestClock: java.time.DateTimeException: No network time available
+Stopping emulator
+INFO         | Wait for emulator (pid 96172) 20 seconds to shutdown gracefully before kill;you can set environment variable ANDROID_EMULATOR_WAIT_TIME_BEFORE_KILL(in seconds) to change the default value (20 seconds)
+
+WARNING      | Not saving state: RAM not mapped as shared
+INFO         | Saving snapshot 'default_boot' using 0 ms
+ERROR        | stop: Not implemented
+WARNING      | Netsim Wifi localhost:43005 is gone due to CANCELLED
+Step 7: restoring original Wi-Fi
+Подключение «AFSK-TRX-8045» успешно деактивировано (активный путь D-Bus: /org/freedesktop/NetworkManager/ActiveConnection/18)
+Подключение успешно активировано (активный путь D-Bus: /org/freedesktop/NetworkManager/ActiveConnection/19)
+Original IP restored: 192.168.1.7/24
+Final active connection:
+NAME             UUID                                  TYPE      DEVICE 
+Tattelecom_2529  b1b8b883-5d2d-4c90-968a-c9843fdf64a2  wifi      wlp4s0 
+tun0             482a0516-c407-4362-aa7b-42e0623ad64d  tun       tun0   
+lo               8eb2cdfb-5282-4b81-8194-e1edfe7099c9  loopback  lo     
+=== WS real hardware + Android emulator test finished: Чт 03 сен 2026 20:04:57 MSK ===
+=== WS real hardware + Android emulator test started: Чт 03 сен 2026 20:07:03 MSK ===
+Original active connection: Tattelecom_2529
+Step 1: disabling original autoconnect and disconnecting Tattelecom_2529
+Подключение «Tattelecom_2529» успешно деактивировано (активный путь D-Bus: /org/freedesktop/NetworkManager/ActiveConnection/19)
+Step 2: connecting to AFSK AP
+Rescanning and trying to connect to AFSK-TRX-8045 (00:4B:12:2F:80:45) ...
+Подключение успешно активировано (активный путь D-Bus: /org/freedesktop/NetworkManager/ActiveConnection/21)
+AFSK IP obtained: 192.168.4.2/24
+Connected to AFSK AP. Verifying reachability ...
+PING 192.168.4.1 (192.168.4.1) 56(84) bytes of data.
+64 bytes from 192.168.4.1: icmp_seq=1 ttl=64 time=3.25 ms
+64 bytes from 192.168.4.1: icmp_seq=2 ttl=64 time=2.50 ms
+
+--- 192.168.4.1 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1002ms
+rtt min/avg/max/mdev = 2.504/2.879/3.254/0.375 ms
+Step 3: starting Android emulator headless
+Emulator PID: 98158
+Step 4: Python WS/HTTP test on 192.168.4.1
+INFO         | Android emulator version 36.5.11.0 (build_id 15261927) (CL:N/A)
+INFO         | Graphics backend: gfxstream
+INFO         | Found systemPath /home/dima/Android/Sdk/system-images/android-36/google_apis_playstore/x86_64/
+WARNING      | Please update the emulator to one that supports the feature(s): VulkanVirtualQueue
+INFO         | Feature 'GLDirectMem' (53) is overridden to 'enabled'
+INFO         | Feature 'Vulkan' (21) is overridden to 'disabled'
+INFO         | Guest GLES Driver: Auto (ext controls)
+INFO         | emuglConfig_init: vulkan_mode_selected:lavapipe gles_mode_selected:swangle
+INFO         | Checking system compatibility:
+INFO         |   Checking: hasSufficientDiskSpace
+INFO         |      Ok: Disk space requirements to run avd: `flutter_emulator` are met
+INFO         |   Checking: hasSufficientHwGpu
+INFO         |      Ok: Hardware GPU compatibility checks are not required
+INFO         |   Checking: hasSufficientSystem
+INFO         |      Ok: System requirements to run avd: `flutter_emulator` are met
+INFO         | Storing crashdata in: /tmp/android-dima/emu-crash-36.5.11.db, detection is enabled for process: 98158
+INFO         | Initializing gfxstream backend
+INFO         | android_startOpenglesRenderer: gpu info
+INFO         | 
+INFO         | SharedLibrary::open for [libX11]
+INFO         | SharedLibrary::open for [libX11-xcb]
+INFO         | Graphics Adapter Vendor Google (Google Inc.)
+INFO         | Graphics Adapter Android Emulator OpenGL ES Translator (Google SwiftShader)
+INFO         | Graphics API Version OpenGL ES 3.0 (OpenGL ES 3.0 SwiftShader 4.0.0.1)
+INFO         | Graphics API Extensions GL_OES_EGL_sync GL_OES_EGL_image GL_OES_EGL_image_external GL_OES_depth24 GL_OES_depth32 GL_OES_element_index_uint GL_OES_texture_float GL_OES_texture_float_linear GL_OES_compressed_paletted_texture GL_OES_compressed_ETC1_RGB8_texture GL_OES_depth_texture GL_OES_texture_half_float GL_OES_texture_half_float_linear GL_OES_packed_depth_stencil GL_OES_vertex_half_float GL_OES_standard_derivatives GL_OES_texture_npot GL_OES_rgb8_rgba8 GL_EXT_color_buffer_float GL_EXT_color_buffer_half_float GL_EXT_texture_format_BGRA8888 GL_APPLE_texture_format_BGRA8888 
+INFO         | Graphics Device Extensions N/A
+ERROR        | Setting read-only feature 'GLAsyncSwap' to '0'
+INFO         | Feature 'GLAsyncSwap' (50) is overridden to 'disabled'
+INFO         | Sending adb public key [QAAAAKNaknf11tlXqAMDa74ioM5eT8yjgWgVlIG0AxkWo/NFkMljC0kIEKHub1kJDwtR3G/4mUSX3hs7wtEaaEYmXREC4AccEgvJegQESK3MMAn9dG05kxgQDusMRA/Ah83uXLHCcwmMbGg56khg6K9q0/dyUsMFR2+xtLFOywsHpCesc0gCsCpWpsSwm42ceb2UB04b8UlZ2h5o7sIRVF7hLSKpLAeUs6nUtdwJBIaennzdlwwsxNe25VzzHFTYKS1H2eJ923e1he6oRb8xETVP7TtqJYlXPkZ5Z1qZoeROFrtgqJRGy7CyJBnsk8/UoNqrYV7U3yov72o8HjHBWqpUcNg7eRbtEjk2FwanKDABToHL76857TMUEvFsyKH6dEys01zfppIE956/tASVnu6uBHma/eER80aH7qRN4zBBTDEI4sFnll1fASrO0dxwmv459IxDz/HcnxVLktTHHycTGCxAPHr3C+qcVNYhulX/2C6CxjQIJ8KtJ2TVZaI+c1zs8BXsNED1BAzVf7M9eJvsQRCVz4JTlx4IuKWlSfB24ic0wNorJeoF4Hz4gapeelioTcRXkSwuQOpxBZX1gjwvjc/DcvOKXiz5ceSZhAKGuG4TR18GSkxJ79N3lJbWmevr+SsjIczTl45+97od7pBKvFLpBOmi6XadcP6tueXr8wYT0RjljAEAAQA= dima@unknown]
+INFO         | Userspace boot properties:
+INFO         |   androidboot.boot_devices=pci0000:00/0000:00:03.0 pci0000:00/0000:00:06.0
+INFO         |   androidboot.dalvik.vm.heapsize=512m
+INFO         |   androidboot.debug.hwui.renderer=skiagl
+INFO         |   androidboot.debug.sf.nobootanimation=1
+INFO         |   androidboot.hardware=ranchu
+INFO         |   androidboot.hardware.gltransport=pipe
+INFO         |   androidboot.logcat=*:V
+INFO         |   androidboot.opengles.version=196608
+INFO         |   androidboot.qemu=1
+INFO         |   androidboot.qemu.adb.pubkey=QAAAAKNaknf11tlXqAMDa74ioM5eT8yjgWgVlIG0AxkWo/NFkMljC0kIEKHub1kJDwtR3G/4mUSX3hs7wtEaaEYmXREC4AccEgvJegQESK3MMAn9dG05kxgQDusMRA/Ah83uXLHCcwmMbGg56khg6K9q0/dyUsMFR2+xtLFOywsHpCesc0gCsCpWpsSwm42ceb2UB04b8UlZ2h5o7sIRVF7hLSKpLAeUs6nUtdwJBIaennzdlwwsxNe25VzzHFTYKS1H2eJ923e1he6oRb8xETVP7TtqJYlXPkZ5Z1qZoeROFrtgqJRGy7CyJBnsk8/UoNqrYV7U3yov72o8HjHBWqpUcNg7eRbtEjk2FwanKDABToHL76857TMUEvFsyKH6dEys01zfppIE956/tASVnu6uBHma/eER80aH7qRN4zBBTDEI4sFnll1fASrO0dxwmv459IxDz/HcnxVLktTHHycTGCxAPHr3C+qcVNYhulX/2C6CxjQIJ8KtJ2TVZaI+c1zs8BXsNED1BAzVf7M9eJvsQRCVz4JTlx4IuKWlSfB24ic0wNorJeoF4Hz4gapeelioTcRXkSwuQOpxBZX1gjwvjc/DcvOKXiz5ceSZhAKGuG4TR18GSkxJ79N3lJbWmevr+SsjIczTl45+97od7pBKvFLpBOmi6XadcP6tueXr8wYT0RjljAEAAQA= dima@unknown
+INFO         |   androidboot.qemu.avd_name=flutter_emulator
+INFO         |   androidboot.qemu.camera_hq_edge_processing=0
+INFO         |   androidboot.qemu.camera_protocol_ver=1
+INFO         |   androidboot.qemu.cpuvulkan.version=4202496
+INFO         |   androidboot.qemu.gltransport.drawFlushInterval=800
+INFO         |   androidboot.qemu.gltransport.name=pipe
+INFO         |   androidboot.qemu.hwcodec.avcdec=2
+INFO         |   androidboot.qemu.hwcodec.hevcdec=2
+INFO         |   androidboot.qemu.hwcodec.vpxdec=2
+INFO         |   androidboot.qemu.settings.system.screen_off_timeout=2147483647
+INFO         |   androidboot.qemu.skin=1080x1920
+INFO         |   androidboot.qemu.virtiowifi=1
+INFO         |   androidboot.qemu.vsync=60
+INFO         |   androidboot.serialno=EMULATOR36X5X11X0
+INFO         |   androidboot.vbmeta.digest=43d61dbc053c8dbf3adaff951e5bdfcf174ece9dd24ffe8e6120f951cb412b2a
+INFO         |   androidboot.vbmeta.hash_alg=sha256
+INFO         |   androidboot.vbmeta.size=6784
+INFO         |   androidboot.veritymode=enforcing
+INFO         | Monitoring duration of emulator setup.
+WARNING      | The emulator now requires a signed jwt token for gRPC access! Use the -grpc flag if you really want an open unprotected grpc port
+INFO         | Using security allow list from: /home/dima/Android/Sdk/emulator/lib/emulator_access.json
+WARNING      | *** Basic token auth should only be used by android-studio ***
+INFO         | The active JSON Web Key Sets can be found here: /run/user/1000/avd/running/98158/jwks/a0312a3e-f7af-4205-8d6c-6661887d0fea/active.jwk
+INFO         | Scanning /run/user/1000/avd/running/98158/jwks/a0312a3e-f7af-4205-8d6c-6661887d0fea for jwk keys.
+INFO         | Started GRPC server at 127.0.0.1:8554, security: Local, auth: +token
+INFO         | Advertising in: /run/user/1000/avd/running/pid_98158.ini
+INFO         | Activated packet streamer for uwb emulation
+INFO         | Activated packet streamer for bluetooth emulation
+INFO         | Successfully initialized netsim WiFi
+INFO         | Setting display: 0 configuration to: 1080x1920, dpi: 420x420 
+INFO         | setDisplayActiveConfig: id:0, 1080x1920
+INFO         | emulatorSetupEnvironment: Setting up screen background view and display layout at env:1080x1920, lcd:1080x1920
+INFO         | emulatorSetupEnvironment: Environment scene is not required
+USER_INFO    | Emulator is performing a full startup. This may take upto two minutes, or more.
+[TEST] Connecting to ws://192.168.4.1:81/ and http://192.168.4.1:80
+WebSocket/HTTP test report
+============================================================
+Target: 192.168.4.1:81 (WS), 80 (HTTP)
+
+http_ping: OK
+http_send: OK (200)
+ws_connect: OK
+ws_system: NOT_EXPECTED (no greeting from real board)
+ws_echo: OK ('TestUser:t1788455238886:Hello from ws test')
+ws_name: SENT
+
+Overall: OK
+Report written to: /tmp/ws_real_hw_all_report.txt
+Step 5: Linux bundle runtime smoke test
+Xvfb not installed; running app directly (it will likely ignore --help and start)
+Gdk-Message: 20:07:19.323: Unable to load  from the cursor theme
+Не удалось инициализировать уведомления: Invalid argument(s): Linux settings must be set when targeting Linux platform.
+Проверяю ping ESP32...
+ESP32 доступен, подключаю WebSocket...
+✅ Успешно подключено к ESP32
+Отправлено имя: Linux
+WARNING      | Downloaded protobuf file is corrupt.
+WARNING      | UpdateCheck: Failure: Error
+WARNING      | UpdateCheck: failed to get the latest version, skipping check (current version '36.5.11-15261927')
+Step 6: Android APK runtime smoke test
+Waiting for emulator to boot and adb ...
+Emulator ready: emulator-5554
+Waiting for emulator-5554 to finish booting ...
+INFO         | Boot completed in 59760 ms
+INFO         | Increasing screen off timeout, logcat buffer size to 2M.
+emulator-5554 boot completed
+Installing APK on emulator-5554
+Performing Streamed Install
+Success
+Starting main activity on emulator-5554
+Starting: Intent { cmp=com.example.radio_bridge_dual/.MainActivity }
+Waiting for app to initialize ...
+App process id: 3050
+ERROR        | bad color buffer handle 320
+Relevant logcat from emulator-5554 (flutter/runtime/crash):
+09-03 20:08:37.112   674   771 W ActivityManager: Slow operation: 53ms so far, now at finishAttachApplicationInner: after mServices.attachApplicationLocked
+09-03 20:08:37.134   674   771 W ActivityManager: Slow operation: 75ms so far, now at finishAttachApplicationInner: after dispatching broadcasts
+09-03 20:08:37.344   674   704 W ActivityManager: Slow operation: 56ms so far, now at startProcess: returned from zygote!
+09-03 20:08:37.351   674   704 W ActivityManager: Slow operation: 63ms so far, now at startProcess: done updating battery stats
+09-03 20:08:37.351   674   704 W ActivityManager: Slow operation: 63ms so far, now at startProcess: building log message
+09-03 20:08:37.352   674   704 I ActivityManager: Start proc 3492:com.android.devicediagnostics/u0a104 for broadcast {com.android.devicediagnostics/com.android.devicediagnostics.BootCompleteReceiver}
+09-03 20:08:37.352   674   704 W ActivityManager: Slow operation: 64ms so far, now at startProcess: starting to update pids map
+09-03 20:08:37.356   674   704 I ActivityManager: ProcessObserver broadcast disabled
+09-03 20:08:37.356   674   704 W ActivityManager: Slow operation: 68ms so far, now at startProcess: done updating pids map
+09-03 20:08:38.417   674   704 I ActivityManager: Start proc 3529:com.android.dynsystem/1000 for broadcast {com.android.dynsystem/com.android.dynsystem.BootCompletedReceiver}
+09-03 20:08:38.417   674   704 I ActivityManager: ProcessObserver broadcast disabled
+09-03 20:08:38.554   674  1866 I ActivityManager: Start proc 3546:com.android.dynsystem:dynsystem/1000 for service {com.android.dynsystem/com.android.dynsystem.DynamicSystemInstallationService}
+09-03 20:08:38.554   674  1866 I ActivityManager: ProcessObserver broadcast disabled
+09-03 20:08:38.589   674   704 W ActivityManager: Slow operation: 55ms so far, now at startProcess: returned from zygote!
+09-03 20:08:38.612   674   704 I ActivityManager: Start proc 3558:com.android.nfc/1027 for broadcast {com.android.nfc/com.android.nfc.NfcMigrationBootCompleteReceiver}
+09-03 20:08:38.612   674   704 I ActivityManager: ProcessObserver broadcast disabled
+09-03 20:08:38.641   674   703 I ActivityManager: reportOnUserCompletedEvent(0): stored=10, eligible=111
+09-03 20:08:38.763   674   730 I ActivityManager: Killing 3558:com.android.nfc/1027 (adj 905): change com.android.nfc
+09-03 20:08:38.805   674   704 W ActivityManager: Slow operation: 56ms so far, now at startProcess: done updating battery stats
+09-03 20:08:38.805   674   704 W ActivityManager: Slow operation: 56ms so far, now at startProcess: building log message
+09-03 20:08:38.805   674   704 I ActivityManager: Start proc 3574:com.android.shell/2000 for broadcast {com.android.shell/com.android.shell.HeapDumpReceiver}
+09-03 20:08:38.810   674   704 W ActivityManager: Slow operation: 61ms so far, now at startProcess: starting to update pids map
+09-03 20:08:38.810   674   704 I ActivityManager: ProcessObserver broadcast disabled
+09-03 20:08:38.810   674   704 W ActivityManager: Slow operation: 61ms so far, now at startProcess: done updating pids map
+09-03 20:08:38.887   674   730 I ActivityManager: Killing 1629:com.google.android.ext.services/u0a216 (adj 0): change com.google.android.ext.services
+09-03 20:08:38.913   674  1866 W ActivityManager: finishReceiver: no app for android.os.BinderProxy@b4466f2
+09-03 20:08:39.021   674   704 I ActivityManager: Start proc 3593:com.google.android.configupdater/u0a132 for broadcast {com.google.android.configupdater/com.google.android.configupdater.MainReceiver}
+09-03 20:08:39.021   674   704 I ActivityManager: ProcessObserver broadcast disabled
+09-03 20:08:39.358   674   704 I ActivityManager: Start proc 3606:com.google.android.federatedcompute/u0a203 for broadcast {com.google.android.federatedcompute/com.android.federatedcompute.services.FederatedComputeBroadcastReceiver}
+09-03 20:08:39.358   674   704 I ActivityManager: ProcessObserver broadcast disabled
+09-03 20:08:39.555   674  2043 I ActivityManager: Process com.android.bluetooth (pid 1310) has died: cch+95 CEM 
+09-03 20:08:39.601   674  2043 I ActivityManager: Process com.google.android.gms.ui (pid 2226) has died: cch+85 CEM 
+09-03 20:08:39.622   674   704 I ActivityManager: Start proc 3626:com.google.android.healthconnect.controller/u0a209 for broadcast {com.google.android.healthconnect.controller/com.android.healthconnect.controller.safetycenter.SafetySourceBroadcastReceiver}
+09-03 20:08:39.622   674   704 I ActivityManager: ProcessObserver broadcast disabled
+09-03 20:08:39.653   674   730 I ActivityManager: Killing 3051:com.google.android.settings.intelligence/u0a145 (adj 0): change com.google.android.settings.intelligence
+09-03 20:08:39.658   674  2208 W ActivityManager: finishReceiver: no app for android.os.BinderProxy@4cf76a5
+09-03 20:08:39.917   674   730 E ActivityManager: Unable to freeze binder for 3626: -11
+09-03 20:08:39.921   674   730 I ActivityManager: Killing 3626:com.google.android.healthconnect.controller/u0a209 (adj 0): change com.google.android.healthconnect.controller
+09-03 20:08:39.932   674   704 I ActivityManager: Start proc 3658:com.google.android.nfc/1027 for broadcast {com.google.android.nfc/com.android.nfc.NfcBootCompletedReceiver}
+09-03 20:08:39.932   674   704 I ActivityManager: ProcessObserver broadcast disabled
+09-03 20:08:39.932   674   771 W ActivityManager: finishReceiver: no app for android.os.BinderProxy@930e447
+09-03 20:08:40.050   674   730 I ActivityManager: Killing 3658:com.google.android.nfc/1027 (adj 0): change com.google.android.nfc
+09-03 20:08:40.067   674   704 I ActivityManager: Start proc 3675:com.google.android.ondevicepersonalization.services/u0a202 for broadcast {com.google.android.ondevicepersonalization.services/com.android.ondevicepersonalization.services.OnDevicePersonalizationBroadcastReceiver}
+09-03 20:08:40.067   674   704 I ActivityManager: ProcessObserver broadcast disabled
+09-03 20:08:40.189   674   704 I ActivityManager: Start proc 3691:com.google.android.projection.gearhead:car/u0a134 for broadcast {com.google.android.projection.gearhead/com.google.android.apps.auto.carservice.gmscorecompatstub.StubComponentInitReceiver}
+09-03 20:08:40.189   674   704 I ActivityManager: ProcessObserver broadcast disabled
+09-03 20:08:40.242   674   704 I ActivityManager: Start proc 3704:com.google.android.rkpdapp/u0a200 for broadcast {com.google.android.rkpdapp/com.android.rkpdapp.BootReceiver}
+09-03 20:08:40.242   674   704 I ActivityManager: ProcessObserver broadcast disabled
+09-03 20:08:40.332   674   704 I ActivityManager: Start proc 3719:com.google.android.settings.intelligence/u0a145 for broadcast {com.google.android.settings.intelligence/com.google.android.settings.intelligence.modules.batterywidget.impl.BatteryWidgetBootBroadcastReceiver}
+09-03 20:08:40.332   674   704 I ActivityManager: ProcessObserver broadcast disabled
+09-03 20:08:40.487   674   694 I ActivityManager: Finished processing BOOT_COMPLETED for u0
+09-03 20:08:40.491   674  1861 W ActivityManager: pid 3719 com.google.android.settings.intelligence sent binder code 6 with flags 2 to frozen apps and got error -74
+09-03 20:08:41.651   674   704 I ActivityManager: Start proc 3815:com.google.android.accessibility.switchaccess/u0a164 for content provider {com.google.android.accessibility.switchaccess/com.google.android.accessibility.switchaccess.systemsettings.search.SwitchAccessSearchIndexablesProvider}
+09-03 20:08:41.651   674   704 I ActivityManager: ProcessObserver broadcast disabled
+09-03 20:08:41.663   674   704 I ActivityManager: Start proc 3820:com.google.android.apps.messaging/u0a144 for content provider {com.google.android.apps.messaging/com.google.android.apps.messaging.settings.search.MessagesSearchIndexablesProvider}
+09-03 20:08:41.663   674   704 I ActivityManager: ProcessObserver broadcast disabled
+09-03 20:08:41.671   674   704 I ActivityManager: Start proc 3823:com.google.android.apps.safetyhub/u0a143 for content provider {com.google.android.apps.safetyhub/com.google.android.apps.safetyhub.platformsettings.search.EmergencySearchIndexablesProvider}
+09-03 20:08:41.671   674   704 I ActivityManager: ProcessObserver broadcast disabled
+09-03 20:08:41.689   674   704 I ActivityManager: Start proc 3824:com.google.android.gms.ui/u0a148 for content provider {com.google.android.gms/com.google.android.gms.accountsettings.content.SettingsSearchContentProvider}
+09-03 20:08:41.689   674   704 I ActivityManager: ProcessObserver broadcast disabled
+09-03 20:08:41.724   674   704 I ActivityManager: Start proc 3841:com.google.android.healthconnect.controller/u0a209 for content provider {com.google.android.healthconnect.controller/com.android.healthconnect.controller.searchindexables.HealthConnectSearchIndexablesProvider}
+09-03 20:08:41.725   674   704 I ActivityManager: ProcessObserver broadcast disabled
+09-03 20:08:41.780   674   704 W ActivityManager: Slow operation: 72ms so far, now at startProcess: done updating battery stats
+09-03 20:08:41.781   674   704 W ActivityManager: Slow operation: 73ms so far, now at startProcess: building log message
+09-03 20:08:41.781   674   704 I ActivityManager: Start proc 3855:com.google.android.marvin.talkback/u0a172 for content provider {com.google.android.marvin.talkback/com.google.android.accessibility.talkback.preference.search.TalkBackSearchIndexablesProvider}
+09-03 20:08:41.781   674   704 W ActivityManager: Slow operation: 73ms so far, now at startProcess: starting to update pids map
+09-03 20:08:41.782   674   704 I ActivityManager: ProcessObserver broadcast disabled
+09-03 20:08:41.782   674   704 W ActivityManager: Slow operation: 74ms so far, now at startProcess: done updating pids map
+09-03 20:08:41.801   674  2047 I ActivityManager: Process com.android.keychain (pid 1912) has died: cch+95 CEM 
+09-03 20:08:41.838   674   771 I ActivityManager: Process com.android.localtransport (pid 2188) has died: cch+85 CEM 
+09-03 20:08:41.952   674  2047 I ActivityManager: Process com.google.android.photopicker (pid 2664) has died: cch+85 CEM 
+09-03 20:08:41.960   674  1863 I ActivityManager: Process com.android.carrierconfig (pid 2792) has died: cch+85 CEM 
+09-03 20:08:42.470   674  1863 W ActivityManager: Background start not allowed: service Intent { xflg=0x4 cmp=com.google.android.apps.messaging/.shared.datamodel.action.execution.ActionExecutorImpl$EmptyService } to com.google.android.apps.messaging/.shared.datamodel.action.execution.ActionExecutorImpl$EmptyService from pid=3820 uid=10144 pkg=com.google.android.apps.messaging startFg?=false
+09-03 20:08:42.478   674  1863 W ActivityManager: Background start not allowed: service Intent { xflg=0x4 cmp=com.google.android.apps.messaging/.shared.datamodel.action.execution.ActionExecutorImpl$EmptyService } to com.google.android.apps.messaging/.shared.datamodel.action.execution.ActionExecutorImpl$EmptyService from pid=3820 uid=10144 pkg=com.google.android.apps.messaging startFg?=false
+09-03 20:08:42.681   674   771 I ActivityManager: Background started FGS: Allowed [callingPackage: com.google.android.apps.messaging; callingUid: 10144; uidState: SVC ; uidBFSL: n/a; intent: Intent { xflg=0x4 cmp=com.google.android.apps.messaging/com.google.apps.tiktok.concurrent.InternalForegroundService (has extras) }; code:BACKGROUND_FGS_PERMISSION; tempAllowListReason:<null>; allowWiu:-1; targetSdkVersion:36; callerTargetSdkVersion:36; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+09-03 20:08:42.688   674  1202 W ActivityManager: Foreground service started from background can not have location/camera/microphone access: service com.google.android.apps.messaging/com.google.apps.tiktok.concurrent.InternalForegroundService
+09-03 20:08:42.733   674  1863 W ActivityManager: Foreground service started from background can not have location/camera/microphone access: service com.google.android.apps.messaging/com.google.apps.tiktok.concurrent.InternalForegroundService
+09-03 20:08:42.733   674  1863 I ActivityManager: Background started FGS: Allowed [callingPackage: com.google.android.apps.messaging; callingUid: 10144; uidState: FGS ; uidBFSL: [BFSL]; intent: Intent { cmp=com.google.android.apps.messaging/com.google.apps.tiktok.concurrent.InternalForegroundService }; code:PROC_STATE_FGS; tempAllowListReason:<null>; allowWiu:-1; targetSdkVersion:36; callerTargetSdkVersion:36; startForegroundCount:1; bindFromPackage:null: isBindService:false] (Called on SHORT_SERVICE)
+09-03 20:08:42.819   674   704 I ActivityManager: Start proc 4045:com.google.android.apps.messaging:rcs/u0a144 for service {com.google.android.apps.messaging/com.google.android.ims.service.JibeService}
+09-03 20:08:42.819   674   704 I ActivityManager: ProcessObserver broadcast disabled
+09-03 20:08:42.854   674  1202 W ActivityManager: Unable to start service Intent { act=grpc.io.action.BIND xflg=0x4 cmp=com.google.android.apps.stargate/.endpointservice.GrpcEndpointService } U=0: not found
+09-03 20:08:42.857   674  1868 W ActivityManager: Unbind failed: could not find connection for android.os.BinderProxy@53e1e8f
+09-03 20:08:43.112   674  1868 W ActivityManager: Foreground service started from background can not have location/camera/microphone access: service com.google.android.apps.messaging/com.google.apps.tiktok.concurrent.InternalForegroundService
+09-03 20:08:43.673   674  2047 W ActivityManager: Unable to start service Intent { act=grpc.io.action.BIND xflg=0x4 cmp=com.google.android.apps.stargate/.endpointservice.GrpcEndpointService } U=0: not found
+09-03 20:08:43.673   674  2047 W ActivityManager: Unbind failed: could not find connection for android.os.BinderProxy@685d593
+09-03 20:08:45.030   674  2047 W ActivityManager: Unable to start service Intent { act=grpc.io.action.BIND xflg=0x4 cmp=com.google.android.apps.stargate/.endpointservice.GrpcEndpointService } U=0: not found
+09-03 20:08:45.031   674  2047 W ActivityManager: Unbind failed: could not find connection for android.os.BinderProxy@2aa01cc
+09-03 20:08:45.590   674  1860 W ActivityManager: Receiver with filter android.content.IntentFilter@e758b3 already registered for pid 4045, callerPackage is com.google.android.apps.messaging
+09-03 20:08:45.620   674  1304 W ActivityManager: Receiver with filter android.content.IntentFilter@61de4c2 already registered for pid 4045, callerPackage is com.google.android.apps.messaging
+09-03 20:08:47.626   674  1304 W ActivityManager: Unable to start service Intent { act=grpc.io.action.BIND xflg=0x4 cmp=com.google.android.apps.stargate/.endpointservice.GrpcEndpointService } U=0: not found
+09-03 20:08:47.627   674  1304 W ActivityManager: Unbind failed: could not find connection for android.os.BinderProxy@4462814
+09-03 20:08:52.048   674  1863 W ActivityManager: Unable to start service Intent { act=grpc.io.action.BIND xflg=0x4 cmp=com.google.android.apps.stargate/.endpointservice.GrpcEndpointService } U=0: not found
+09-03 20:08:52.048   674  1206 W ActivityManager: Unbind failed: could not find connection for android.os.BinderProxy@3ed387a
+09-03 20:08:54.954   674   704 I ActivityManager: Start proc 4230:com.android.vending:quick_launch/u0a146 for service {com.android.vending/com.google.frameworks.client.data.android.server.play.QuickLaunchProcessEndpointService}
+09-03 20:08:54.954   674   704 I ActivityManager: ProcessObserver broadcast disabled
+09-03 20:08:56.095   674   703 I ActivityManager: Waited long enough for: ServiceRecord{af77866 u0 com.android.settings/.SettingsDumpService c:com.android.settings}
+09-03 20:08:57.875   674  1861 W ActivityManager: Unable to start service Intent { act=com.google.android.gms.homegraph.service.START xflg=0x4 pkg=com.google.android.gms } U=0: not found
+09-03 20:08:57.875   674  1861 W ActivityManager: Unbind failed: could not find connection for android.os.BinderProxy@7000362
+09-03 20:08:59.534   674  1413 W ActivityManager: Unable to start service Intent { act=grpc.io.action.BIND xflg=0x4 cmp=com.google.android.apps.stargate/.endpointservice.GrpcEndpointService } U=0: not found
+09-03 20:08:59.535   674  1413 W ActivityManager: Unbind failed: could not find connection for android.os.BinderProxy@e3e40d1
+Full logcat dump saved to /tmp/android_logcat_emulator-5554.txt
+Stopping emulator
+INFO         | Wait for emulator (pid 98158) 20 seconds to shutdown gracefully before kill;you can set environment variable ANDROID_EMULATOR_WAIT_TIME_BEFORE_KILL(in seconds) to change the default value (20 seconds)
+
+WARNING      | Not saving state: RAM not mapped as shared
+INFO         | Saving snapshot 'default_boot' using 1 ms
+ERROR        | stop: Not implemented
+WARNING      | Netsim Wifi localhost:38143 is gone due to CANCELLED
+Step 7: restoring original Wi-Fi
+Подключение «AFSK-TRX-8045» успешно деактивировано (активный путь D-Bus: /org/freedesktop/NetworkManager/ActiveConnection/21)
+Подключение успешно активировано (активный путь D-Bus: /org/freedesktop/NetworkManager/ActiveConnection/22)
+Original IP restored: 192.168.1.7/24
+Final active connection:
+NAME             UUID                                  TYPE      DEVICE 
+Tattelecom_2529  b1b8b883-5d2d-4c90-968a-c9843fdf64a2  wifi      wlp4s0 
+tun0             482a0516-c407-4362-aa7b-42e0623ad64d  tun       tun0   
+lo               8eb2cdfb-5282-4b81-8194-e1edfe7099c9  loopback  lo     
+=== WS real hardware + Android emulator test finished: Чт 03 сен 2026 20:09:07 MSK ===
+=== WS real hardware + Android emulator test started: Чт 03 сен 2026 20:11:18 MSK ===
+Original active connection: Tattelecom_2529
+Step 1: disabling original autoconnect and disconnecting Tattelecom_2529
+Подключение «Tattelecom_2529» успешно деактивировано (активный путь D-Bus: /org/freedesktop/NetworkManager/ActiveConnection/22)
+Step 2: connecting to AFSK AP
+Rescanning and trying to connect to AFSK-TRX-8045 (00:4B:12:2F:80:45) ...
+Подключение успешно активировано (активный путь D-Bus: /org/freedesktop/NetworkManager/ActiveConnection/24)
+AFSK IP obtained: 192.168.4.2/24
+Connected to AFSK AP. Verifying reachability ...
+PING 192.168.4.1 (192.168.4.1) 56(84) bytes of data.
+64 bytes from 192.168.4.1: icmp_seq=1 ttl=64 time=3.21 ms
+64 bytes from 192.168.4.1: icmp_seq=2 ttl=64 time=13.7 ms
+
+--- 192.168.4.1 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1002ms
+rtt min/avg/max/mdev = 3.213/8.464/13.716/5.251 ms
+Step 3: starting Android emulator headless
+Emulator PID: 100412
+Step 4: Python WS/HTTP test on 192.168.4.1
+INFO         | Android emulator version 36.5.11.0 (build_id 15261927) (CL:N/A)
+INFO         | Graphics backend: gfxstream
+INFO         | Found systemPath /home/dima/Android/Sdk/system-images/android-36/google_apis_playstore/x86_64/
+WARNING      | Please update the emulator to one that supports the feature(s): VulkanVirtualQueue
+INFO         | Feature 'GLDirectMem' (53) is overridden to 'enabled'
+INFO         | Feature 'Vulkan' (21) is overridden to 'disabled'
+INFO         | Guest GLES Driver: Auto (ext controls)
+INFO         | emuglConfig_init: vulkan_mode_selected:lavapipe gles_mode_selected:swangle
+INFO         | Checking system compatibility:
+INFO         |   Checking: hasSufficientDiskSpace
+INFO         |      Ok: Disk space requirements to run avd: `flutter_emulator` are met
+INFO         |   Checking: hasSufficientHwGpu
+INFO         |      Ok: Hardware GPU compatibility checks are not required
+INFO         |   Checking: hasSufficientSystem
+INFO         |      Ok: System requirements to run avd: `flutter_emulator` are met
+INFO         | Storing crashdata in: /tmp/android-dima/emu-crash-36.5.11.db, detection is enabled for process: 100412
+INFO         | Initializing gfxstream backend
+INFO         | android_startOpenglesRenderer: gpu info
+INFO         | 
+INFO         | SharedLibrary::open for [libX11]
+INFO         | SharedLibrary::open for [libX11-xcb]
+INFO         | Graphics Adapter Vendor Google (Google Inc.)
+INFO         | Graphics Adapter Android Emulator OpenGL ES Translator (Google SwiftShader)
+INFO         | Graphics API Version OpenGL ES 3.0 (OpenGL ES 3.0 SwiftShader 4.0.0.1)
+INFO         | Graphics API Extensions GL_OES_EGL_sync GL_OES_EGL_image GL_OES_EGL_image_external GL_OES_depth24 GL_OES_depth32 GL_OES_element_index_uint GL_OES_texture_float GL_OES_texture_float_linear GL_OES_compressed_paletted_texture GL_OES_compressed_ETC1_RGB8_texture GL_OES_depth_texture GL_OES_texture_half_float GL_OES_texture_half_float_linear GL_OES_packed_depth_stencil GL_OES_vertex_half_float GL_OES_standard_derivatives GL_OES_texture_npot GL_OES_rgb8_rgba8 GL_EXT_color_buffer_float GL_EXT_color_buffer_half_float GL_EXT_texture_format_BGRA8888 GL_APPLE_texture_format_BGRA8888 
+INFO         | Graphics Device Extensions N/A
+ERROR        | Setting read-only feature 'GLAsyncSwap' to '0'
+INFO         | Feature 'GLAsyncSwap' (50) is overridden to 'disabled'
+INFO         | Sending adb public key [QAAAAKNaknf11tlXqAMDa74ioM5eT8yjgWgVlIG0AxkWo/NFkMljC0kIEKHub1kJDwtR3G/4mUSX3hs7wtEaaEYmXREC4AccEgvJegQESK3MMAn9dG05kxgQDusMRA/Ah83uXLHCcwmMbGg56khg6K9q0/dyUsMFR2+xtLFOywsHpCesc0gCsCpWpsSwm42ceb2UB04b8UlZ2h5o7sIRVF7hLSKpLAeUs6nUtdwJBIaennzdlwwsxNe25VzzHFTYKS1H2eJ923e1he6oRb8xETVP7TtqJYlXPkZ5Z1qZoeROFrtgqJRGy7CyJBnsk8/UoNqrYV7U3yov72o8HjHBWqpUcNg7eRbtEjk2FwanKDABToHL76857TMUEvFsyKH6dEys01zfppIE956/tASVnu6uBHma/eER80aH7qRN4zBBTDEI4sFnll1fASrO0dxwmv459IxDz/HcnxVLktTHHycTGCxAPHr3C+qcVNYhulX/2C6CxjQIJ8KtJ2TVZaI+c1zs8BXsNED1BAzVf7M9eJvsQRCVz4JTlx4IuKWlSfB24ic0wNorJeoF4Hz4gapeelioTcRXkSwuQOpxBZX1gjwvjc/DcvOKXiz5ceSZhAKGuG4TR18GSkxJ79N3lJbWmevr+SsjIczTl45+97od7pBKvFLpBOmi6XadcP6tueXr8wYT0RjljAEAAQA= dima@unknown]
+INFO         | Userspace boot properties:
+INFO         |   androidboot.boot_devices=pci0000:00/0000:00:03.0 pci0000:00/0000:00:06.0
+INFO         |   androidboot.dalvik.vm.heapsize=512m
+INFO         |   androidboot.debug.hwui.renderer=skiagl
+INFO         |   androidboot.debug.sf.nobootanimation=1
+INFO         |   androidboot.hardware=ranchu
+INFO         |   androidboot.hardware.gltransport=pipe
+INFO         |   androidboot.logcat=*:V
+INFO         |   androidboot.opengles.version=196608
+INFO         |   androidboot.qemu=1
+INFO         |   androidboot.qemu.adb.pubkey=QAAAAKNaknf11tlXqAMDa74ioM5eT8yjgWgVlIG0AxkWo/NFkMljC0kIEKHub1kJDwtR3G/4mUSX3hs7wtEaaEYmXREC4AccEgvJegQESK3MMAn9dG05kxgQDusMRA/Ah83uXLHCcwmMbGg56khg6K9q0/dyUsMFR2+xtLFOywsHpCesc0gCsCpWpsSwm42ceb2UB04b8UlZ2h5o7sIRVF7hLSKpLAeUs6nUtdwJBIaennzdlwwsxNe25VzzHFTYKS1H2eJ923e1he6oRb8xETVP7TtqJYlXPkZ5Z1qZoeROFrtgqJRGy7CyJBnsk8/UoNqrYV7U3yov72o8HjHBWqpUcNg7eRbtEjk2FwanKDABToHL76857TMUEvFsyKH6dEys01zfppIE956/tASVnu6uBHma/eER80aH7qRN4zBBTDEI4sFnll1fASrO0dxwmv459IxDz/HcnxVLktTHHycTGCxAPHr3C+qcVNYhulX/2C6CxjQIJ8KtJ2TVZaI+c1zs8BXsNED1BAzVf7M9eJvsQRCVz4JTlx4IuKWlSfB24ic0wNorJeoF4Hz4gapeelioTcRXkSwuQOpxBZX1gjwvjc/DcvOKXiz5ceSZhAKGuG4TR18GSkxJ79N3lJbWmevr+SsjIczTl45+97od7pBKvFLpBOmi6XadcP6tueXr8wYT0RjljAEAAQA= dima@unknown
+INFO         |   androidboot.qemu.avd_name=flutter_emulator
+INFO         |   androidboot.qemu.camera_hq_edge_processing=0
+INFO         |   androidboot.qemu.camera_protocol_ver=1
+INFO         |   androidboot.qemu.cpuvulkan.version=4202496
+INFO         |   androidboot.qemu.gltransport.drawFlushInterval=800
+INFO         |   androidboot.qemu.gltransport.name=pipe
+INFO         |   androidboot.qemu.hwcodec.avcdec=2
+INFO         |   androidboot.qemu.hwcodec.hevcdec=2
+INFO         |   androidboot.qemu.hwcodec.vpxdec=2
+INFO         |   androidboot.qemu.settings.system.screen_off_timeout=2147483647
+INFO         |   androidboot.qemu.skin=1080x1920
+INFO         |   androidboot.qemu.virtiowifi=1
+INFO         |   androidboot.qemu.vsync=60
+INFO         |   androidboot.serialno=EMULATOR36X5X11X0
+INFO         |   androidboot.vbmeta.digest=43d61dbc053c8dbf3adaff951e5bdfcf174ece9dd24ffe8e6120f951cb412b2a
+INFO         |   androidboot.vbmeta.hash_alg=sha256
+INFO         |   androidboot.vbmeta.size=6784
+INFO         |   androidboot.veritymode=enforcing
+INFO         | Monitoring duration of emulator setup.
+WARNING      | The emulator now requires a signed jwt token for gRPC access! Use the -grpc flag if you really want an open unprotected grpc port
+INFO         | Using security allow list from: /home/dima/Android/Sdk/emulator/lib/emulator_access.json
+WARNING      | *** Basic token auth should only be used by android-studio ***
+INFO         | The active JSON Web Key Sets can be found here: /run/user/1000/avd/running/100412/jwks/643b9046-44b3-4493-bf39-ac4bd9f98226/active.jwk
+INFO         | Scanning /run/user/1000/avd/running/100412/jwks/643b9046-44b3-4493-bf39-ac4bd9f98226 for jwk keys.
+INFO         | Started GRPC server at 127.0.0.1:8554, security: Local, auth: +token
+INFO         | Advertising in: /run/user/1000/avd/running/pid_100412.ini
+INFO         | Activated packet streamer for bluetooth emulation
+INFO         | Activated packet streamer for uwb emulation
+INFO         | Successfully initialized netsim WiFi
+INFO         | Setting display: 0 configuration to: 1080x1920, dpi: 420x420 
+INFO         | setDisplayActiveConfig: id:0, 1080x1920
+INFO         | emulatorSetupEnvironment: Setting up screen background view and display layout at env:1080x1920, lcd:1080x1920
+INFO         | emulatorSetupEnvironment: Environment scene is not required
+USER_INFO    | Emulator is performing a full startup. This may take upto two minutes, or more.
+[TEST] Connecting to ws://192.168.4.1:81/ and http://192.168.4.1:80
+WebSocket/HTTP test report
+============================================================
+Target: 192.168.4.1:81 (WS), 80 (HTTP)
+
+http_ping: OK
+http_send: OK (200)
+ws_connect: OK
+ws_system: NOT_EXPECTED (no greeting from real board)
+ws_echo: OK ('TestUser:t1788455493016:Hello from ws test')
+ws_name: SENT
+
+Overall: OK
+Report written to: /tmp/ws_real_hw_all_report.txt
+Step 5: Linux bundle runtime smoke test
+Xvfb not installed; running app directly (it will likely ignore --help and start)
+Gdk-Message: 20:11:33.289: Unable to load  from the cursor theme
+Не удалось инициализировать уведомления: Invalid argument(s): Linux settings must be set when targeting Linux platform.
+Проверяю ping ESP32...
+ESP32 доступен, подключаю WebSocket...
+✅ Успешно подключено к ESP32
+Отправлено имя: Linux
+WARNING      | Downloaded protobuf file is corrupt.
+WARNING      | UpdateCheck: Failure: Error
+WARNING      | UpdateCheck: failed to get the latest version, skipping check (current version '36.5.11-15261927')
+Step 6: Android APK runtime smoke test
+Waiting for emulator to boot and adb ...
+Emulator ready: emulator-5554
+Waiting for emulator-5554 to finish booting ...
+INFO         | Boot completed in 48904 ms
+INFO         | Increasing screen off timeout, logcat buffer size to 2M.
+emulator-5554 boot completed
+Installing APK on emulator-5554
+Performing Streamed Install
+Success
+Starting main activity on emulator-5554
+Starting: Intent { cmp=com.example.radio_bridge_dual/.MainActivity }
+Waiting for app to initialize ...
+App process id: 2986
+Relevant logcat from emulator-5554 (flutter/runtime/crash):
+09-03 20:12:43.856   672   705 I ActivityManager: Start proc 3626:com.google.android.nfc/1027 for broadcast {com.google.android.nfc/com.android.nfc.NfcBootCompletedReceiver}
+09-03 20:12:43.856   672   705 I ActivityManager: ProcessObserver broadcast disabled
+09-03 20:12:43.968   672   729 I ActivityManager: Killing 3626:com.google.android.nfc/1027 (adj 0): change com.google.android.nfc
+09-03 20:12:44.006   672   705 I ActivityManager: Start proc 3643:com.google.android.ondevicepersonalization.services/u0a206 for broadcast {com.google.android.ondevicepersonalization.services/com.android.ondevicepersonalization.services.OnDevicePersonalizationBroadcastReceiver}
+09-03 20:12:44.007   672   705 I ActivityManager: ProcessObserver broadcast disabled
+09-03 20:12:44.240   672   729 I ActivityManager: Killing 3013:com.google.android.settings.intelligence/u0a144 (adj 0): change com.google.android.settings.intelligence
+09-03 20:12:44.273   672  1845 W ActivityManager: finishReceiver: no app for android.os.BinderProxy@3a86618
+09-03 20:12:44.392   672   705 I ActivityManager: Start proc 3664:com.google.android.projection.gearhead:car/u0a134 for broadcast {com.google.android.projection.gearhead/com.google.android.apps.auto.carservice.gmscorecompatstub.StubComponentInitReceiver}
+09-03 20:12:44.404   672   705 I ActivityManager: ProcessObserver broadcast disabled
+09-03 20:12:44.469   672   764 W ActivityManager: Slow operation: 66ms so far, now at attachApplicationLocked: after updateOomAdjLocked
+09-03 20:12:44.708   672   705 W ActivityManager: Slow operation: 130ms so far, now at startProcess: returned from zygote!
+09-03 20:12:44.708   672   705 W ActivityManager: Slow operation: 130ms so far, now at startProcess: done updating battery stats
+09-03 20:12:44.708   672   705 W ActivityManager: Slow operation: 130ms so far, now at startProcess: building log message
+09-03 20:12:44.708   672   705 I ActivityManager: Start proc 3696:com.google.android.rkpdapp/u0a216 for broadcast {com.google.android.rkpdapp/com.android.rkpdapp.BootReceiver}
+09-03 20:12:44.708   672   705 W ActivityManager: Slow operation: 130ms so far, now at startProcess: starting to update pids map
+09-03 20:12:44.708   672   705 I ActivityManager: ProcessObserver broadcast disabled
+09-03 20:12:44.708   672   705 W ActivityManager: Slow operation: 130ms so far, now at startProcess: done updating pids map
+09-03 20:12:44.776  2986  2986 I flutter : ✅ Успешно подключено к ESP32
+09-03 20:12:44.781   672  1489 I ActivityManager: Background started FGS: Allowed [callingPackage: com.example.radio_bridge_dual; callingUid: 10217; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { xflg=0x4 cmp=com.example.radio_bridge_dual/.ChatForegroundService }; code:PROC_STATE_TOP; tempAllowListReason:<null>; allowWiu:12; targetSdkVersion:36; callerTargetSdkVersion:36; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+09-03 20:12:44.802  2986  2986 I flutter : Отправлено имя: User_245
+09-03 20:12:44.941   672   705 I ActivityManager: Start proc 3722:com.google.android.settings.intelligence/u0a144 for broadcast {com.google.android.settings.intelligence/com.google.android.settings.intelligence.modules.batterywidget.impl.BatteryWidgetBootBroadcastReceiver}
+09-03 20:12:44.941   672   705 I ActivityManager: ProcessObserver broadcast disabled
+09-03 20:12:45.314   672   695 I ActivityManager: Finished processing BOOT_COMPLETED for u0
+09-03 20:12:45.325   672  1489 W ActivityManager: pid 3722 com.google.android.settings.intelligence sent binder code 6 with flags 2 to frozen apps and got error -74
+09-03 20:12:46.937   672   705 I ActivityManager: Start proc 3806:com.google.android.accessibility.switchaccess/u0a166 for content provider {com.google.android.accessibility.switchaccess/com.google.android.accessibility.switchaccess.systemsettings.search.SwitchAccessSearchIndexablesProvider}
+09-03 20:12:46.938   672   705 I ActivityManager: ProcessObserver broadcast disabled
+09-03 20:12:46.969   672   705 W ActivityManager: Slow operation: 61ms so far, now at startProcess: returned from zygote!
+09-03 20:12:47.003   672   705 W ActivityManager: Slow operation: 95ms so far, now at startProcess: done updating battery stats
+09-03 20:12:47.003   672   705 W ActivityManager: Slow operation: 95ms so far, now at startProcess: building log message
+09-03 20:12:47.003   672   705 I ActivityManager: Start proc 3809:com.google.android.apps.messaging/u0a145 for content provider {com.google.android.apps.messaging/com.google.android.apps.messaging.settings.search.MessagesSearchIndexablesProvider}
+09-03 20:12:47.003   672   705 W ActivityManager: Slow operation: 96ms so far, now at startProcess: starting to update pids map
+09-03 20:12:47.003   672   705 I ActivityManager: ProcessObserver broadcast disabled
+09-03 20:12:47.003   672   705 W ActivityManager: Slow operation: 96ms so far, now at startProcess: done updating pids map
+09-03 20:12:47.004   672   705 W ActivityManager: Slow operation: 88ms so far, now at startProcess: asking zygote to start proc
+09-03 20:12:47.050   672   705 W ActivityManager: Slow operation: 134ms so far, now at startProcess: returned from zygote!
+09-03 20:12:47.062   672  1424 I ActivityManager: Process com.android.printspooler (pid 1791) has died: cch+85 CEM 
+09-03 20:12:47.089   672   705 W ActivityManager: Slow operation: 173ms so far, now at startProcess: done updating battery stats
+09-03 20:12:47.103   672   705 W ActivityManager: Slow operation: 187ms so far, now at startProcess: building log message
+09-03 20:12:47.108   672   705 I ActivityManager: Start proc 3820:com.google.android.apps.safetyhub/u0a143 for content provider {com.google.android.apps.safetyhub/com.google.android.apps.safetyhub.platformsettings.search.EmergencySearchIndexablesProvider}
+09-03 20:12:47.108   672   705 W ActivityManager: Slow operation: 192ms so far, now at startProcess: starting to update pids map
+09-03 20:12:47.132   672   705 I ActivityManager: ProcessObserver broadcast disabled
+09-03 20:12:47.133   672   705 W ActivityManager: Slow operation: 217ms so far, now at startProcess: done updating pids map
+09-03 20:12:47.136   672   705 W ActivityManager: Slow operation: 194ms so far, now at startProcess: asking zygote to start proc
+09-03 20:12:47.140   672  2218 I ActivityManager: Process com.android.bluetooth (pid 1301) has died: cch+85 CEM 
+09-03 20:12:47.159   672  1844 I ActivityManager: Process com.android.keychain (pid 1983) has died: cch+75 CEM 
+09-03 20:12:47.159   672   689 I ActivityManager: Process com.android.localtransport (pid 2104) has died: cch+75 CEM 
+09-03 20:12:47.162   672   705 W ActivityManager: Slow operation: 220ms so far, now at startProcess: returned from zygote!
+09-03 20:12:47.171   672  1489 I ActivityManager: Process com.android.managedprovisioning (pid 2271) has died: cch+65 CEM 
+09-03 20:12:47.191   672  1846 I ActivityManager: Process com.android.carrierconfig (pid 3040) has died: cch+65 CEM 
+09-03 20:12:47.198   672   705 W ActivityManager: Slow operation: 256ms so far, now at startProcess: done updating battery stats
+09-03 20:12:47.198   672   705 W ActivityManager: Slow operation: 256ms so far, now at startProcess: building log message
+09-03 20:12:47.198   672   705 I ActivityManager: Start proc 3828:com.google.android.healthconnect.controller/u0a195 for content provider {com.google.android.healthconnect.controller/com.android.healthconnect.controller.searchindexables.HealthConnectSearchIndexablesProvider}
+09-03 20:12:47.198   672   705 W ActivityManager: Slow operation: 256ms so far, now at startProcess: starting to update pids map
+09-03 20:12:47.198   672   705 I ActivityManager: ProcessObserver broadcast disabled
+09-03 20:12:47.198   672   705 W ActivityManager: Slow operation: 256ms so far, now at startProcess: done updating pids map
+09-03 20:12:47.198   672   705 W ActivityManager: Slow operation: 225ms so far, now at startProcess: asking zygote to start proc
+09-03 20:12:47.199   672  1846 I ActivityManager: Process com.google.android.photopicker (pid 2731) has died: cch+65 CEM 
+09-03 20:12:47.207   672   705 W ActivityManager: Slow operation: 234ms so far, now at startProcess: returned from zygote!
+09-03 20:12:47.208   672   705 W ActivityManager: Slow operation: 235ms so far, now at startProcess: done updating battery stats
+09-03 20:12:47.208   672   705 W ActivityManager: Slow operation: 235ms so far, now at startProcess: building log message
+09-03 20:12:47.208   672   705 I ActivityManager: Start proc 3846:com.google.android.marvin.talkback/u0a172 for content provider {com.google.android.marvin.talkback/com.google.android.accessibility.talkback.preference.search.TalkBackSearchIndexablesProvider}
+09-03 20:12:47.208   672   705 W ActivityManager: Slow operation: 235ms so far, now at startProcess: starting to update pids map
+09-03 20:12:47.208   672   705 I ActivityManager: ProcessObserver broadcast disabled
+09-03 20:12:47.208   672   705 W ActivityManager: Slow operation: 235ms so far, now at startProcess: done updating pids map
+09-03 20:12:47.431   672  1844 I ActivityManager: Process com.google.android.onetimeinitializer (pid 3349) has died: cch+55 CEM 
+09-03 20:12:47.535   672  1489 I ActivityManager: Process com.android.devicediagnostics (pid 3419) has died: cch+45 CEM 
+09-03 20:12:47.539   672   996 I ActivityManager: Process com.android.dynsystem (pid 3435) has died: cch+45 CEM 
+09-03 20:12:47.549   672  1187 I ActivityManager: Process com.android.camera2 (pid 3381) has died: cch+45 CEM 
+09-03 20:12:47.568   672   996 I ActivityManager: Process com.android.shell (pid 3488) has died: cch+35 CEM 
+09-03 20:12:48.012   672  1187 W ActivityManager: Background start not allowed: service Intent { xflg=0x4 cmp=com.google.android.apps.messaging/.shared.datamodel.action.execution.ActionExecutorImpl$EmptyService } to com.google.android.apps.messaging/.shared.datamodel.action.execution.ActionExecutorImpl$EmptyService from pid=3809 uid=10145 pkg=com.google.android.apps.messaging startFg?=false
+09-03 20:12:48.027   672  1425 W ActivityManager: Background start not allowed: service Intent { xflg=0x4 cmp=com.google.android.apps.messaging/.shared.datamodel.action.execution.ActionExecutorImpl$EmptyService } to com.google.android.apps.messaging/.shared.datamodel.action.execution.ActionExecutorImpl$EmptyService from pid=3809 uid=10145 pkg=com.google.android.apps.messaging startFg?=false
+09-03 20:12:48.083   672   705 I ActivityManager: Start proc 3983:com.android.chrome/u0a150 for broadcast {com.android.chrome/com.google.android.apps.chrome.rlz.RevenueStatsConfigurationUpdateReceiver}
+09-03 20:12:48.083   672   705 I ActivityManager: ProcessObserver broadcast disabled
+09-03 20:12:48.103   672  1187 W ActivityManager: Background start not allowed: service Intent { xflg=0x4 cmp=com.google.android.apps.messaging/.shared.datamodel.action.execution.ActionExecutorImpl$EmptyService } to com.google.android.apps.messaging/.shared.datamodel.action.execution.ActionExecutorImpl$EmptyService from pid=3809 uid=10145 pkg=com.google.android.apps.messaging startFg?=false
+09-03 20:12:48.636   672  1489 I ActivityManager: Background started FGS: Allowed [callingPackage: com.google.android.apps.messaging; callingUid: 10145; uidState: TRNB; uidBFSL: n/a; intent: Intent { xflg=0x4 cmp=com.google.android.apps.messaging/com.google.apps.tiktok.concurrent.InternalForegroundService (has extras) }; code:BACKGROUND_FGS_PERMISSION; tempAllowListReason:<null>; allowWiu:-1; targetSdkVersion:36; callerTargetSdkVersion:36; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+09-03 20:12:48.648   672  1197 W ActivityManager: Foreground service started from background can not have location/camera/microphone access: service com.google.android.apps.messaging/com.google.apps.tiktok.concurrent.InternalForegroundService
+09-03 20:12:48.901   672   705 I ActivityManager: Start proc 4041:com.google.android.apps.messaging:rcs/u0a145 for service {com.google.android.apps.messaging/com.google.android.ims.service.JibeService}
+09-03 20:12:48.901   672   705 I ActivityManager: ProcessObserver broadcast disabled
+09-03 20:12:49.410   672  1489 W ActivityManager: Unable to start service Intent { act=grpc.io.action.BIND xflg=0x4 cmp=com.google.android.apps.stargate/.endpointservice.GrpcEndpointService } U=0: not found
+09-03 20:12:49.410   672  1489 W ActivityManager: Unbind failed: could not find connection for android.os.BinderProxy@7cd392c
+09-03 20:12:49.564   672  1489 W ActivityManager: Foreground service started from background can not have location/camera/microphone access: service com.google.android.apps.messaging/com.google.apps.tiktok.concurrent.InternalForegroundService
+09-03 20:12:49.564   672  1489 I ActivityManager: Background started FGS: Allowed [callingPackage: com.google.android.apps.messaging; callingUid: 10145; uidState: FGS ; uidBFSL: [BFSL]; intent: Intent { cmp=com.google.android.apps.messaging/com.google.apps.tiktok.concurrent.InternalForegroundService }; code:PROC_STATE_FGS; tempAllowListReason:<null>; allowWiu:-1; targetSdkVersion:36; callerTargetSdkVersion:36; startForegroundCount:1; bindFromPackage:null: isBindService:false] (Called on SHORT_SERVICE)
+09-03 20:12:49.596   672   764 W ActivityManager: Foreground service started from background can not have location/camera/microphone access: service com.google.android.apps.messaging/com.google.apps.tiktok.concurrent.InternalForegroundService
+09-03 20:12:50.394   672  2565 W ActivityManager: Unable to start service Intent { act=grpc.io.action.BIND xflg=0x4 cmp=com.google.android.apps.stargate/.endpointservice.GrpcEndpointService } U=0: not found
+09-03 20:12:50.395   672  2565 W ActivityManager: Unbind failed: could not find connection for android.os.BinderProxy@b92fad
+09-03 20:12:52.226   672  2565 W ActivityManager: Unable to start service Intent { act=grpc.io.action.BIND xflg=0x4 cmp=com.google.android.apps.stargate/.endpointservice.GrpcEndpointService } U=0: not found
+09-03 20:12:52.226   672  2565 W ActivityManager: Unbind failed: could not find connection for android.os.BinderProxy@63f27ea
+09-03 20:12:54.528   672  2760 W ActivityManager: Unable to start service Intent { act=grpc.io.action.BIND xflg=0x4 cmp=com.google.android.apps.stargate/.endpointservice.GrpcEndpointService } U=0: not found
+09-03 20:12:54.528   672  2760 W ActivityManager: Unbind failed: could not find connection for android.os.BinderProxy@5fda089
+09-03 20:12:58.087   672  2789 W ActivityManager: Unable to start service Intent { act=grpc.io.action.BIND xflg=0x4 cmp=com.google.android.apps.stargate/.endpointservice.GrpcEndpointService } U=0: not found
+09-03 20:12:58.087   672  2789 W ActivityManager: Unbind failed: could not find connection for android.os.BinderProxy@fa070ae
+09-03 20:12:58.377   672   764 W ActivityManager: Receiver with filter android.content.IntentFilter@4dc54b3 already registered for pid 4041, callerPackage is com.google.android.apps.messaging
+09-03 20:12:58.395   672  1489 W ActivityManager: Receiver with filter android.content.IntentFilter@80137a already registered for pid 4041, callerPackage is com.google.android.apps.messaging
+09-03 20:12:59.462   672   705 I ActivityManager: Start proc 4196:com.android.vending:quick_launch/u0a146 for service {com.android.vending/com.google.frameworks.client.data.android.server.play.QuickLaunchProcessEndpointService}
+09-03 20:12:59.464   672   705 I ActivityManager: ProcessObserver broadcast disabled
+09-03 20:13:00.634   672   704 I ActivityManager: Waited long enough for: ServiceRecord{35bee8 u0 com.android.settings/.SettingsDumpService c:com.android.settings}
+09-03 20:13:02.505   672  2218 W ActivityManager: Unable to start service Intent { act=com.google.android.gms.homegraph.service.START xflg=0x4 pkg=com.google.android.gms } U=0: not found
+09-03 20:13:02.505   672  2218 W ActivityManager: Unbind failed: could not find connection for android.os.BinderProxy@789f09b
+09-03 20:13:03.783   672   996 W ActivityManager: Unable to start service Intent { act=grpc.io.action.BIND xflg=0x4 cmp=com.google.android.apps.stargate/.endpointservice.GrpcEndpointService } U=0: not found
+09-03 20:13:03.783   672   996 W ActivityManager: Unbind failed: could not find connection for android.os.BinderProxy@28bfa27
+Full logcat dump saved to /tmp/android_logcat_emulator-5554.txt
+Stopping emulator
+INFO         | Wait for emulator (pid 100412) 20 seconds to shutdown gracefully before kill;you can set environment variable ANDROID_EMULATOR_WAIT_TIME_BEFORE_KILL(in seconds) to change the default value (20 seconds)
+
+WARNING      | Not saving state: RAM not mapped as shared
+INFO         | Saving snapshot 'default_boot' using 1 ms
+ERROR        | stop: Not implemented
+WARNING      | Netsim Wifi localhost:46527 is gone due to CANCELLED
+Step 7: restoring original Wi-Fi
+Подключение «AFSK-TRX-8045» успешно деактивировано (активный путь D-Bus: /org/freedesktop/NetworkManager/ActiveConnection/24)
+Подключение успешно активировано (активный путь D-Bus: /org/freedesktop/NetworkManager/ActiveConnection/25)
+Original IP restored: 192.168.1.7/24
+Final active connection:
+NAME             UUID                                  TYPE      DEVICE 
+Tattelecom_2529  b1b8b883-5d2d-4c90-968a-c9843fdf64a2  wifi      wlp4s0 
+tun0             482a0516-c407-4362-aa7b-42e0623ad64d  tun       tun0   
+lo               8eb2cdfb-5282-4b81-8194-e1edfe7099c9  loopback  lo     
+=== WS real hardware + Android emulator test finished: Чт 03 сен 2026 20:13:10 MSK ===

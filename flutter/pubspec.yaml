@@ -1,0 +1,31 @@
+name: radio_bridge_dual
+description: Радиочат через UV-82 и ESP32 (TX + RX)
+
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  audioplayers: ^6.1.0
+  http: ^1.1.0
+  web_socket_channel: ^3.0.3
+  network_info_plus: ^5.0.3
+  shared_preferences: ^2.2.2
+  flutter_local_notifications: ^17.2.2
+  window_manager: 0.4.3  # пиним совместимую версию для Flutter 3.22
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+
+  # Пути в AssetSource указываются относительно assets/ (префикс audioplayers)
+  assets:
+    - assets/73g_assets/sounds/notify.mp3

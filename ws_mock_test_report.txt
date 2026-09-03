@@ -1,0 +1,12 @@
+WebSocket/HTTP test report
+============================================================
+Target: 127.0.0.1:8081 (WS), 8080 (HTTP)
+
+http_ping: OK
+http_send: OK (200)
+ws_connect: OK
+ws_system: OK (System:Mock ready)
+ws_echo: OK ('msg:TestUser:Hello from ws test')
+ws_name: SENT
+
+Overall: OK

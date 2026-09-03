@@ -1,0 +1,22 @@
+# GPIO remap for ESP32-S3-N16R8. Avoids pins that do not exist on the S3
+# (22-25), the octal PSRAM/flash bus (26-37), the native USB pair (19/20),
+# strapping pins (0/3/45/46) and the on-board RGB LED (48).
+# Everything else (baud rate, CPU frequency, sources) stays the same as on
+# WROOM: only these numbers change.
+CONFIG_PIN_FQ_UD=18
+CONFIG_PIN_W_CLK=4
+CONFIG_PIN_DATA=21
+CONFIG_PIN_RESET=16
+CONFIG_PIN_PTT=15
+CONFIG_PIN_I2S_BCK=5
+CONFIG_PIN_I2S_WS=6
+CONFIG_PIN_I2S_DATA=7
+
+# N16R8 module: 16 MB quad flash + 8 MB octal PSRAM
+CONFIG_ESPTOOLPY_FLASHSIZE_16MB=y
+CONFIG_SPIRAM=y
+CONFIG_SPIRAM_MODE_OCT=y
+
+# The S3 has no USB-UART bridge on most N16R8 clones: the console goes
+# through the built-in USB Serial/JTAG peripheral.
+CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y

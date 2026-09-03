@@ -1,0 +1,12 @@
+WebSocket/HTTP test report
+============================================================
+Target: 192.168.4.1:81 (WS), 80 (HTTP)
+
+http_ping: OK
+http_send: OK (200)
+ws_connect: OK
+ws_system: NOT_EXPECTED (no greeting from real board)
+ws_echo: OK ('TestUser:t1788455493016:Hello from ws test')
+ws_name: SENT
+
+Overall: OK

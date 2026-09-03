@@ -1,0 +1,530 @@
+AFSK focused test report: cyr_600
+========================================================================================================================
+
+## cyr_600
+Status: OK
+Sent (600 chars, 1200 bytes): ПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверка...
+TX blocks: 24
+RX packets: 24, CRC errors: 0, Frames aborted: 0
+Preamble sync: 480/480 (100%, glitches: 0)
+RX full message: 1200 bytes in 24 blocks
+
+--- TX raw output ---
+ПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаПроверкаI (1645) MAIN: Message: 1200 bytes, Blocks: 24
+I (1645) MAIN: TX Block 1/24: ПроверкаПроверкаПроверкаП
+I (1655) TX_AD9851: Sending block: 50 bytes
+
+[MAIN] Enter next message: 
+I (8355) MAIN: TX Block 2/24: роверкаПроверкаПроверкаПр
+I (8355) TX_AD9851: Sending block: 50 bytes
+[STAT] Waiting for AFSK signal...
+I (15055) MAIN: TX Block 3/24: оверкаПроверкаПроверкаПро
+I (15055) TX_AD9851: Sending block: 50 bytes
+[STAT] Waiting for AFSK signal...
+I (21755) MAIN: TX Block 4/24: веркаПроверкаПроверкаПров
+I (21755) TX_AD9851: Sending block: 50 bytes
+I (28455) MAIN: TX Block 5/24: еркаПроверкаПроверкаПрове
+I (28455) TX_AD9851: Sending block: 50 bytes
+[STAT] Waiting for AFSK signal...
+I (35155) MAIN: TX Block 6/24: ркаПроверкаПроверкаПровер
+I (35155) TX_AD9851: Sending block: 50 bytes
+[STAT] Waiting for AFSK signal...
+I (41855) MAIN: TX Block 7/24: каПроверкаПроверкаПроверк
+I (41855) TX_AD9851: Sending block: 50 bytes
+I (48555) MAIN: TX Block 8/24: аПроверкаПроверкаПроверка
+I (48555) TX_AD9851: Sending block: 50 bytes
+[STAT] Waiting for AFSK signal...
+I (55255) MAIN: TX Block 9/24: ПроверкаПроверкаПроверкаП
+I (55255) TX_AD9851: Sending block: 50 bytes
+[STAT] Waiting for AFSK signal...
+I (61955) MAIN: TX Block 10/24: роверкаПроверкаПроверкаПр
+I (61955) TX_AD9851: Sending block: 50 bytes
+I (68655) MAIN: TX Block 11/24: оверкаПроверкаПроверкаПро
+I (68655) TX_AD9851: Sending block: 50 bytes
+[STAT] Waiting for AFSK signal...
+I (75355) MAIN: TX Block 12/24: веркаПроверкаПроверкаПров
+I (75355) TX_AD9851: Sending block: 50 bytes
+[STAT] Waiting for AFSK signal...
+I (82055) MAIN: TX Block 13/24: еркаПроверкаПроверкаПрове
+I (82055) TX_AD9851: Sending block: 50 bytes
+I (88755) MAIN: TX Block 14/24: ркаПроверкаПроверкаПровер
+I (88755) TX_AD9851: Sending block: 50 bytes
+[STAT] Waiting for AFSK signal...
+I (95455) MAIN: TX Block 15/24: каПроверкаПроверкаПроверк
+I (95455) TX_AD9851: Sending block: 50 bytes
+[STAT] Waiting for AFSK signal...
+I (102155) MAIN: TX Block 16/24: аПроверкаПроверкаПроверка
+I (102155) TX_AD9851: Sending block: 50 bytes
+I (108855) MAIN: TX Block 17/24: ПроверкаПроверкаПроверкаП
+I (108855) TX_AD9851: Sending block: 50 bytes
+[STAT] Waiting for AFSK signal...
+I (115555) MAIN: TX Block 18/24: роверкаПроверкаПроверкаПр
+I (115555) TX_AD9851: Sending block: 50 bytes
+[STAT] Waiting for AFSK signal...
+I (122255) MAIN: TX Block 19/24: оверкаПроверкаПроверкаПро
+I (122255) TX_AD9851: Sending block: 50 bytes
+I (128955) MAIN: TX Block 20/24: веркаПроверкаПроверкаПров
+I (128955) TX_AD9851: Sending block: 50 bytes
+[STAT] Waiting for AFSK signal...
+I (135655) MAIN: TX Block 21/24: еркаПроверкаПроверкаПрове
+I (135655) TX_AD9851: Sending block: 50 bytes
+[STAT] Waiting for AFSK signal...
+I (142355) MAIN: TX Block 22/24: ркаПроверкаПроверкаПровер
+I (142355) TX_AD9851: Sending block: 50 bytes
+I (149055) MAIN: TX Block 23/24: каПроверкаПроверкаПроверк
+I (149055) TX_AD9851: Sending block: 50 bytes
+[STAT] Waiting for AFSK signal...
+I (155755) MAIN: TX Block 24/24: аПроверкаПроверкаПроверка
+I (155755) TX_AD9851: Sending block: 50 bytes
+[STAT] Waiting for AFSK signal...
+I (161955) MAIN: All blocks sent
+[STAT] Waiting for AFSK signal...
+
+--- RX raw output ---
+[PREAMBLE] 60/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 120/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 180/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 240/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 300/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 360/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 420/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 480/480 (conf: 99%, glitches: 0)
+
+========================================
+[RX] Message received!
+[RX] Length: 50 bytes
+[RX] CRC: OK
+[RX] --- Text ---
+ПроверкаПроверкаПроверкаП
+========================================
+[RX] Stats: Packets: 1 | CRC errors: 0 | Frames aborted: 0
+[PREAMBLE] 60/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 120/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 180/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 240/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 300/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 360/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 420/480 (conf: 100%, glitches: 0)
+[LEVEL] peak: -4.2 dBFS | mark: -7.8 | space: -8.9 | squelch: -40.0 dBFS
+[STAT] Waiting for AFSK signal...
+[PREAMBLE] 480/480 (conf: 99%, glitches: 0)
+
+========================================
+[RX] Message received!
+[RX] Length: 50 bytes
+[RX] CRC: OK
+[RX] --- Text ---
+роверкаПроверкаПроверкаПр
+========================================
+[RX] Stats: Packets: 2 | CRC errors: 0 | Frames aborted: 0
+[PREAMBLE] 60/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 120/480 (conf: 100%, glitches: 0)
+[LEVEL] peak: -4.3 dBFS | mark: -7.9 | space: -9.0 | squelch: -40.0 dBFS
+[PREAMBLE] 180/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 240/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 300/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 360/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 420/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 480/480 (conf: 100%, glitches: 0)
+[STAT] Waiting for AFSK signal...
+
+========================================
+[RX] Message received!
+[RX] Length: 50 bytes
+[RX] CRC: OK
+[RX] --- Text ---
+оверкаПроверкаПроверкаПро
+========================================
+[RX] Stats: Packets: 3 | CRC errors: 0 | Frames aborted: 0
+[PREAMBLE] 60/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 120/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 180/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 240/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 300/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 360/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 420/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 480/480 (conf: 100%, glitches: 0)
+
+========================================
+[RX] Message received!
+[RX] Length: 50 bytes
+[RX] CRC: OK
+[RX] --- Text ---
+веркаПроверкаПроверкаПров
+========================================
+[RX] Stats: Packets: 4 | CRC errors: 0 | Frames aborted: 0
+[PREAMBLE] 60/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 120/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 180/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 240/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 300/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 360/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 420/480 (conf: 100%, glitches: 0)
+[LEVEL] peak: -4.2 dBFS | mark: -7.9 | space: -9.0 | squelch: -40.0 dBFS
+[STAT] Waiting for AFSK signal...
+[PREAMBLE] 480/480 (conf: 99%, glitches: 0)
+
+========================================
+[RX] Message received!
+[RX] Length: 50 bytes
+[RX] CRC: OK
+[RX] --- Text ---
+еркаПроверкаПроверкаПрове
+========================================
+[RX] Stats: Packets: 5 | CRC errors: 0 | Frames aborted: 0
+[PREAMBLE] 60/480 (conf: 100%, glitches: 0)
+[LEVEL] peak: -4.1 dBFS | mark: -7.8 | space: -9.0 | squelch: -40.0 dBFS
+[PREAMBLE] 120/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 180/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 240/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 300/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 360/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 420/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 480/480 (conf: 100%, glitches: 0)
+[STAT] Waiting for AFSK signal...
+
+========================================
+[RX] Message received!
+[RX] Length: 50 bytes
+[RX] CRC: OK
+[RX] --- Text ---
+ркаПроверкаПроверкаПровер
+========================================
+[RX] Stats: Packets: 6 | CRC errors: 0 | Frames aborted: 0
+[PREAMBLE] 60/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 120/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 180/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 240/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 300/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 360/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 420/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 480/480 (conf: 99%, glitches: 0)
+
+========================================
+[RX] Message received!
+[RX] Length: 50 bytes
+[RX] CRC: OK
+[RX] --- Text ---
+каПроверкаПроверкаПроверк
+========================================
+[RX] Stats: Packets: 7 | CRC errors: 0 | Frames aborted: 0
+[PREAMBLE] 60/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 120/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 180/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 240/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 300/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 360/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 420/480 (conf: 100%, glitches: 0)
+[LEVEL] peak: -4.8 dBFS | mark: -7.8 | space: -9.0 | squelch: -40.0 dBFS
+[STAT] Waiting for AFSK signal...
+[PREAMBLE] 480/480 (conf: 100%, glitches: 0)
+
+========================================
+[RX] Message received!
+[RX] Length: 50 bytes
+[RX] CRC: OK
+[RX] --- Text ---
+аПроверкаПроверкаПроверка
+========================================
+[RX] Stats: Packets: 8 | CRC errors: 0 | Frames aborted: 0
+[PREAMBLE] 60/480 (conf: 99%, glitches: 1)
+[LEVEL] peak: -5.1 dBFS | mark: -7.9 | space: -9.0 | squelch: -40.0 dBFS
+[PREAMBLE] 120/480 (conf: 100%, glitches: 1)
+[PREAMBLE] 180/480 (conf: 99%, glitches: 1)
+[PREAMBLE] 240/480 (conf: 100%, glitches: 1)
+[PREAMBLE] 300/480 (conf: 100%, glitches: 1)
+[PREAMBLE] 360/480 (conf: 100%, glitches: 1)
+[PREAMBLE] 420/480 (conf: 99%, glitches: 1)
+[PREAMBLE] 480/480 (conf: 100%, glitches: 1)
+[STAT] Waiting for AFSK signal...
+
+========================================
+[RX] Message received!
+[RX] Length: 50 bytes
+[RX] CRC: OK
+[RX] --- Text ---
+ПроверкаПроверкаПроверкаП
+========================================
+[RX] Stats: Packets: 9 | CRC errors: 0 | Frames aborted: 0
+[PREAMBLE] 60/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 120/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 180/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 240/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 300/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 360/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 420/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 480/480 (conf: 100%, glitches: 0)
+
+========================================
+[RX] Message received!
+[RX] Length: 50 bytes
+[RX] CRC: OK
+[RX] --- Text ---
+роверкаПроверкаПроверкаПр
+========================================
+[RX] Stats: Packets: 10 | CRC errors: 0 | Frames aborted: 0
+[PREAMBLE] 60/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 120/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 180/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 240/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 300/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 360/480 (conf: 100%, glitches: 0)
+[LEVEL] peak: -4.2 dBFS | mark: -7.9 | space: -9.0 | squelch: -40.0 dBFS
+[STAT] Waiting for AFSK signal...
+[PREAMBLE] 420/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 480/480 (conf: 100%, glitches: 0)
+
+========================================
+[RX] Message received!
+[RX] Length: 50 bytes
+[RX] CRC: OK
+[RX] --- Text ---
+оверкаПроверкаПроверкаПро
+========================================
+[RX] Stats: Packets: 11 | CRC errors: 0 | Frames aborted: 0
+[PREAMBLE] 60/480 (conf: 100%, glitches: 0)
+[LEVEL] peak: -4.1 dBFS | mark: -7.9 | space: -9.0 | squelch: -40.0 dBFS
+[PREAMBLE] 120/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 180/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 240/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 300/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 360/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 420/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 480/480 (conf: 100%, glitches: 0)
+[STAT] Waiting for AFSK signal...
+
+========================================
+[RX] Message received!
+[RX] Length: 50 bytes
+[RX] CRC: OK
+[RX] --- Text ---
+веркаПроверкаПроверкаПров
+========================================
+[RX] Stats: Packets: 12 | CRC errors: 0 | Frames aborted: 0
+[PREAMBLE] 60/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 120/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 180/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 240/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 300/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 360/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 420/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 480/480 (conf: 100%, glitches: 0)
+
+========================================
+[RX] Message received!
+[RX] Length: 50 bytes
+[RX] CRC: OK
+[RX] --- Text ---
+еркаПроверкаПроверкаПрове
+========================================
+[RX] Stats: Packets: 13 | CRC errors: 0 | Frames aborted: 0
+[PREAMBLE] 60/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 120/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 180/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 240/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 300/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 360/480 (conf: 100%, glitches: 0)
+[LEVEL] peak: -4.5 dBFS | mark: -7.9 | space: -9.0 | squelch: -40.0 dBFS
+[STAT] Waiting for AFSK signal...
+[PREAMBLE] 420/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 480/480 (conf: 100%, glitches: 0)
+
+========================================
+[RX] Message received!
+[RX] Length: 50 bytes
+[RX] CRC: OK
+[RX] --- Text ---
+ркаПроверкаПроверкаПровер
+========================================
+[RX] Stats: Packets: 14 | CRC errors: 0 | Frames aborted: 0
+[LEVEL] peak: -4.1 dBFS | mark: -7.9 | space: -9.0 | squelch: -40.0 dBFS
+[PREAMBLE] 60/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 120/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 180/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 240/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 300/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 360/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 420/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 480/480 (conf: 100%, glitches: 0)
+[STAT] Waiting for AFSK signal...
+
+========================================
+[RX] Message received!
+[RX] Length: 50 bytes
+[RX] CRC: OK
+[RX] --- Text ---
+каПроверкаПроверкаПроверк
+========================================
+[RX] Stats: Packets: 15 | CRC errors: 0 | Frames aborted: 0
+[PREAMBLE] 60/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 120/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 180/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 240/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 300/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 360/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 420/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 480/480 (conf: 100%, glitches: 0)
+
+========================================
+[RX] Message received!
+[RX] Length: 50 bytes
+[RX] CRC: OK
+[RX] --- Text ---
+аПроверкаПроверкаПроверка
+========================================
+[RX] Stats: Packets: 16 | CRC errors: 0 | Frames aborted: 0
+[PREAMBLE] 60/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 120/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 180/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 240/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 300/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 360/480 (conf: 100%, glitches: 0)
+[LEVEL] peak: -4.1 dBFS | mark: -7.9 | space: -9.0 | squelch: -40.0 dBFS
+[STAT] Waiting for AFSK signal...
+[PREAMBLE] 420/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 480/480 (conf: 99%, glitches: 0)
+
+========================================
+[RX] Message received!
+[RX] Length: 50 bytes
+[RX] CRC: OK
+[RX] --- Text ---
+ПроверкаПроверкаПроверкаП
+========================================
+[RX] Stats: Packets: 17 | CRC errors: 0 | Frames aborted: 0
+[LEVEL] peak: -4.1 dBFS | mark: -7.9 | space: -9.0 | squelch: -40.0 dBFS
+[PREAMBLE] 60/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 120/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 180/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 240/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 300/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 360/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 420/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 480/480 (conf: 100%, glitches: 0)
+[STAT] Waiting for AFSK signal...
+
+========================================
+[RX] Message received!
+[RX] Length: 50 bytes
+[RX] CRC: OK
+[RX] --- Text ---
+роверкаПроверкаПроверкаПр
+========================================
+[RX] Stats: Packets: 18 | CRC errors: 0 | Frames aborted: 0
+[PREAMBLE] 60/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 120/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 180/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 240/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 300/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 360/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 420/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 480/480 (conf: 100%, glitches: 0)
+
+========================================
+[RX] Message received!
+[RX] Length: 50 bytes
+[RX] CRC: OK
+[RX] --- Text ---
+оверкаПроверкаПроверкаПро
+========================================
+[RX] Stats: Packets: 19 | CRC errors: 0 | Frames aborted: 0
+[PREAMBLE] 60/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 120/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 180/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 240/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 300/480 (conf: 100%, glitches: 0)
+[LEVEL] peak: -4.9 dBFS | mark: -7.9 | space: -9.0 | squelch: -40.0 dBFS
+[STAT] Waiting for AFSK signal...
+[PREAMBLE] 360/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 420/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 480/480 (conf: 100%, glitches: 0)
+
+========================================
+[RX] Message received!
+[RX] Length: 50 bytes
+[RX] CRC: OK
+[RX] --- Text ---
+веркаПроверкаПроверкаПров
+========================================
+[RX] Stats: Packets: 20 | CRC errors: 0 | Frames aborted: 0
+[LEVEL] peak: -4.6 dBFS | mark: -7.9 | space: -9.0 | squelch: -40.0 dBFS
+[PREAMBLE] 60/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 120/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 180/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 240/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 300/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 360/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 420/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 480/480 (conf: 100%, glitches: 0)
+[STAT] Waiting for AFSK signal...
+
+========================================
+[RX] Message received!
+[RX] Length: 50 bytes
+[RX] CRC: OK
+[RX] --- Text ---
+еркаПроверкаПроверкаПрове
+========================================
+[RX] Stats: Packets: 21 | CRC errors: 0 | Frames aborted: 0
+[PREAMBLE] 60/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 120/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 180/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 240/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 300/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 360/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 420/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 480/480 (conf: 100%, glitches: 0)
+
+========================================
+[RX] Message received!
+[RX] Length: 50 bytes
+[RX] CRC: OK
+[RX] --- Text ---
+ркаПроверкаПроверкаПровер
+========================================
+[RX] Stats: Packets: 22 | CRC errors: 0 | Frames aborted: 0
+[PREAMBLE] 60/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 120/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 180/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 240/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 300/480 (conf: 100%, glitches: 0)
+[LEVEL] peak: -4.2 dBFS | mark: -7.9 | space: -9.0 | squelch: -40.0 dBFS
+[STAT] Waiting for AFSK signal...
+[PREAMBLE] 360/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 420/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 480/480 (conf: 100%, glitches: 0)
+
+========================================
+[RX] Message received!
+[RX] Length: 50 bytes
+[RX] CRC: OK
+[RX] --- Text ---
+каПроверкаПроверкаПроверк
+========================================
+[RX] Stats: Packets: 23 | CRC errors: 0 | Frames aborted: 0
+[LEVEL] peak: -4.7 dBFS | mark: -7.9 | space: -9.0 | squelch: -40.0 dBFS
+[PREAMBLE] 60/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 120/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 180/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 240/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 300/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 360/480 (conf: 100%, glitches: 0)
+[PREAMBLE] 420/480 (conf: 99%, glitches: 0)
+[PREAMBLE] 480/480 (conf: 100%, glitches: 0)
+[STAT] Waiting for AFSK signal...
+
+========================================
+[RX] Message received!
+[RX] Length: 50 bytes
+[RX] CRC: OK
+[RX] --- Text ---
+аПроверкаПроверкаПроверка
+========================================
+[RX] Stats: Packets: 24 | CRC errors: 0 | Frames aborted: 0
+[LEVEL] peak: -9.0 dBFS | mark: -7.9 | space: -9.0 | squelch: -40.0 dBFS
+[LEVEL] peak: -73.6 dBFS | mark: -91.6 | space: -90.9 | squelch: -40.0 dBFS
+[STAT] Waiting for AFSK signal...
+
+########################################
+[RX] FULL MESSAGE: 1200 bytes in 24 blocks
+########################################
