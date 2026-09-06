@@ -18,6 +18,8 @@ class MainActivity : FlutterActivity() {
 
     private var connectivityManager: ConnectivityManager? = null
     private var networkCallback: ConnectivityManager.NetworkCallback? = null
+    // Result текущего bindToWifi, ещё не получившего ответа от ConnectivityManager
+    private var pendingBindResult: MethodChannel.Result? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,16 +55,12 @@ class MainActivity : FlutterActivity() {
                         result.success(true)
                     }
                     "closeApp" -> {
-                        // Та же цепочка, что и «Выйти» из уведомления:
-                        // снимаем Wi-Fi, останавливаем foreground-сервис с удалением
-                        // уведомления и закрываем активность полностью.
-                        unbind()
-                        startService(
-                            Intent(this, ChatForegroundService::class.java)
-                                .setAction(ChatForegroundService.ACTION_EXIT)
-                        )
-                        closeApp()
+                        // Та же цепочка, что и «Выйти» из уведомления. Ответ Dart уходит
+                        // до начала остановки: дальше процесс будет убит и отвечать
+                        // будет некому.
                         result.success(true)
+                        unbind()
+                        ChatForegroundService.requestExit(this)
                     }
                     else -> result.notImplemented()
                 }
@@ -88,16 +86,16 @@ class MainActivity : FlutterActivity() {
         }
 
         // Снимаем предыдущую привязку/колбэк, чтобы они не накапливались
-        // при периодическом вызове раз в 5 с из _checkConnection()
+        // при повторном bind (смена IP или новая попытка подключения).
+        // Предыдущий ожидающий Result завершаем, иначе Dart ждал бы его вечно
         unbind()
+        pendingBindResult = result
 
         val request = NetworkRequest.Builder()
             .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
             // НЕ добавляем NET_CAPABILITY_INTERNET: сеть ESP32 без интернета,
             // иначе система откажет в выдаче сети
             .build()
-
-        var reported = false
 
         val callback = object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
@@ -107,19 +105,17 @@ class MainActivity : FlutterActivity() {
                     @Suppress("DEPRECATION")
                     ConnectivityManager.setProcessDefaultNetwork(network)
                 }
-                if (!reported) {
-                    reported = true
-                    // Колбэк приходит в фоновом потоке, а MethodChannel.Result
-                    // обязан вызываться в главном потоке
-                    runOnUiThread { result.success(ok) }
-                }
+                // Колбэк приходит в фоновом потоке, а MethodChannel.Result
+                // обязан вызываться в главном потоке
+                runOnUiThread { completeBind(this, ok) }
             }
 
             override fun onUnavailable() {
-                if (!reported) {
-                    reported = true
-                    runOnUiThread { result.success(false) }
-                }
+                runOnUiThread { completeBind(this, false) }
+            }
+
+            override fun onLost(network: Network) {
+                runOnUiThread { completeBind(this, false) }
             }
         }
 
@@ -128,7 +124,17 @@ class MainActivity : FlutterActivity() {
         cm.requestNetwork(request, callback, 8000)
     }
 
+    // Отвечаем Dart только если колбэк всё ещё актуальный: после unbind()
+    // система может ещё доставить события старому колбэку
+    private fun completeBind(callback: ConnectivityManager.NetworkCallback, ok: Boolean) {
+        if (networkCallback !== callback) return
+        pendingBindResult?.success(ok)
+        pendingBindResult = null
+    }
+
     private fun unbind() {
+        pendingBindResult?.success(false)
+        pendingBindResult = null
         val cm = connectivityManager ?: return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             cm.bindProcessToNetwork(null)

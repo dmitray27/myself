@@ -234,19 +234,33 @@ class ChatController extends ChangeNotifier {
 
   // ---------------- Foreground service / Wi-Fi binding ----------------
 
-  Future<bool> _bindToWifi() async {
+  /// IP, для которого bind уже выполнен: повторный bind на каждом опросе
+  /// пересоздаёт NetworkCallback и может подвесить ожидающий Result.
+  String? _boundIp;
+
+  Future<bool> _bindToWifi({bool force = false}) async {
     if (!Platform.isAndroid) return true;
+    if (!force && _boundIp != null && _boundIp == _deviceIp) return true;
     try {
-      final ok = await _networkChannel.invokeMethod<bool>('bindToWifi');
-      return ok ?? false;
+      final ok = await _networkChannel
+          .invokeMethod<bool>('bindToWifi')
+          .timeout(const Duration(seconds: 10));
+      if (ok == true) {
+        _boundIp = _deviceIp;
+        return true;
+      }
+      _boundIp = null;
+      return false;
     } catch (e) {
       debugPrint('bindToWifi error: $e');
+      _boundIp = null;
       return false;
     }
   }
 
   Future<void> _unbindWifi() async {
     if (!Platform.isAndroid) return;
+    _boundIp = null;
     try {
       await _networkChannel.invokeMethod('unbind');
     } catch (e) {
@@ -283,12 +297,14 @@ class ChatController extends ChangeNotifier {
     }
   }
 
-  Future<void> _closeApp() async {
-    if (!Platform.isAndroid) return;
+  Future<bool> _closeApp() async {
+    if (!Platform.isAndroid) return false;
     try {
-      await _networkChannel.invokeMethod('closeApp');
+      final ok = await _networkChannel.invokeMethod<bool>('closeApp');
+      return ok ?? false;
     } catch (e) {
       debugPrint('closeApp error: $e');
+      return false;
     }
   }
 
@@ -327,7 +343,9 @@ class ChatController extends ChangeNotifier {
       if (ipChanged) _notify();
 
       if (deviceIp.startsWith('192.168.4.')) {
-        await _bindToWifi();
+        await _bindToWifi(force: ipChanged);
+      } else if (_boundIp != null) {
+        await _unbindWifi();
       }
 
       final reachable = _connection.isConnected || await _pingEsp32();
@@ -422,6 +440,7 @@ class ChatController extends ChangeNotifier {
       debugPrint('Проверяю ping ESP32...');
       if (!await _pingEsp32()) {
         debugPrint('❌ ESP32 не отвечает на ping');
+        _boundIp = null;
         return;
       }
 
@@ -568,11 +587,17 @@ class ChatController extends ChangeNotifier {
   }
 
   /// Закрывает соединения, сервисы, уведомления и активность при выходе.
-  Future<void> exit() async {
+  /// На Android вся остановка (сервис, unbind, Activity, процесс) идёт одной
+  /// цепочкой через `closeApp`, чтобы не останавливать и сразу заново
+  /// запускать сервис. Возвращает true, если платформа закрывает приложение
+  /// сама и вызывающему ничего закрывать не надо.
+  Future<bool> exit() async {
     _connectionTimer?.cancel();
     await _connection.disconnect();
-    await _stopForegroundService();
-    await _unbindWifi();
-    await _closeApp();
+    if (Platform.isAndroid) {
+      _boundIp = null;
+      return _closeApp();
+    }
+    return false;
   }
 }

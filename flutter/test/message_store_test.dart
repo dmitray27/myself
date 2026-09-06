@@ -38,5 +38,16 @@ void main() {
       expect(outcome, IngestOutcome.duplicateIgnored);
       expect(store.messages.length, 1);
     });
+
+    test('same id from different senders is not a duplicate', () {
+      final store = MessageStore();
+      store.ingest(parseIncomingFrame('hist:Alice:1:Hello'), myName: 'User');
+      final outcome = store.ingest(
+        parseIncomingFrame('hist:Remote:1:Привет'),
+        myName: 'User',
+      );
+      expect(outcome, IngestOutcome.addedHistory);
+      expect(store.messages.length, 2);
+    });
   });
 }

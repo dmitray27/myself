@@ -158,7 +158,7 @@ class MessageStore {
   bool _alreadyShown(String id, String from, String text, bool isMe) {
     if (id.isNotEmpty) {
       for (final message in _messages.reversed) {
-        if (message.id == id) return true;
+        if (message.id == id && message.from == from) return true;
       }
     }
     for (final message in _messages.reversed) {

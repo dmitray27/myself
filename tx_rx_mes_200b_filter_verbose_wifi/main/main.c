@@ -271,11 +271,12 @@ static void rx_task(void *pvParameters)
             printf("########################################\n");
 
             /* Генерируем id для сообщения, принятого с эфира: клиент
-               ожидает кадр Remote:<id>:<text>.  Копируем ровно assembly_len
+               ожидает кадр Remote:<id>:<text>. Префикс 'r' отличает id от
+               счётчика HTTP-сообщений в wifi_link.c. Копируем ровно assembly_len
                байт, чтобы встроенный '\0' в payload не обрезал broadcast. */
             static uint32_t rx_msg_id = 0;
             char id_buf[16];
-            snprintf(id_buf, sizeof(id_buf), "%lx", (unsigned long)++rx_msg_id);
+            snprintf(id_buf, sizeof(id_buf), "r%lx", (unsigned long)++rx_msg_id);
             size_t id_len = strlen(id_buf);
             if (id_len + 1 + s_assembly_len < RX_ASSEMBLY_MAX + 64) {
                 memcpy(s_broadcast_buf, id_buf, id_len);

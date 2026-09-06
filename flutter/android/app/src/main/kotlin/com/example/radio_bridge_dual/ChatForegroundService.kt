@@ -10,7 +10,9 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.net.wifi.WifiManager
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 
 // Пока сервис на переднем плане, ОС не замораживает процесс при погашенном
 // экране: WebSocket к ESP32 продолжает читать кадры, а WifiLock не даёт
@@ -155,9 +157,7 @@ class ChatForegroundService : Service() {
             stopForeground(true)
         }
         stopSelf()
-        // Полностью уничтожаем процесс, иначе Android держит его в кэше
-        // и "Выйти" выглядит как сворачивание, а не закрытие.
-        android.os.Process.killProcess(android.os.Process.myPid())
+        scheduleProcessKill()
     }
 
     private fun notificationManager(): NotificationManager =
@@ -292,6 +292,37 @@ class ChatForegroundService : Service() {
         // Новый запуск приложения отменяет режим выхода
         fun clearExitState() {
             exiting = false
+        }
+
+        // Единая точка выхода для AppBar «Выйти». Если сервис жив — гасим его
+        // напрямую (без startService ради ACTION_EXIT: из фона он может
+        // бросить IllegalStateException). Если сервиса нет — не создаём его
+        // только чтобы убить, а закрываем активность и процесс сразу
+        fun requestExit(context: Context) {
+            exiting = true
+            desiredConnected = false
+            val service = instance
+            if (service != null) {
+                service.stopWithNotifications()
+                return
+            }
+            MainActivity.closeApp()
+            val manager =
+                context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            manager.cancel(ALERT_NOTIFICATION_ID)
+            manager.cancel(NOTIFICATION_ID)
+            scheduleProcessKill()
+        }
+
+        // Процесс убиваем отложенно, чтобы finishAndRemoveTask/stopSelf и ответ
+        // MethodChannel успели дойти до системы. Иначе Android держит процесс
+        // в кэше и «Выйти» выглядит как сворачивание
+        private const val KILL_DELAY_MS = 300L
+
+        private fun scheduleProcessKill() {
+            Handler(Looper.getMainLooper()).postDelayed({
+                android.os.Process.killProcess(android.os.Process.myPid())
+            }, KILL_DELAY_MS)
         }
 
         fun setConnected(isConnected: Boolean) {

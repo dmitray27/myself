@@ -217,7 +217,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
     if (confirmed != true || !mounted) return;
 
-    await _controller.exit();
+    final closedByPlatform = await _controller.exit();
+    if (closedByPlatform) return;
 
     if (Platform.isAndroid) {
       await SystemNavigator.pop();

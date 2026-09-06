@@ -46,9 +46,9 @@
 // Последние сообщения хранятся на плате: клиент, у которого соединение
 // оборвалось (например при засыпании телефона), получает пропущенное
 // сразу после рукопожатия
-// 300 символов кириллицы — это 600 байт, плюс имя и разделитель
+// Слот вмещает любой кадр, который проходит WS_MAX_FRAME_LEN, плюс имя
 #define HISTORY_SIZE    20
-#define HISTORY_MAX_LEN 704
+#define HISTORY_MAX_LEN (WS_MAX_FRAME_LEN + WS_NAME_MAX + 8)
 
 static const char *TAG = "WIFI_LINK";
 
@@ -220,13 +220,13 @@ static void ws_send_work(void *arg)
     ws_pkt.payload = (uint8_t *)ctx->payload;
     ws_pkt.len = ctx->len;
 
-    esp_err_t ret = httpd_ws_send_frame_async(ctx->server, ctx->fd, &ws_pkt);  
-   if (ret != ESP_OK) {  
-    ESP_LOGW(TAG, "WS send to fd %d failed: %d", ctx->fd, ret);  
-    httpd_sess_trigger_close(ctx->server, ctx->fd); 
-}  
-free(ctx->payload);  
-free(ctx);
+    esp_err_t ret = httpd_ws_send_frame_async(ctx->server, ctx->fd, &ws_pkt);
+    if (ret != ESP_OK) {
+        ESP_LOGW(TAG, "WS send to fd %d failed: %d", ctx->fd, ret);
+        httpd_sess_trigger_close(ctx->server, ctx->fd);
+    }
+    free(ctx->payload);
+    free(ctx);
 }
 
 static void ws_queue_text(int fd, const char *payload, size_t len)
@@ -263,7 +263,8 @@ static void ws_queue_text(int fd, const char *payload, size_t len)
 // в чате, но не проигрывает по ним звук и не показывает уведомление
 static void history_send_to(int fd)
 {
-    char frame[HISTORY_MAX_LEN + 8];
+    // Статический: буфер больше килобайта не для стека httpd, доступ под s_ws_mutex
+    static char frame[HISTORY_MAX_LEN + 8];
 
     xSemaphoreTake(s_ws_mutex, portMAX_DELAY);
 
@@ -377,6 +378,16 @@ void wifi_link_broadcast(const char *from, const char *text)
 // HTTP
 // ============================
 
+// Имя без ':' (разделитель кадра) и не "System": иначе клиент смог бы
+// подделать служебные уведомления
+static bool name_is_valid(const char *name)
+{
+    if (name[0] == '\0' || strchr(name, ':') != NULL) {
+        return false;
+    }
+    return strncmp(name, "System", 6) != 0;
+}
+
 static int hex_val(char c)
 {
     if (c >= '0' && c <= '9') return c - '0';
@@ -393,7 +404,11 @@ static void url_decode(char *out, size_t out_size, const char *in, const char *e
             out[i++] = ' ';
         } else if (*in == '%' && (in + 2) < end &&
                    hex_val(in[1]) >= 0 && hex_val(in[2]) >= 0) {
-            out[i++] = (char)((hex_val(in[1]) << 4) | hex_val(in[2]));
+            char decoded = (char)((hex_val(in[1]) << 4) | hex_val(in[2]));
+            // Встроенный '\0' обрезал бы текст при strlen ниже
+            if (decoded != '\0') {
+                out[i++] = decoded;
+            }
             in += 2;
         } else {
             out[i++] = *in;
@@ -510,8 +525,7 @@ static esp_err_t send_post_handler(httpd_req_t *req)
     url_decode(from, sizeof(from), p_from, p_from_end ? p_from_end : body_end);
     url_decode(text, POST_BUF_SIZE, p_text, p_text_end ? p_text_end : body_end);
 
-    if (strchr(from, ':') != NULL ||
-        (strnlen(from, sizeof(from)) >= 6 && strncmp(from, "System", 6) == 0)) {
+    if (!name_is_valid(from)) {
         httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid 'from'");
         goto cleanup;
     }
@@ -549,7 +563,9 @@ static esp_err_t send_post_handler(httpd_req_t *req)
        единообразный кадр from:<id>:<text>. */
     static uint32_t post_id = 0;
     char id_buf[16];
-    snprintf(id_buf, sizeof(id_buf), "%lx", (unsigned long)++post_id);
+    // Префикс 'p' отличает id от счётчиков rx_task и клиентов: приложение
+    // дедуплицирует историю по id, одинаковые номера теряли бы сообщения
+    snprintf(id_buf, sizeof(id_buf), "p%lx", (unsigned long)++post_id);
     snprintf(id_text, POST_BUF_SIZE + 32, "%s:%s", id_buf, text);
 
     wifi_link_broadcast(from, id_text);
@@ -583,7 +599,7 @@ static void ws_handle_frame(httpd_req_t *req, char *payload)
 
     if (strncmp(payload, "setName:", 8) == 0) {
         const char *name = payload + 8;
-        if (strlen(name) == 0 || strchr(name, ':')) {
+        if (!name_is_valid(name)) {
             ESP_LOGW(TAG, "Rejected name from fd %d: '%s'", fd, name);
             ws_notify(fd, "Недопустимое имя");
             return;
@@ -636,7 +652,7 @@ static void ws_handle_frame(httpd_req_t *req, char *payload)
     if (!client_get_name(fd, from, sizeof(from))) {
         strlcpy(from, frame_name, sizeof(from));
     }
-    if (strlen(from) == 0) {
+    if (!name_is_valid(from)) {
         strlcpy(from, "Unknown", sizeof(from));
     }
 
