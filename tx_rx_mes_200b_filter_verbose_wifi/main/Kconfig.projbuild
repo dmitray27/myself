@@ -70,3 +70,18 @@ menu "AFSK Wi-Fi Access Point"
             board on the air.
 
 endmenu
+
+menu "AFSK Logging"
+
+    config AFSK_VERBOSE_LOG
+        bool "Verbose diagnostics (preamble, level meter, per-block RX, full WS/TX text)"
+        default y
+        help
+            Full logging profile: preamble progress, idle level meter,
+            per-block RX report and statistics, complete WebSocket frames
+            and TX block text. Costs UART time in rx_task (about 1% at
+            115200 baud) and up to ~90 ms per long WebSocket frame.
+            Disable for a field build that prints only CRC failures and
+            assembled-message headers. See sdkconfig.defaults.release.
+
+endmenu

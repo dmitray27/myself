@@ -81,6 +81,33 @@ idf.py -p /dev/ttyUSB0 flash monitor
 
 При смене target конфигурация пинов подтянется автоматически из `sdkconfig.defaults.esp32s3`.
 
+### Два профиля логирования
+
+| Профиль | Что в UART | Когда |
+|---|---|---|
+| **verbose** (по умолчанию) | преамбула, уровни, каждый RX-блок с текстом и `Stats`, TX-блоки с текстом, полные WS-кадры | отладка, стенд, `afsk_serial_test.py` |
+| **release** | CRC FAIL, заголовки собранных сообщений, номер/длина TX-блока, Wi-Fi события | поле, боевой комплект |
+
+Оба собираются из одного дерева в разные каталоги, не мешая друг другу:
+
+```bash
+# verbose — обычная сборка (build/, sdkconfig)
+idf.py build
+idf.py -p /dev/ttyUSB0 flash monitor
+
+# release — отдельный build-каталог и отдельный sdkconfig
+idf.py -B build_release -DSDKCONFIG=sdkconfig.release \
+    -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.release" build
+idf.py -B build_release -p /dev/ttyUSB0 flash monitor
+
+# release для ESP32-S3
+idf.py -B build_release_s3 -DIDF_TARGET=esp32s3 -DSDKCONFIG=sdkconfig.release.s3 \
+    -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.esp32s3;sdkconfig.defaults.release" build
+```
+
+Переключатель — `idf.py menuconfig` → **AFSK Logging** → *Verbose diagnostics*
+(`CONFIG_AFSK_VERBOSE_LOG`). Подробности — в разделе «Логирование и производительность».
+
 ---
 
 ## Параметры радиоканала
@@ -149,7 +176,7 @@ curl -d "from=Operator&text=Hello" http://192.168.4.1/send
 
 ### WebSocket (порт 81)
 
-URI: `ws://192.168.4.1/`
+URI: `ws://192.168.4.1:81/`
 
 Кадры от клиента:
 
@@ -224,14 +251,15 @@ UART 115200 бод ≈ 11.5 КБ/с, вывод блокирующий. DMA-бу
 | По-блочная диагностика RX (`Message received`, `Stats`) | `rx_task` | ~25 мс на 50-байтный блок (~1 % от 2.5 с эфира) | `AFSK_VERBOSE` |
 | `[PREAMBLE] n/480`, `[RX] Frame aborted` | декодер | ~4 мс раз в ~300 мс | `AFSK_VERBOSE` |
 | `[LEVEL]` уровни сигнала | декодер | раз в 5 с | `LEVEL_REPORT_MS` |
-| `TX Block i/n: <len> bytes` | `tx_task` | ~5 мс, вне битового цикла | уровень `ESP_LOG` |
-| `WS text from fd` (длина + 64 байта) | httpd | <10 мс | `ESP_LOGD` |
+| `TX Block i/n: <len> bytes[: <текст>]` | `tx_task` | 5–10 мс, вне битового цикла | текст — `AFSK_VERBOSE` |
+| `WS text from fd` | httpd | verbose: весь кадр, до ~90 мс; тихая: длина + 64 байта на `ESP_LOGD` | `AFSK_VERBOSE` |
 
+`AFSK_VERBOSE` берётся из menuconfig → **AFSK Logging** (`CONFIG_AFSK_VERBOSE_LOG`,
+по умолчанию включено); флаг компилятора `-DAFSK_VERBOSE=0/1` имеет приоритет.
 Тестовые скрипты `afsk_serial_test.py` / `afsk_cyr600_test.py` разбирают строки
-`FULL MESSAGE`, `Stats:` и `[PREAMBLE]`, поэтому для тестов нужен
-`AFSK_VERBOSE = 1` (значение по умолчанию в `afsk_common.h`). Для боевой
-прошивки: `idf.py build -DCMAKE_C_FLAGS=-DAFSK_VERBOSE=0` или правка
-`afsk_common.h`. **Никогда не печатайте тело сообщения целиком из `rx_task`.**
+`FULL MESSAGE`, `Stats:` и `[PREAMBLE]`, поэтому гонять их нужно на verbose-сборке.
+**Никогда не печатайте тело сообщения целиком из `rx_task`** — это не включается
+даже в verbose-профиле.
 
 ---
 

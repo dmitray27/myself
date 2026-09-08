@@ -78,7 +78,11 @@ static void tx_send_message(const char *text, size_t len)
         memcpy(block, &text[start], block_len);
         block[block_len] = '\0';
 
-        ESP_LOGI(TAG, "TX Block %d/%d: %d bytes", i + 1, blocks, block_len);
+        if (AFSK_VERBOSE) {
+            ESP_LOGI(TAG, "TX Block %d/%d: %d bytes: %s", i + 1, blocks, block_len, block);
+        } else {
+            ESP_LOGI(TAG, "TX Block %d/%d: %d bytes", i + 1, blocks, block_len);
+        }
 
         if (tx_ad9851_send_block((const uint8_t *)block, block_len)) {
             tx_ad9851_wait_idle();

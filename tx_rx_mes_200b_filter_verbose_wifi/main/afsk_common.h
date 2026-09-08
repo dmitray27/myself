@@ -1,6 +1,7 @@
 #pragma once
 #include <stdint.h>
 #include <stddef.h>
+#include "sdkconfig.h"
 
 /* Shared AFSK link parameters (identical for TX and RX). */
 #define MARK_FREQ       1200        /* Hz, logical '1' */
@@ -60,11 +61,17 @@ _Static_assert(MAX_BLOCK_LEN >= 4,
  * is silently dropped, which is why this is computed, not a constant. */
 #define TX_IDLE_TIMEOUT_MS (BLOCK_AIR_MS + BLOCK_AIR_MS / 2 + PTT_OVERHEAD_MS + 500)
 
-/* Diagnostic chatter: preamble progress, idle level meter and the periodic
- * "waiting for signal" line. Set to 0 for a quiet log with received blocks
- * and assembled messages only. */
+/* Diagnostic chatter: preamble progress, idle level meter, per-block RX
+ * report, full WS frame and TX block text. 0 gives a quiet log with CRC
+ * failures and assembled-message headers only. Comes from menuconfig
+ * (CONFIG_AFSK_VERBOSE_LOG, see sdkconfig.defaults.release); a -DAFSK_VERBOSE=N
+ * compiler flag overrides it. */
 #ifndef AFSK_VERBOSE
+#ifdef CONFIG_AFSK_VERBOSE_LOG
 #define AFSK_VERBOSE    1
+#else
+#define AFSK_VERBOSE    0
+#endif
 #endif
 
 /* CRC-8 (poly 0x07, init 0x00). Single shared implementation. */

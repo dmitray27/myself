@@ -6,3 +6,6 @@ sdkconfig.old
 *.elf
 *.map
 managed_components/
+build_*/
+sdkconfig.release
+sdkconfig.release.old

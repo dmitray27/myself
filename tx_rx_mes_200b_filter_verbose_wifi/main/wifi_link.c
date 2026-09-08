@@ -19,6 +19,8 @@
 #include "esp_netif.h"
 #include "esp_http_server.h"
 
+#include "afsk_common.h"
+
 // К префиксу добавляются последние два байта MAC точки доступа:
 // так несколько плат рядом не дают одинаковый SSID
 #define WIFI_SSID_PREFIX "AFSK-TRX-"
@@ -734,10 +736,15 @@ static esp_err_t ws_handler(httpd_req_t *req)
                      (unsigned)ws_pkt.len);
             ws_notify(httpd_req_to_sockfd(req), "Сообщение слишком длинное");
         } else {
-            // Полный кадр (до 1 КБ ≈ 90 мс UART) блокировал бы httpd-таск и других
-            // клиентов — логируем только длину и начало
-            ESP_LOGD(TAG, "WS text from fd %d (%u bytes): %.64s",
-                     httpd_req_to_sockfd(req), (unsigned)ws_pkt.len, (char *)buf);
+            // Полный кадр (до 1 КБ ≈ 90 мс UART) блокирует httpd-таск и других
+            // клиентов — в тихой сборке логируем только длину и начало
+            if (AFSK_VERBOSE) {
+                ESP_LOGI(TAG, "WS text from fd %d (%u bytes): %s",
+                         httpd_req_to_sockfd(req), (unsigned)ws_pkt.len, (char *)buf);
+            } else {
+                ESP_LOGD(TAG, "WS text from fd %d (%u bytes): %.64s",
+                         httpd_req_to_sockfd(req), (unsigned)ws_pkt.len, (char *)buf);
+            }
             ws_handle_frame(req, (char *)buf);
         }
     }
