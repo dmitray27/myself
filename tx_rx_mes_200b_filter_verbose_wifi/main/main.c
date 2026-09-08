@@ -78,7 +78,7 @@ static void tx_send_message(const char *text, size_t len)
         memcpy(block, &text[start], block_len);
         block[block_len] = '\0';
 
-        ESP_LOGI(TAG, "TX Block %d/%d: %s", i + 1, blocks, block);
+        ESP_LOGI(TAG, "TX Block %d/%d: %d bytes", i + 1, blocks, block_len);
 
         if (tx_ad9851_send_block((const uint8_t *)block, block_len)) {
             tx_ad9851_wait_idle();
@@ -321,20 +321,25 @@ static void rx_task(void *pvParameters)
                 packets_received++;
                 if (!message.crc_valid) crc_errors++;
 
-                printf("\n========================================\n");
-                printf("[RX] Message received!\n");
-                printf("[RX] Length: %d bytes\n", message.length);
-                printf("[RX] CRC: %s\n", message.crc_valid ? "OK" : "FAIL");
+                /* По-блочная диагностика (~300 байт ≈ 25 мс UART при запасе DMA
+                   ~85 мс) безопасна, но в боевой сборке отключается вместе с
+                   остальным выводом декодера. CRC-ошибки печатаем всегда. */
+                if (AFSK_VERBOSE) {
+                    printf("\n========================================\n");
+                    printf("[RX] Message received!\n");
+                    printf("[RX] Length: %d bytes\n", message.length);
+                    printf("[RX] CRC: %s\n", message.crc_valid ? "OK" : "FAIL");
+                    printf("[RX] --- Text ---\n");
+                    printf("%s\n", message.text);
+                    printf("========================================\n");
+                    printf("[RX] Stats: Packets: %" PRIu32 " | CRC errors: %" PRIu32
+                           " | Frames aborted: %" PRIu32 "\n",
+                           packets_received, crc_errors, decoder.frames_aborted);
+                }
                 if (!message.crc_valid) {
-                    printf("  Expected: 0x%02X, Got: 0x%02X\n",
+                    printf("[RX] CRC FAIL: expected 0x%02X, got 0x%02X\n",
                            message.calculated_crc, message.received_crc);
                 }
-                printf("[RX] --- Text ---\n");
-                printf("%s\n", message.text);
-                printf("========================================\n");
-                printf("[RX] Stats: Packets: %" PRIu32 " | CRC errors: %" PRIu32
-                       " | Frames aborted: %" PRIu32 "\n",
-                       packets_received, crc_errors, decoder.frames_aborted);
 
                 if (message.crc_valid) {
                     int space = RX_ASSEMBLY_MAX - s_assembly_len;

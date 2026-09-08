@@ -734,8 +734,10 @@ static esp_err_t ws_handler(httpd_req_t *req)
                      (unsigned)ws_pkt.len);
             ws_notify(httpd_req_to_sockfd(req), "Сообщение слишком длинное");
         } else {
-            ESP_LOGI(TAG, "WS text from fd %d: %s",
-                     httpd_req_to_sockfd(req), (char *)buf);
+            // Полный кадр (до 1 КБ ≈ 90 мс UART) блокировал бы httpd-таск и других
+            // клиентов — логируем только длину и начало
+            ESP_LOGD(TAG, "WS text from fd %d (%u bytes): %.64s",
+                     httpd_req_to_sockfd(req), (unsigned)ws_pkt.len, (char *)buf);
             ws_handle_frame(req, (char *)buf);
         }
     }
