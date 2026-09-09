@@ -107,13 +107,29 @@ class InfoDialog extends StatelessWidget {
   }
 }
 
-class _InfoText extends StatelessWidget {
+class _InfoText extends StatefulWidget {
   final AppInfo info;
 
   const _InfoText({required this.info});
 
   @override
+  State<_InfoText> createState() => _InfoTextState();
+}
+
+class _InfoTextState extends State<_InfoText> {
+  // Общий контроллер: иначе полоса прокрутки не связана с содержимым
+  // и перетаскивание её ползунка ничего не двигает
+  final ScrollController _scroll = ScrollController();
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final info = widget.info;
     final theme = Theme.of(context).textTheme;
     // Прокрутка пальцем, колесом, а на десктопе ещё и перетаскиванием мышью
     // (по умолчанию Flutter не даёт тянуть контент мышью)
@@ -122,8 +138,10 @@ class _InfoText extends StatelessWidget {
         dragDevices: PointerDeviceKind.values.toSet(),
       ),
       child: Scrollbar(
+        controller: _scroll,
         thumbVisibility: true,
         child: SingleChildScrollView(
+          controller: _scroll,
           padding: const EdgeInsets.only(right: 12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
