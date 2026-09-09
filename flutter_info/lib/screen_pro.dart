@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:window_manager/window_manager.dart';
 import 'chat_controller.dart';
+import 'info_dialog.dart';
 
 class ChatScreen extends StatefulWidget {
   final bool isLinux;
@@ -303,6 +304,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         Expanded(
           child: Scaffold(
             appBar: AppBar(
+              leading: const InfoButton(),
               title: const Text('Радиочат', style: TextStyle(color: Colors.white)),
               backgroundColor: Colors.green[800],
               actions: [

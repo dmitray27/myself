@@ -29,3 +29,4 @@ flutter:
   # Пути в AssetSource указываются относительно assets/ (префикс audioplayers)
   assets:
     - assets/73g_assets/sounds/notify.mp3
+    - assets/info.json
