@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -19,7 +20,9 @@ class AppInfo {
 
   factory AppInfo.fromJson(Map<String, dynamic> json) {
     List<String> strings(String key) =>
-        (json[key] as List<dynamic>? ?? const []).map((e) => e.toString()).toList();
+        (json[key] as List<dynamic>? ?? const [])
+            .map((e) => e.toString())
+            .toList();
     return AppInfo(
       title: json['title'] as String? ?? 'О приложении',
       credits: strings('credits'),
@@ -82,7 +85,8 @@ class InfoDialog extends StatelessWidget {
           builder: (context, snapshot) {
             if (snapshot.hasError) {
               return Center(
-                child: Text('Не удалось загрузить info.json:\n${snapshot.error}'),
+                child:
+                    Text('Не удалось загрузить info.json:\n${snapshot.error}'),
               );
             }
             final info = snapshot.data;
@@ -111,31 +115,36 @@ class _InfoText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context).textTheme;
-    // Scrollbar + SingleChildScrollView: прокрутка пальцем в обе стороны,
-    // на десктопе — колесом и перетаскиванием полосы
-    return Scrollbar(
-      thumbVisibility: true,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.only(right: 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(info.title, style: theme.titleLarge),
-            const SizedBox(height: 12),
-            for (final line in info.credits)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: Text(line, style: theme.bodyMedium),
-              ),
-            const SizedBox(height: 16),
-            Text(info.manualTitle, style: theme.titleMedium),
-            const SizedBox(height: 8),
-            for (final paragraph in info.manual)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: Text(paragraph, style: theme.bodyMedium),
-              ),
-          ],
+    // Прокрутка пальцем, колесом, а на десктопе ещё и перетаскиванием мышью
+    // (по умолчанию Flutter не даёт тянуть контент мышью)
+    return ScrollConfiguration(
+      behavior: ScrollConfiguration.of(context).copyWith(
+        dragDevices: PointerDeviceKind.values.toSet(),
+      ),
+      child: Scrollbar(
+        thumbVisibility: true,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.only(right: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(info.title, style: theme.titleLarge),
+              const SizedBox(height: 12),
+              for (final line in info.credits)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text(line, style: theme.bodyMedium),
+                ),
+              const SizedBox(height: 16),
+              Text(info.manualTitle, style: theme.titleMedium),
+              const SizedBox(height: 8),
+              for (final paragraph in info.manual)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Text(paragraph, style: theme.bodyMedium),
+                ),
+            ],
+          ),
         ),
       ),
     );
