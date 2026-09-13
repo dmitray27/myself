@@ -580,8 +580,8 @@ class ChatController extends ChangeNotifier {
   /// Возвращает текст ошибки или null при успехе.
   Future<String?> setName(String newName) async {
     newName = newName.trim();
-    if (newName.contains(':')) return 'Имя не может содержать двоеточие';
-    if (newName.isEmpty) return 'Имя не может быть пустым';
+    final error = validateName(newName);
+    if (error != null) return error;
     if (newName == _myName) return null;
 
     _myName = newName;

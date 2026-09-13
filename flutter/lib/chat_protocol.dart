@@ -91,6 +91,23 @@ String buildMessageFrame(String name, String text, {String? id}) {
 /// Кадр регистрации имени.
 String buildSetNameFrame(String name) => 'setName:$name';
 
+/// Предел имени в прошивке (WS_NAME_MAX в main/wifi_link.c, включая '\0'),
+/// в байтах UTF-8: более длинное имя плата молча обрежет.
+const int kMaxNameBytes = 31;
+
+/// Те же правила, что name_is_valid() в прошивке: не пустое, без ':'
+/// и не начинается с "System" (иначе можно подделать служебные кадры).
+/// Возвращает текст ошибки или null.
+String? validateName(String name) {
+  if (name.isEmpty) return 'Имя не может быть пустым';
+  if (name.contains(':')) return 'Имя не может содержать двоеточие';
+  if (name.startsWith('System')) return 'Имя не может начинаться с "System"';
+  if (utf8.encode(name).length > kMaxNameBytes) {
+    return 'Имя слишком длинное (до $kMaxNameBytes байт)';
+  }
+  return null;
+}
+
 /// Ключ, по которому входящий кадр сверяется с очередью исходящих.
 ///
 /// Если [id] задан — используется он, иначе возвращается fallback

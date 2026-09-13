@@ -14,6 +14,19 @@ void main() {
     });
   });
 
+  group('validateName', () {
+    test('mirrors firmware name_is_valid', () {
+      expect(validateName('Дима'), isNull);
+      expect(validateName(''), isNotNull);
+      expect(validateName('a:b'), isNotNull);
+      expect(validateName('System'), isNotNull);
+      expect(validateName('SystemAdmin'), isNotNull);
+      expect(validateName('system'), isNull);
+      expect(validateName('Ж' * 15), isNull);
+      expect(validateName('Ж' * 16), isNotNull);
+    });
+  });
+
   group('parseIncomingFrame', () {
     test('parses new from:<id>:text', () {
       final f = parseIncomingFrame('User:abc123:Hello world');
