@@ -342,13 +342,16 @@ class ChatController extends ChangeNotifier {
       _deviceIp = deviceIp;
       if (ipChanged) _notify();
 
+      var bound = true;
       if (deviceIp.startsWith('192.168.4.')) {
-        await _bindToWifi(force: ipChanged);
+        bound = await _bindToWifi(force: ipChanged);
       } else if (_boundIp != null) {
         await _unbindWifi();
       }
 
-      final reachable = _connection.isConnected || await _pingEsp32();
+      // Без bind запросы уйдут через мобильную сеть и бессмысленно ждут таймаута
+      final reachable =
+          bound && (_connection.isConnected || await _pingEsp32());
 
       if (!reachable) {
         _pollBackoff.onFailure();
@@ -435,7 +438,12 @@ class ChatController extends ChangeNotifier {
     _setConnectAttemptRunning(true);
 
     try {
-      await _bindToWifi();
+      if (!await _bindToWifi()) {
+        debugPrint('❌ Не удалось привязаться к Wi-Fi ESP32');
+        _networkHint = 'Подключитесь к WiFi ESP32';
+        _notify();
+        return;
+      }
 
       debugPrint('Проверяю ping ESP32...');
       if (!await _pingEsp32()) {
