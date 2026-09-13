@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
+#include <ctype.h>
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -380,6 +381,21 @@ void wifi_link_broadcast(const char *from, const char *text)
 // HTTP
 // ============================
 
+/* id клиента — только латиница/цифры (та же проверка в flutter/lib/chat_protocol.dart);
+   иначе сегмент — начало legacy-текста с двоеточием внутри */
+static bool looks_like_id(const char *s, size_t len)
+{
+    if (len == 0 || len > 32) {
+        return false;
+    }
+    for (size_t i = 0; i < len; i++) {
+        if (!isalnum((unsigned char)s[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
 // Имя без ':' (разделитель кадра) и не "System": иначе клиент смог бы
 // подделать служебные уведомления
 static bool name_is_valid(const char *name)
@@ -629,7 +645,7 @@ static void ws_handle_frame(httpd_req_t *req, char *payload)
     char *text;
     char *broadcast_text;
 
-    if (colon2) {
+    if (colon2 && looks_like_id(id_start, (size_t)(colon2 - id_start))) {
         *colon1 = '\0';
         *colon2 = '\0';
         text = colon2 + 1;

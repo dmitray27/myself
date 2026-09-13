@@ -33,6 +33,23 @@ void main() {
       expect(f.echoKey, 'User:Hello world');
     });
 
+    test('legacy text with colon is not split into id', () {
+      final f = parseIncomingFrame('User:Встреча в 12:30, приходи');
+      expect(f.id, '');
+      expect(f.text, 'Встреча в 12:30, приходи');
+      expect(f.echoKey, 'User:Встреча в 12:30, приходи');
+
+      final g = parseIncomingFrame('User:Внимание: сбор у входа');
+      expect(g.id, '');
+      expect(g.text, 'Внимание: сбор у входа');
+    });
+
+    test('id frame keeps colons inside text', () {
+      final f = parseIncomingFrame('Remote:r7:Встреча в 12:30');
+      expect(f.id, 'r7');
+      expect(f.text, 'Встреча в 12:30');
+    });
+
     test('parses history with id', () {
       final f = parseIncomingFrame('hist:User:abc123:Hello');
       expect(f.kind, IncomingKind.chat);

@@ -63,6 +63,13 @@ const String kHistoryPrefix = 'hist:';
 
 int _idCounter = 0;
 
+/// Все id — прошивки (`p<hex>`, `r<n>`) и клиента ([generateMessageId]) —
+/// состоят только из латинских букв и цифр. Всё остальное между первым и
+/// вторым ':' считается началом legacy-текста.
+final RegExp _idPattern = RegExp(r'^[A-Za-z0-9]{1,32}$');
+
+bool looksLikeMessageId(String s) => _idPattern.hasMatch(s);
+
 /// Генерирует короткий уникальный идентификатор кадра.
 ///
 /// Включает временную метку и монотонный счётчик, не содержит ':'.
@@ -130,8 +137,8 @@ IncomingFrame parseIncomingFrame(String raw) {
   final afterFrom = message.substring(firstSeparator + 1);
 
   final secondSeparator = afterFrom.indexOf(':');
-  if (secondSeparator > 0) {
-    final id = afterFrom.substring(0, secondSeparator);
+  final id = secondSeparator > 0 ? afterFrom.substring(0, secondSeparator) : '';
+  if (id.isNotEmpty && looksLikeMessageId(id)) {
     final text = afterFrom.substring(secondSeparator + 1).trim();
     if (text.isEmpty) return IncomingFrame.ignored;
     return IncomingFrame._(
