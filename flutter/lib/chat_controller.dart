@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
+import 'package:characters/characters.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart'
@@ -576,6 +577,10 @@ class ChatController extends ChangeNotifier {
   Future<void> sendMessage(String text) async {
     final trimmed = text.trim();
     if (trimmed.isEmpty || !_connection.isConnected) return;
+    if (trimmed.characters.length > maxMessageLength) {
+      _setSnack('Сообщение не длиннее $maxMessageLength символов');
+      return;
+    }
 
     final id = generateMessageId();
 
@@ -608,6 +613,9 @@ class ChatController extends ChangeNotifier {
   /// Возвращает текст ошибки или null при успехе.
   Future<String?> setName(String newName) async {
     newName = newName.trim();
+    if (newName.characters.length > maxNameLength) {
+      return 'Имя не длиннее $maxNameLength символов';
+    }
     final error = validateName(newName);
     if (error != null) return error;
     if (newName == _myName) return null;
