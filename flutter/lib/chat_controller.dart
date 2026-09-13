@@ -574,19 +574,25 @@ class ChatController extends ChangeNotifier {
 
   // ---------------- User actions ----------------
 
-  Future<void> sendMessage(String text) async {
+  /// true — сообщение принято в отправку (поле ввода можно очищать);
+  /// false — отклонено или не ушло, текст остаётся у пользователя.
+  Future<bool> sendMessage(String text) async {
     final trimmed = text.trim();
-    if (trimmed.isEmpty || !_connection.isConnected) return;
+    if (trimmed.isEmpty) return false;
+    if (!_connection.isConnected) {
+      _setSnack('Нет соединения с ESP32');
+      return false;
+    }
     if (trimmed.characters.length > maxMessageLength) {
       _setSnack('Сообщение не длиннее $maxMessageLength символов');
-      return;
+      return false;
     }
 
     final id = generateMessageId();
 
     if (!messageFitsFrame(_myName, trimmed, id: id)) {
       _setSnack('Сообщение слишком длинное для передачи');
-      return;
+      return false;
     }
 
     final message = _store.addOutgoing(id, _myName, trimmed);
@@ -598,10 +604,11 @@ class ChatController extends ChangeNotifier {
       _store.markFailed(message);
       _notify();
       _setSnack('Не удалось отправить');
-      return;
+      return false;
     }
 
     debugPrint('Отправлено через WS: $outgoing');
+    return true;
   }
 
   Future<void> toggleSound() async {

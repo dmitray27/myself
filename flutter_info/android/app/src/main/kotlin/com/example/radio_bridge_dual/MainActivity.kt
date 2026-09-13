@@ -8,6 +8,8 @@ import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import androidx.annotation.NonNull
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -15,11 +17,13 @@ import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
     private val CHANNEL = "esp32/network"
+    private val BIND_TIMEOUT_MS = 8000
 
     private var connectivityManager: ConnectivityManager? = null
     private var networkCallback: ConnectivityManager.NetworkCallback? = null
     // Result текущего bindToWifi, ещё не получившего ответа от ConnectivityManager
     private var pendingBindResult: MethodChannel.Result? = null
+    private val bindTimeoutHandler = Handler(Looper.getMainLooper())
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -120,19 +124,27 @@ class MainActivity : FlutterActivity() {
         }
 
         networkCallback = callback
-        // requestNetwork с таймаутом, чтобы onUnavailable точно пришёл (API 26+)
-        cm.requestNetwork(request, callback, 8000)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            // С таймаутом система сама вызовет onUnavailable
+            cm.requestNetwork(request, callback, BIND_TIMEOUT_MS)
+        } else {
+            // До API 26 перегрузки с таймаутом нет — считаем сами
+            cm.requestNetwork(request, callback)
+            bindTimeoutHandler.postDelayed({ completeBind(callback, false) }, BIND_TIMEOUT_MS.toLong())
+        }
     }
 
     // Отвечаем Dart только если колбэк всё ещё актуальный: после unbind()
     // система может ещё доставить события старому колбэку
     private fun completeBind(callback: ConnectivityManager.NetworkCallback, ok: Boolean) {
         if (networkCallback !== callback) return
+        bindTimeoutHandler.removeCallbacksAndMessages(null)
         pendingBindResult?.success(ok)
         pendingBindResult = null
     }
 
     private fun unbind() {
+        bindTimeoutHandler.removeCallbacksAndMessages(null)
         pendingBindResult?.success(false)
         pendingBindResult = null
         val cm = connectivityManager ?: return

@@ -135,8 +135,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final text = _textController.text.trim();
     if (text.isEmpty) return;
 
-    await _controller.sendMessage(text);
-    _textController.clear();
+    final sent = await _controller.sendMessage(text);
+    if (sent && mounted) _textController.clear();
     _inputFocusNode.requestFocus();
   }
 
