@@ -157,16 +157,11 @@ class MessageStore {
 
   bool _alreadyShown(String id, String from, String text, bool isMe) {
     if (id.isNotEmpty) {
-      for (final message in _messages.reversed) {
-        if (message.id == id && message.from == from) return true;
-      }
+      return _messages.any((m) => m.id == id && m.from == from);
     }
-    for (final message in _messages.reversed) {
-      if (message.from == from && message.text == text && message.isMe == isMe) {
-        return true;
-      }
-    }
-    return false;
+    return _messages.any(
+      (m) => m.from == from && m.text == text && m.isMe == isMe,
+    );
   }
 
   void _append(Message message) {
