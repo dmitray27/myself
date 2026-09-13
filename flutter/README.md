@@ -37,6 +37,9 @@ flutter build apk --debug            # для эмулятора и логов
 flutter build apk --release          # production APK
 ```
 
+Release-APK подписывается своим ключом из `android/key.properties`; как его
+создать — в `android/SIGNING.md`. Без файла APK подписывается debug-ключом.
+
 Перед запуском телефон/ноутбук должен быть подключён к Wi-Fi платы
 (`AFSK-TRX-xxxx`, пароль по умолчанию `afsk12345`). Плата всегда на `192.168.4.1`.
 
