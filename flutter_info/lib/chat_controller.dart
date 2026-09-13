@@ -138,15 +138,35 @@ class ChatController extends ChangeNotifier {
     scheduleMicrotask(_startConnectionMonitoring);
   }
 
+  /// Общая асинхронная очистка для [exit] и [dispose]: выполняется один раз,
+  /// повторный вызов ждёт ту же Future, а не запускает параллельную цепочку.
+  Future<void>? _shutdown;
+
+  Future<void> _stopMonitoringAndDisconnect() {
+    return _shutdown ??= () async {
+      _connectionTimer?.cancel();
+      _connectionTimer = null;
+      await _connection.disconnect();
+    }();
+  }
+
   @override
   void dispose() {
     _disposed = true;
-    _connectionTimer?.cancel();
-    _connection.disconnect();
-    _stopForegroundService();
-    _unbindWifi();
+    _connection
+      ..onFrame = null
+      ..onChanged = null
+      ..onConnected = null
+      ..onDisconnected = null;
     _notificationPlayer.dispose();
     snackBar.dispose();
+    // Платформенные вызовы идут последовательно: одновременные disconnect/unbind/
+    // stopService гонялись с цепочкой closeApp из exit()
+    unawaited(_stopMonitoringAndDisconnect().then((_) async {
+      if (_exitedViaPlatform) return;
+      await _stopForegroundService();
+      await _unbindWifi();
+    }));
     super.dispose();
   }
 
@@ -321,12 +341,16 @@ class ChatController extends ChangeNotifier {
     _checkConnection();
   }
 
+  bool get _shuttingDown => _disposed || _shutdown != null;
+
   void _scheduleConnectionCheck() {
     _connectionTimer?.cancel();
+    if (_shuttingDown) return;
     _connectionTimer = Timer(_pollBackoff.interval, _checkConnection);
   }
 
   Future<void> _checkConnection() async {
+    if (_shuttingDown) return;
     if (_isConnectAttemptRunning || _connection.isBusy) {
       _scheduleConnectionCheck();
       return;
@@ -338,6 +362,7 @@ class ChatController extends ChangeNotifier {
 
     try {
       final deviceIp = await _wifiIp();
+      if (_shuttingDown) return;
       final ipChanged = deviceIp != _deviceIp;
       _deviceIp = deviceIp;
       if (ipChanged) _notify();
@@ -352,6 +377,7 @@ class ChatController extends ChangeNotifier {
       // Без bind запросы уйдут через мобильную сеть и бессмысленно ждут таймаута
       final reachable =
           bound && (_connection.isConnected || await _pingEsp32());
+      if (_shuttingDown) return;
 
       if (!reachable) {
         _pollBackoff.onFailure();
@@ -431,6 +457,7 @@ class ChatController extends ChangeNotifier {
   // ---------------- Connect / disconnect ----------------
 
   Future<void> _connectToEsp32() async {
+    if (_shuttingDown) return;
     if (_isConnectAttemptRunning || _connection.isConnecting) {
       debugPrint('⚠️ Уже подключаюсь, пропускаю');
       return;
@@ -451,6 +478,7 @@ class ChatController extends ChangeNotifier {
         _boundIp = null;
         return;
       }
+      if (_shuttingDown) return;
 
       debugPrint('ESP32 доступен, подключаю WebSocket...');
       await _connection.connect();
@@ -599,12 +627,14 @@ class ChatController extends ChangeNotifier {
   /// цепочкой через `closeApp`, чтобы не останавливать и сразу заново
   /// запускать сервис. Возвращает true, если платформа закрывает приложение
   /// сама и вызывающему ничего закрывать не надо.
+  bool _exitedViaPlatform = false;
+
   Future<bool> exit() async {
-    _connectionTimer?.cancel();
-    await _connection.disconnect();
+    await _stopMonitoringAndDisconnect();
     if (Platform.isAndroid) {
       _boundIp = null;
-      return _closeApp();
+      _exitedViaPlatform = await _closeApp();
+      return _exitedViaPlatform;
     }
     return false;
   }
