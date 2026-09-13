@@ -26,6 +26,10 @@ idf.py -p /dev/ttyUSB1 flash   # RX
 
 Все тесты: `short_ascii`, `cyr_1`, `cyr_25`, `cyr_50`, `cyr_200`, `cyr_255`, `cyr_300`, `cyr_600`.
 
+Скрипт сверяет CRC32 принятого сообщения с отправленным и завершается с кодом 1,
+если хоть один тест не `OK` (как и `ws_real_hw_test.sh`/`ws_real_hw_all.sh`: они печатают
+`Overall: OK|FAIL` и проверяют, что Linux/Android-приложение реально подключилось к ESP32).
+
 Только `cyr_600`:
 
 ```bash

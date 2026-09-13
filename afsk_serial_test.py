@@ -17,6 +17,7 @@ import re
 import sys
 import threading
 import time
+import zlib
 
 try:
     import serial
@@ -167,11 +168,27 @@ def parse_rx_stats(lines):
 
 
 def parse_full_message(lines):
+    """Return (bytes, blocks, crc32) of the RX 'FULL MESSAGE' line.
+
+    crc32 is None on firmware that does not print it yet.
+    """
     for line in lines:
-        m = re.search(r"FULL MESSAGE:\s+(\d+)\s+bytes\s+in\s+(\d+)\s+blocks", line)
+        m = re.search(
+            r"FULL MESSAGE:\s+(\d+)\s+bytes\s+in\s+(\d+)\s+blocks(?:,\s+CRC32:\s+([0-9A-Fa-f]{8}))?",
+            line,
+        )
         if m:
-            return int(m.group(1)), int(m.group(2))
-    return None, None
+            crc = int(m.group(3), 16) if m.group(3) else None
+            return int(m.group(1)), int(m.group(2)), crc
+    return None, None, None
+
+
+def parse_rx_lost_blocks(lines):
+    for line in lines:
+        m = re.search(r"WARNING:\s+(\d+)\s+block\(s\)\s+lost", line)
+        if m:
+            return int(m.group(1))
+    return 0
 
 
 def parse_preamble_sync(lines):
@@ -200,6 +217,8 @@ def format_test_section(
     preamble_sync,
     full_bytes,
     full_blocks,
+    full_crc,
+    expected_crc,
     tx_lines,
     rx_lines,
 ):
@@ -215,6 +234,8 @@ def format_test_section(
         f"Preamble sync: {preamble_sync if preamble_sync else 'None'}",
         f"RX full message: {full_bytes if full_bytes is not None else 'None'} bytes in "
         f"{full_blocks if full_blocks is not None else 'None'} blocks",
+        f"RX CRC32: {f'{full_crc:08X}' if full_crc is not None else 'None'} "
+        f"(expected {expected_crc:08X})",
         "",
         "--- TX raw output ---",
     ]
@@ -227,8 +248,11 @@ def format_test_section(
 
 
 def run_test(name, msg, tx, rx, tx_timeout, rx_timeout):
-    """Run a single AFSK test case and return its formatted section."""
+    """Run a single AFSK test case; return (formatted section, passed)."""
     msg_bytes = msg.encode("utf-8")
+    # The firmware prints zlib-compatible CRC32 of the whole message on both
+    # sides, so payload integrity is checked without echoing the text over UART.
+    expected_crc = zlib.crc32(msg_bytes) & 0xFFFFFFFF
 
     # Discard any chatter that arrived between tests.
     tx.drain(timeout=0.2)
@@ -259,15 +283,22 @@ def run_test(name, msg, tx, rx, tx_timeout, rx_timeout):
 
     tx_blocks = parse_tx_blocks(tx_lines)
     rx_packets, rx_crc, rx_aborted = parse_rx_stats(rx_lines)
-    full_bytes, full_blocks = parse_full_message(rx_lines)
+    full_bytes, full_blocks, full_crc = parse_full_message(rx_lines)
+    lost_blocks = parse_rx_lost_blocks(rx_lines)
     preamble_sync = parse_preamble_sync(rx_lines)
 
     if not tx_ok:
         status = 'TX timeout (no "All blocks sent")'
     elif not rx_ok:
         status = "RX timeout (no full message)"
+    elif lost_blocks:
+        status = f"RX lost {lost_blocks} block(s) (CRC error)"
     elif full_bytes != len(msg_bytes) or full_blocks is None:
         status = f"RX mismatch ({full_bytes} bytes / {full_blocks} blocks)"
+    elif full_crc is None:
+        status = "RX no CRC32 (old firmware)"
+    elif full_crc != expected_crc:
+        status = f"RX payload mismatch (CRC32 {full_crc:08X} != {expected_crc:08X})"
     else:
         status = "OK"
 
@@ -284,9 +315,11 @@ def run_test(name, msg, tx, rx, tx_timeout, rx_timeout):
         preamble_sync,
         full_bytes,
         full_blocks,
+        full_crc,
+        expected_crc,
         tx_lines,
         rx_lines,
-    )
+    ), status == "OK"
 
 
 def main():
@@ -333,13 +366,16 @@ def main():
         "",
     ]
 
+    failed = 0
     try:
         for name, msg, tx_to, rx_to in selected:
-            section = run_test(name, msg, tx, rx, tx_to, rx_to)
+            section, passed = run_test(name, msg, tx, rx, tx_to, rx_to)
             report_sections.append(section)
             report_sections.append("")
-            if args.stop_on_fail and not section.startswith(f"## {name}\nStatus: OK"):
-                break
+            if not passed:
+                failed += 1
+                if args.stop_on_fail:
+                    break
     finally:
         tx.close()
         rx.close()
@@ -348,6 +384,8 @@ def main():
     with open(args.report, "w", encoding="utf-8") as f:
         f.write(report)
     print(f"\nReport written to: {args.report}")
+    print(f"Overall: {'OK' if failed == 0 else f'FAIL ({failed} of {len(selected)} failed)'}")
+    sys.exit(0 if failed == 0 else 1)
 
 
 if __name__ == "__main__":

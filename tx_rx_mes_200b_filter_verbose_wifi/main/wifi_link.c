@@ -335,6 +335,8 @@ static void ws_notify(int fd, const char *text)
     ws_queue_text(fd, payload, (size_t)len);
 }
 
+static void ws_send_to_all(const char *payload, size_t payload_len);
+
 void wifi_link_broadcast(const char *from, const char *text)
 {
     if (!s_ws_server || !from || !text) {
@@ -358,7 +360,38 @@ void wifi_link_broadcast(const char *from, const char *text)
     payload[payload_len] = '\0';
 
     history_store(payload);
+    ws_send_to_all(payload, payload_len);
+    free(payload);
+}
 
+void wifi_link_notify_all(const char *text)
+{
+    if (!s_ws_server || !text || text[0] == '\0') {
+        return;
+    }
+    char payload[160];
+    int len = snprintf(payload, sizeof(payload), "System:%s", text);
+    if (len < 0) {
+        return;
+    }
+    if (len > (int)sizeof(payload) - 1) {
+        len = (int)sizeof(payload) - 1;
+    }
+    ws_send_to_all(payload, (size_t)len);
+}
+
+bool wifi_link_message_fits(const char *from, const char *id, const char *text)
+{
+    /* Тот же лимит считает клиент (messageFitsFrame в chat_protocol.dart) */
+    size_t len = strlen(from) + 1 + strlen(text);
+    if (id && id[0] != '\0') {
+        len += strlen(id) + 1;
+    }
+    return len <= WS_MAX_FRAME_LEN;
+}
+
+static void ws_send_to_all(const char *payload, size_t payload_len)
+{
     size_t client_count = WS_MAX_CLIENTS;
     int client_fds[WS_MAX_CLIENTS];
     if (httpd_get_client_list(s_ws_server, &client_count, client_fds) == ESP_OK) {
@@ -373,8 +406,6 @@ void wifi_link_broadcast(const char *from, const char *text)
             ws_queue_text(client_fds[i], payload, payload_len);
         }
     }
-
-    free(payload);
 }
 
 // ============================
@@ -553,6 +584,18 @@ static esp_err_t send_post_handler(httpd_req_t *req)
         goto cleanup;
     }
 
+    /* id генерируем до проверки размера: лимит считается для итогового кадра from:id:text.
+       Префикс 'p' отличает id от счётчиков rx_task и клиентов: приложение
+       дедуплицирует историю по id, одинаковые номера теряли бы сообщения */
+    static uint32_t post_id = 0;
+    char id_buf[16];
+    snprintf(id_buf, sizeof(id_buf), "p%lx", (unsigned long)++post_id);
+
+    if (!wifi_link_message_fits(from, id_buf, text)) {
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Message too long");
+        goto cleanup;
+    }
+
     if (!s_tx_queue) {
         httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "No TX queue");
         goto cleanup;
@@ -577,13 +620,6 @@ static esp_err_t send_post_handler(httpd_req_t *req)
         goto cleanup;
     }
 
-    /* Генерируем id для HTTP/POST, чтобы клиент всегда получал
-       единообразный кадр from:<id>:<text>. */
-    static uint32_t post_id = 0;
-    char id_buf[16];
-    // Префикс 'p' отличает id от счётчиков rx_task и клиентов: приложение
-    // дедуплицирует историю по id, одинаковые номера теряли бы сообщения
-    snprintf(id_buf, sizeof(id_buf), "p%lx", (unsigned long)++post_id);
     snprintf(id_text, POST_BUF_SIZE + 32, "%s:%s", id_buf, text);
 
     wifi_link_broadcast(from, id_text);
@@ -672,6 +708,12 @@ static void ws_handle_frame(httpd_req_t *req, char *payload)
     }
     if (!name_is_valid(from)) {
         strlcpy(from, "Unknown", sizeof(from));
+    }
+
+    // broadcast_text уже содержит "<id>:" (если был), считаем итоговый кадр
+    if (!wifi_link_message_fits(from, NULL, broadcast_text)) {
+        ws_notify(fd, "Сообщение слишком длинное для передачи");
+        return;
     }
 
     if (!s_tx_queue) {

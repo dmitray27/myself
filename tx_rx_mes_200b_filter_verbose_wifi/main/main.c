@@ -12,6 +12,7 @@
 #include "esp_log.h"
 #include "esp_system.h"
 #include "esp_heap_caps.h"
+#include "esp_rom_crc.h"
 #include "nvs_flash.h"
 #include "tx_ad9851.h"
 #include "afsk_protocol.h"
@@ -68,7 +69,11 @@ static void tx_send_message(const char *text, size_t len)
         s += afsk_utf8_block_len(text, s, (int)len, MAX_BLOCK_LEN);
         blocks++;
     }
-    ESP_LOGI(TAG, "Message: %d bytes, Blocks: %d", (int)len, blocks);
+    /* CRC32 всего сообщения печатается и здесь, и приёмником в FULL MESSAGE:
+       тест сверяет содержимое, не печатая тело из rx_task */
+    uint32_t crc = esp_rom_crc32_le(0, (const uint8_t *)text, len);
+    ESP_LOGI(TAG, "Message: %d bytes, Blocks: %d, CRC32: %08" PRIX32,
+             (int)len, blocks, crc);
 
     int start = 0;
     for (int i = 0; i < blocks; i++) {
@@ -263,9 +268,11 @@ static void rx_task(void *pvParameters)
         if (s_assembling &&
             (xTaskGetTickCount() - last_packet_tick) >= pdMS_TO_TICKS(MESSAGE_IDLE_MS)) {
             s_assembly[s_assembly_len] = '\0';
+            uint32_t crc = esp_rom_crc32_le(0, (const uint8_t *)s_assembly,
+                                            (uint32_t)s_assembly_len);
             printf("\n########################################\n");
-            printf("[RX] FULL MESSAGE: %d bytes in %" PRIu32 " blocks\n",
-                   s_assembly_len, s_assembly_blocks);
+            printf("[RX] FULL MESSAGE: %d bytes in %" PRIu32 " blocks, CRC32: %08" PRIX32 "\n",
+                   s_assembly_len, s_assembly_blocks, crc);
             if (s_assembly_dropped > 0) {
                 printf("[RX] WARNING: %" PRIu32 " block(s) lost (CRC error)\n",
                        s_assembly_dropped);
@@ -273,6 +280,21 @@ static void rx_task(void *pvParameters)
             /* Длинное тело сообщения не печатаем в rx_task — вывод через UART
                блокирует чтение I2S и может привести к потере блоков. */
             printf("########################################\n");
+
+            if (s_assembly_dropped > 0) {
+                /* Сообщение с дырками в чат не отдаём: вместо искажённого текста
+                   клиент видит служебное уведомление о потере */
+                char notice[144];
+                snprintf(notice, sizeof(notice),
+                         "Сообщение из эфира принято с ошибками (потеряно блоков: %" PRIu32 ")",
+                         s_assembly_dropped);
+                wifi_link_notify_all(notice);
+                s_assembly_len = 0;
+                s_assembly_blocks = 0;
+                s_assembly_dropped = 0;
+                s_assembling = false;
+                continue;
+            }
 
             /* Генерируем id для сообщения, принятого с эфира: клиент
                ожидает кадр Remote:<id>:<text>. Префикс 'r' отличает id от

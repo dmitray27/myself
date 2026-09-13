@@ -98,7 +98,16 @@ fi
 
 echo "Connected to AFSK AP. Verifying reachability ..."
 sleep 2
-ping -c 2 -W 2 192.168.4.1 || true
+FAILURES=0
+fail() { echo "FAIL: $1"; FAILURES=$((FAILURES + 1)); }
+check_linux_log() {
+  if grep -q "Успешно подключено к ESP32" "$LINUX_LOG" 2>/dev/null; then
+    echo "Linux app: WebSocket к ESP32 установлен"
+  else
+    fail "Linux app не подключился к ESP32 (нет 'Успешно подключено к ESP32' в $LINUX_LOG)"
+  fi
+}
+ping -c 2 -W 2 192.168.4.1 || fail "ESP32 192.168.4.1 не отвечает на ping"
 
 # 3. Start Android emulator in the background while we run other tests.
 echo "Step 3: starting Android emulator headless"
@@ -115,7 +124,7 @@ fi
 
 # 4. Python HTTP / WebSocket test against real ESP32.
 echo "Step 4: Python WS/HTTP test on 192.168.4.1"
-$PYTHON "$TEST_SCRIPT" test --host 192.168.4.1 --report "$REPORT" || true
+$PYTHON "$TEST_SCRIPT" test --host 192.168.4.1 --report "$REPORT" || fail "Python WS/HTTP тест"
 
 # 5. Linux desktop application runtime smoke test.
 echo "Step 5: Linux bundle runtime smoke test"
@@ -125,20 +134,23 @@ if [ -x "$LINUX_BUNDLE/radio_bridge_dual" ]; then
     export DISPLAY=:99
     Xvfb :99 -screen 0 1024x768x24 &
     sleep 2
-    timeout 25s "$LINUX_BUNDLE/radio_bridge_dual" &
+    LINUX_LOG=/tmp/ws_linux_app.log
+    timeout 25s "$LINUX_BUNDLE/radio_bridge_dual" >"$LINUX_LOG" 2>&1 &
     APP_PID=$!
     sleep 20
     kill $APP_PID 2>/dev/null || true
     pkill -f Xvfb 2>/dev/null || true
   else
-    echo "Xvfb not installed; running app directly (it will likely ignore --help and start)"
-    timeout 25s "$LINUX_BUNDLE/radio_bridge_dual" &
+    echo "Xvfb not installed; running app directly"
+    LINUX_LOG=/tmp/ws_linux_app.log
+    timeout 25s "$LINUX_BUNDLE/radio_bridge_dual" >"$LINUX_LOG" 2>&1 &
     APP_PID=$!
     sleep 20
     kill $APP_PID 2>/dev/null || true
   fi
+  check_linux_log
 else
-  echo "Linux bundle not found at $LINUX_BUNDLE/radio_bridge_dual"
+  fail "Linux bundle not found at $LINUX_BUNDLE/radio_bridge_dual"
 fi
 
 # 6. Wait for Android emulator and test APK.
@@ -168,7 +180,7 @@ if [ -n "$EMULATOR_PID" ] && kill -0 $EMULATOR_PID 2>/dev/null; then
       # Extra time for PackageManager and other services.
       sleep 10
       echo "Installing APK on $DEV"
-      $ADB -s "$DEV" install -r -t "$APK" || true
+      $ADB -s "$DEV" install -r -t "$APK" || fail "adb install on $DEV"
       # Grant notification permission so the app doesn't show a runtime dialog in headless mode.
       $ADB -s "$DEV" shell pm grant com.example.radio_bridge_dual android.permission.POST_NOTIFICATIONS 2>/dev/null || true
       echo "Starting main activity on $DEV"
@@ -181,11 +193,16 @@ if [ -n "$EMULATOR_PID" ] && kill -0 $EMULATOR_PID 2>/dev/null; then
       sleep 25
       echo "Relevant logcat from $DEV (flutter/runtime/crash):"
       $ADB -s "$DEV" logcat -d -s flutter:I AndroidRuntime:E ActivityManager:I 2>/dev/null | tail -100 || true
+      if $ADB -s "$DEV" logcat -d 2>/dev/null | grep -q "Успешно подключено к ESP32"; then
+        echo "Android app on $DEV: WebSocket к ESP32 установлен"
+      else
+        fail "Android app on $DEV не подключился к ESP32 (нет 'Успешно подключено к ESP32' в logcat)"
+      fi
       echo "Full logcat dump saved to /tmp/android_logcat_${DEV}.txt"
       $ADB -s "$DEV" logcat -d 2>/dev/null | gzip > "/tmp/android_logcat_${DEV}.txt.gz"
     done
   else
-    echo "Emulator did not come online, skipping APK runtime"
+    fail "Emulator did not come online"
   fi
 
   echo "Stopping emulator"
@@ -193,7 +210,7 @@ if [ -n "$EMULATOR_PID" ] && kill -0 $EMULATOR_PID 2>/dev/null; then
   sleep 2
   kill -9 $EMULATOR_PID 2>/dev/null || true
 else
-  echo "Emulator not started or already dead, skipping APK runtime"
+  fail "Emulator not started or already dead"
 fi
 
 # 7. Restore the original (internet) connection.
@@ -208,3 +225,8 @@ echo "Final active connection:"
 nmcli connection show --active 2>/dev/null | head -5
 
 echo "=== WS real hardware + Android emulator test finished: $(date) ==="
+if [ "$FAILURES" -gt 0 ]; then
+  echo "Overall: FAIL ($FAILURES)"
+  exit 1
+fi
+echo "Overall: OK"

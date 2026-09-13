@@ -108,11 +108,20 @@ fi
 echo "Connected to AFSK AP. Verifying reachability ..."
 # Give the DHCP lease and route a moment.
 sleep 2
-ping -c 2 -W 2 192.168.4.1 || true
+FAILURES=0
+fail() { echo "FAIL: $1"; FAILURES=$((FAILURES + 1)); }
+check_linux_log() {
+  if grep -q "Успешно подключено к ESP32" "$LINUX_LOG" 2>/dev/null; then
+    echo "Linux app: WebSocket к ESP32 установлен"
+  else
+    fail "Linux app не подключился к ESP32 (нет 'Успешно подключено к ESP32' в $LINUX_LOG)"
+  fi
+}
+ping -c 2 -W 2 192.168.4.1 || fail "ESP32 192.168.4.1 не отвечает на ping"
 
 # 3. Python HTTP / WebSocket test against the real ESP32.
 echo "Step 3: Python WS/HTTP test on 192.168.4.1"
-$PYTHON "$TEST_SCRIPT" test --host 192.168.4.1 --report "$REPORT" || true
+$PYTHON "$TEST_SCRIPT" test --host 192.168.4.1 --report "$REPORT" || fail "Python WS/HTTP тест"
 
 # 4. Linux desktop application runtime smoke test.
 echo "Step 4: Linux bundle runtime smoke test"
@@ -122,17 +131,18 @@ if [ -x "$LINUX_BUNDLE/radio_bridge_dual" ]; then
     export DISPLAY=:99
     Xvfb :99 -screen 0 1024x768x24 &
     sleep 2
-    timeout 20s "$LINUX_BUNDLE/radio_bridge_dual" &
+    LINUX_LOG=/tmp/ws_linux_app.log
+    timeout 20s "$LINUX_BUNDLE/radio_bridge_dual" >"$LINUX_LOG" 2>&1 &
     APP_PID=$!
     sleep 15
     kill $APP_PID 2>/dev/null || true
     pkill -f Xvfb 2>/dev/null || true
+    check_linux_log
   else
-    echo "Xvfb not installed; checking binary can start and parse args"
-    "$LINUX_BUNDLE/radio_bridge_dual" --help 2>&1 || true
+    fail "Xvfb не установлен, Linux app не проверен"
   fi
 else
-  echo "Linux bundle not found at $LINUX_BUNDLE/radio_bridge_dual"
+  fail "Linux bundle not found at $LINUX_BUNDLE/radio_bridge_dual"
 fi
 
 # 5. Android APK runtime smoke test.
@@ -142,12 +152,18 @@ if [ -x "$ADB" ]; then
   if [ -n "$DEVICES" ]; then
     for DEV in $DEVICES; do
       echo "Installing APK on $DEV"
-      $ADB -s "$DEV" install -r -t "$APK" || true
+      $ADB -s "$DEV" install -r -t "$APK" || fail "adb install on $DEV"
       echo "Starting main activity on $DEV"
-      $ADB -s "$DEV" shell am start -n com.example.radio_bridge_dual/.MainActivity 2>/dev/null || true
+      $ADB -s "$DEV" logcat -c 2>/dev/null || true
+      $ADB -s "$DEV" shell am start -n com.example.radio_bridge_dual/.MainActivity 2>/dev/null || fail "am start on $DEV"
       sleep 15
       echo "Relevant logcat from $DEV:"
-      $ADB -s "$DEV" logcat -d -t '01-01 00:00:00.000' 2>/dev/null | grep -iE 'radio_bridge|flutter|chatconnection|websocket|esp32|network' | tail -80 || true
+      $ADB -s "$DEV" logcat -d 2>/dev/null | grep -iE 'radio_bridge|flutter|chatconnection|websocket|esp32|network' | tail -80 || true
+      if $ADB -s "$DEV" logcat -d 2>/dev/null | grep -q "Успешно подключено к ESP32"; then
+        echo "Android app on $DEV: WebSocket к ESP32 установлен"
+      else
+        fail "Android app on $DEV не подключился к ESP32 (нет 'Успешно подключено к ESP32' в logcat)"
+      fi
     done
   else
     echo "No Android devices/emulators attached, skipping APK runtime"
@@ -169,3 +185,8 @@ echo "Final active connection:"
 nmcli connection show --active 2>/dev/null | head -5
 
 echo "=== WS real hardware test finished: $(date) ==="
+if [ "$FAILURES" -gt 0 ]; then
+  echo "Overall: FAIL ($FAILURES)"
+  exit 1
+fi
+echo "Overall: OK"
