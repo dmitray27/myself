@@ -3,8 +3,7 @@
 
 Runs a suite of TX/RX tests over two serial ports (or radios). Each test sends a
 message to the TX board, waits for "All blocks sent", then waits for the RX
-board to print "FULL MESSAGE" (or "INCOMPLETE MESSAGE" when blocks were lost)
-and reports block/packet/CRC/preamble stats.
+board to print "FULL MESSAGE" and reports block/packet/CRC/preamble stats.
 
 Example:
     /home/dima/.espressif/python_env/idf6.0_py3.12_env/bin/python \
@@ -269,9 +268,7 @@ def run_test(name, msg, tx, rx, tx_timeout, rx_timeout):
     tx_ok, _ = tx.wait_for("All blocks sent", tx_timeout, start)
     if tx_ok:
         print(f"[{time.strftime('%H:%M:%S')}] [{name}] TX done, waiting RX ...")
-        # "FULL MESSAGE:" when every block arrived, "INCOMPLETE MESSAGE:" when
-        # the receiver gave up on a gap - either one ends the wait.
-        rx_ok, _ = rx.wait_for("MESSAGE:", rx_timeout, start)
+        rx_ok, _ = rx.wait_for("FULL MESSAGE", rx_timeout, start)
     else:
         rx_ok = False
         print(f"[{time.strftime('%H:%M:%S')}] [{name}] TX timeout")
@@ -295,7 +292,7 @@ def run_test(name, msg, tx, rx, tx_timeout, rx_timeout):
     elif not rx_ok:
         status = "RX timeout (no full message)"
     elif lost_blocks:
-        status = f"RX lost {lost_blocks} block(s) (missing or CRC error)"
+        status = f"RX lost {lost_blocks} block(s) (CRC error)"
     elif full_bytes != len(msg_bytes) or full_blocks is None:
         status = f"RX mismatch ({full_bytes} bytes / {full_blocks} blocks)"
     elif full_crc is None:

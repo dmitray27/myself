@@ -94,37 +94,6 @@ int afsk_utf8_block_len(const char *buf, int start, int len, int max_len) {
     return n;
 }
 
-size_t afsk_pack_block(uint8_t *out, size_t out_size,
-                       const afsk_block_hdr_t *hdr,
-                       const uint8_t *text, size_t text_len) {
-    if (text_len > MAX_BLOCK_LEN || out_size < AFSK_HDR_LEN + text_len ||
-        hdr->total == 0 || hdr->block_no >= hdr->total) {
-        return 0;
-    }
-    out[0] = hdr->seq;
-    out[1] = hdr->block_no;
-    out[2] = hdr->total;
-    memcpy(out + AFSK_HDR_LEN, text, text_len);
-    return AFSK_HDR_LEN + text_len;
-}
-
-bool afsk_unpack_block(const uint8_t *frame, size_t frame_len,
-                       afsk_block_hdr_t *hdr,
-                       const uint8_t **text, size_t *text_len) {
-    if (frame_len < AFSK_HDR_LEN || frame_len - AFSK_HDR_LEN > MAX_BLOCK_LEN) {
-        return false;
-    }
-    hdr->seq = frame[0];
-    hdr->block_no = frame[1];
-    hdr->total = frame[2];
-    if (hdr->total == 0 || hdr->block_no >= hdr->total) {
-        return false;
-    }
-    *text = frame + AFSK_HDR_LEN;
-    *text_len = frame_len - AFSK_HDR_LEN;
-    return true;
-}
-
 uint8_t afsk_crc8(const uint8_t *data, size_t len) {
     uint8_t crc = 0x00;
     while (len--) {
