@@ -49,14 +49,114 @@ static const char *TAG = "MAIN";
 static afsk_decoder_t decoder;
 static afsk_message_t message;
 
+/* Блоков в сообщении не больше, чем влезает в буфер сборки при самом коротком
+   блоке (MAX_BLOCK_LEN минус 3 байта, которые afsk_utf8_block_len() может
+   отдать следующему блоку ради целого UTF-8 символа). */
+#define RX_MAX_BLOCKS ((RX_ASSEMBLY_MAX / (MAX_BLOCK_LEN - 3)) + 1)
+_Static_assert(RX_MAX_BLOCKS <= AFSK_MAX_BLOCKS, "RX_MAX_BLOCKS exceeds header range");
+
 /* Ассемблер-сборщик сообщений вынесен в глобальные массивы: так исключаем
-   возможность повреждения указателей на стеке rx_task. */
+   возможность повреждения указателей на стеке rx_task. Блоки раскладываются
+   по слотам согласно номеру в заголовке и склеиваются, только когда пришли
+   все total блоков. */
 static char s_assembly[RX_ASSEMBLY_MAX + 1];
 static char s_broadcast_buf[RX_ASSEMBLY_MAX + 64];
-static int s_assembly_len = 0;
-static uint32_t s_assembly_blocks = 0;
-static uint32_t s_assembly_dropped = 0;
+static uint8_t s_slots[RX_MAX_BLOCKS][MAX_BLOCK_LEN];
+static uint8_t s_slot_len[RX_MAX_BLOCKS];
+static bool s_slot_filled[RX_MAX_BLOCKS];
+static uint8_t s_cur_seq = 0;
+static uint8_t s_cur_total = 0;
+static uint32_t s_blocks_received = 0;   /* уникальных блоков текущего seq */
+static uint32_t s_assembly_dropped = 0;  /* кадров с CRC FAIL за время сборки */
 static bool s_assembling = false;
+
+static void rx_assembly_reset(void)
+{
+    memset(s_slot_filled, 0, sizeof(s_slot_filled));
+    s_blocks_received = 0;
+    s_assembly_dropped = 0;
+    s_cur_total = 0;
+    s_assembling = false;
+}
+
+static void rx_assembly_start(uint8_t seq, uint8_t total)
+{
+    rx_assembly_reset();
+    s_cur_seq = seq;
+    s_cur_total = total;
+    s_assembling = true;
+}
+
+/* Завершает сборку текущего seq: полное сообщение уходит в чат, неполное —
+   только служебным уведомлением. Тело в UART не печатается (см. AGENTS.md). */
+static void rx_assembly_finish(void)
+{
+    if (!s_assembling) {
+        return;
+    }
+
+    if (s_blocks_received < s_cur_total) {
+        uint32_t lost = s_cur_total - s_blocks_received;
+        printf("\n########################################\n");
+        printf("[RX] INCOMPLETE MESSAGE: seq %u, %" PRIu32 " of %u blocks received\n",
+               s_cur_seq, s_blocks_received, s_cur_total);
+        printf("[RX] WARNING: %" PRIu32 " block(s) lost (%" PRIu32 " CRC error(s))\n",
+               lost, s_assembly_dropped);
+        printf("########################################\n");
+
+        /* Сообщение с дырками в чат не отдаём: вместо искажённого текста
+           клиент видит служебное уведомление о потере */
+        char notice[144];
+        snprintf(notice, sizeof(notice),
+                 "Сообщение из эфира принято не полностью (получено блоков: %" PRIu32 " из %u)",
+                 s_blocks_received, s_cur_total);
+        wifi_link_notify_all(notice);
+        rx_assembly_reset();
+        return;
+    }
+
+    int assembly_len = 0;
+    for (int i = 0; i < s_cur_total; i++) {
+        if (assembly_len + s_slot_len[i] > RX_ASSEMBLY_MAX) {
+            ESP_LOGW(TAG, "Assembly buffer full, message seq %u dropped", s_cur_seq);
+            rx_assembly_reset();
+            return;
+        }
+        memcpy(s_assembly + assembly_len, s_slots[i], s_slot_len[i]);
+        assembly_len += s_slot_len[i];
+    }
+    s_assembly[assembly_len] = '\0';
+
+    uint32_t crc = esp_rom_crc32_le(0, (const uint8_t *)s_assembly, (uint32_t)assembly_len);
+    printf("\n########################################\n");
+    printf("[RX] FULL MESSAGE: %d bytes in %u blocks, CRC32: %08" PRIX32 ", seq %u\n",
+           assembly_len, s_cur_total, crc, s_cur_seq);
+    if (s_assembly_dropped > 0) {
+        printf("[RX] NOTE: %" PRIu32 " CRC-failed frame(s) ignored during assembly\n",
+               s_assembly_dropped);
+    }
+    printf("########################################\n");
+
+    /* Генерируем id для сообщения, принятого с эфира: клиент
+       ожидает кадр Remote:<id>:<text>. Префикс 'r' отличает id от
+       счётчика HTTP-сообщений в wifi_link.c. Копируем ровно assembly_len
+       байт, чтобы встроенный '\0' в payload не обрезал broadcast. */
+    static uint32_t rx_msg_id = 0;
+    char id_buf[16];
+    snprintf(id_buf, sizeof(id_buf), "r%lx", (unsigned long)++rx_msg_id);
+    size_t id_len = strlen(id_buf);
+    if (id_len + 1 + assembly_len < sizeof(s_broadcast_buf)) {
+        memcpy(s_broadcast_buf, id_buf, id_len);
+        s_broadcast_buf[id_len] = ':';
+        memcpy(s_broadcast_buf + id_len + 1, s_assembly, assembly_len);
+        s_broadcast_buf[id_len + 1 + assembly_len] = '\0';
+    } else {
+        s_broadcast_buf[0] = '\0';
+    }
+
+    wifi_link_broadcast("Remote", s_broadcast_buf);
+    rx_assembly_reset();
+}
 
 static void tx_send_message(const char *text, size_t len)
 {
@@ -69,27 +169,43 @@ static void tx_send_message(const char *text, size_t len)
         s += afsk_utf8_block_len(text, s, (int)len, MAX_BLOCK_LEN);
         blocks++;
     }
+    if (blocks > AFSK_MAX_BLOCKS) {
+        ESP_LOGE(TAG, "Message of %d bytes needs %d blocks, header allows %d — not sent",
+                 (int)len, blocks, AFSK_MAX_BLOCKS);
+        return;
+    }
+
     /* CRC32 всего сообщения печатается и здесь, и приёмником в FULL MESSAGE:
        тест сверяет содержимое, не печатая тело из rx_task */
+    static uint8_t tx_seq = 0;
+    afsk_block_hdr_t hdr = { .seq = tx_seq++, .block_no = 0, .total = (uint8_t)blocks };
     uint32_t crc = esp_rom_crc32_le(0, (const uint8_t *)text, len);
-    ESP_LOGI(TAG, "Message: %d bytes, Blocks: %d, CRC32: %08" PRIX32,
-             (int)len, blocks, crc);
+    ESP_LOGI(TAG, "Message: %d bytes, Blocks: %d, CRC32: %08" PRIX32 ", Seq: %u",
+             (int)len, blocks, crc, hdr.seq);
 
     int start = 0;
     for (int i = 0; i < blocks; i++) {
         int block_len = afsk_utf8_block_len(text, start, (int)len, MAX_BLOCK_LEN);
 
-        char block[MAX_BLOCK_LEN + 1];
-        memcpy(block, &text[start], block_len);
-        block[block_len] = '\0';
-
-        if (AFSK_VERBOSE) {
-            ESP_LOGI(TAG, "TX Block %d/%d: %d bytes: %s", i + 1, blocks, block_len, block);
-        } else {
-            ESP_LOGI(TAG, "TX Block %d/%d: %d bytes", i + 1, blocks, block_len);
+        hdr.block_no = (uint8_t)i;
+        uint8_t frame[AFSK_HDR_LEN + MAX_BLOCK_LEN];
+        size_t frame_len = afsk_pack_block(frame, sizeof(frame), &hdr,
+                                           (const uint8_t *)&text[start], block_len);
+        if (frame_len == 0) {
+            ESP_LOGE(TAG, "TX Block %d/%d: cannot pack, skipping", i + 1, blocks);
+            start += block_len;
+            continue;
         }
 
-        if (tx_ad9851_send_block((const uint8_t *)block, block_len)) {
+        if (AFSK_VERBOSE) {
+            ESP_LOGI(TAG, "TX Block %d/%d (seq %u): %d bytes: %.*s", i + 1, blocks,
+                     hdr.seq, block_len, block_len, &text[start]);
+        } else {
+            ESP_LOGI(TAG, "TX Block %d/%d (seq %u): %d bytes", i + 1, blocks,
+                     hdr.seq, block_len);
+        }
+
+        if (tx_ad9851_send_block(frame, frame_len)) {
             tx_ad9851_wait_idle();
         } else {
             ESP_LOGW(TAG, "Failed to send block, skipping");
@@ -253,10 +369,7 @@ static void rx_task(void *pvParameters)
         return;
     }
 
-    s_assembly_len = 0;
-    s_assembly_blocks = 0;
-    s_assembly_dropped = 0;
-    s_assembling = false;
+    rx_assembly_reset();
     TickType_t last_packet_tick = 0;
 
     uint32_t packets_received = 0;
@@ -265,60 +378,10 @@ static void rx_task(void *pvParameters)
     TickType_t last_stat_tick = xTaskGetTickCount();
 
     while (1) {
+        /* Тишина дольше MESSAGE_IDLE_MS: недостающие блоки уже не придут */
         if (s_assembling &&
             (xTaskGetTickCount() - last_packet_tick) >= pdMS_TO_TICKS(MESSAGE_IDLE_MS)) {
-            s_assembly[s_assembly_len] = '\0';
-            uint32_t crc = esp_rom_crc32_le(0, (const uint8_t *)s_assembly,
-                                            (uint32_t)s_assembly_len);
-            printf("\n########################################\n");
-            printf("[RX] FULL MESSAGE: %d bytes in %" PRIu32 " blocks, CRC32: %08" PRIX32 "\n",
-                   s_assembly_len, s_assembly_blocks, crc);
-            if (s_assembly_dropped > 0) {
-                printf("[RX] WARNING: %" PRIu32 " block(s) lost (CRC error)\n",
-                       s_assembly_dropped);
-            }
-            /* Длинное тело сообщения не печатаем в rx_task — вывод через UART
-               блокирует чтение I2S и может привести к потере блоков. */
-            printf("########################################\n");
-
-            if (s_assembly_dropped > 0) {
-                /* Сообщение с дырками в чат не отдаём: вместо искажённого текста
-                   клиент видит служебное уведомление о потере */
-                char notice[144];
-                snprintf(notice, sizeof(notice),
-                         "Сообщение из эфира принято с ошибками (потеряно блоков: %" PRIu32 ")",
-                         s_assembly_dropped);
-                wifi_link_notify_all(notice);
-                s_assembly_len = 0;
-                s_assembly_blocks = 0;
-                s_assembly_dropped = 0;
-                s_assembling = false;
-                continue;
-            }
-
-            /* Генерируем id для сообщения, принятого с эфира: клиент
-               ожидает кадр Remote:<id>:<text>. Префикс 'r' отличает id от
-               счётчика HTTP-сообщений в wifi_link.c. Копируем ровно assembly_len
-               байт, чтобы встроенный '\0' в payload не обрезал broadcast. */
-            static uint32_t rx_msg_id = 0;
-            char id_buf[16];
-            snprintf(id_buf, sizeof(id_buf), "r%lx", (unsigned long)++rx_msg_id);
-            size_t id_len = strlen(id_buf);
-            if (id_len + 1 + s_assembly_len < RX_ASSEMBLY_MAX + 64) {
-                memcpy(s_broadcast_buf, id_buf, id_len);
-                s_broadcast_buf[id_len] = ':';
-                memcpy(s_broadcast_buf + id_len + 1, s_assembly, s_assembly_len);
-                s_broadcast_buf[id_len + 1 + s_assembly_len] = '\0';
-            } else {
-                s_broadcast_buf[0] = '\0';
-            }
-
-            wifi_link_broadcast("Remote", s_broadcast_buf);
-
-            s_assembly_len = 0;
-            s_assembly_blocks = 0;
-            s_assembly_dropped = 0;
-            s_assembling = false;
+            rx_assembly_finish();
         }
 
         esp_err_t ret = i2s_channel_read(rx_chan, buffer, 512 * sizeof(int32_t),
@@ -347,6 +410,13 @@ static void rx_task(void *pvParameters)
                 packets_received++;
                 if (!message.crc_valid) crc_errors++;
 
+                afsk_block_hdr_t hdr;
+                const uint8_t *text = NULL;
+                size_t text_len = 0;
+                bool hdr_ok = message.crc_valid &&
+                              afsk_unpack_block((const uint8_t *)message.text,
+                                                message.length, &hdr, &text, &text_len);
+
                 /* По-блочная диагностика (~300 байт ≈ 25 мс UART при запасе DMA
                    ~85 мс) безопасна, но в боевой сборке отключается вместе с
                    остальным выводом декодера. CRC-ошибки печатаем всегда. */
@@ -355,8 +425,12 @@ static void rx_task(void *pvParameters)
                     printf("[RX] Message received!\n");
                     printf("[RX] Length: %d bytes\n", message.length);
                     printf("[RX] CRC: %s\n", message.crc_valid ? "OK" : "FAIL");
-                    printf("[RX] --- Text ---\n");
-                    printf("%s\n", message.text);
+                    if (hdr_ok) {
+                        printf("[RX] Block %u/%u of seq %u\n",
+                               hdr.block_no + 1, hdr.total, hdr.seq);
+                        printf("[RX] --- Text ---\n");
+                        printf("%.*s\n", (int)text_len, (const char *)text);
+                    }
                     printf("========================================\n");
                     printf("[RX] Stats: Packets: %" PRIu32 " | CRC errors: %" PRIu32
                            " | Frames aborted: %" PRIu32 "\n",
@@ -365,25 +439,42 @@ static void rx_task(void *pvParameters)
                 if (!message.crc_valid) {
                     printf("[RX] CRC FAIL: expected 0x%02X, got 0x%02X\n",
                            message.calculated_crc, message.received_crc);
+                } else if (!hdr_ok) {
+                    printf("[RX] BAD HEADER: %d-byte frame ignored\n", message.length);
                 }
 
-                if (message.crc_valid) {
-                    int space = RX_ASSEMBLY_MAX - s_assembly_len;
-                    int n = (message.length < space) ? message.length : space;
-                    if (n > 0) {
-                        memcpy(s_assembly + s_assembly_len, message.text, n);
-                        s_assembly_len += n;
+                if (hdr_ok) {
+                    if (hdr.total > RX_MAX_BLOCKS) {
+                        printf("[RX] seq %u: %u blocks exceed RX_MAX_BLOCKS (%d), ignored\n",
+                               hdr.seq, hdr.total, RX_MAX_BLOCKS);
+                    } else {
+                        /* Блок другого сообщения — текущее (если было) закрываем
+                           как есть, начинаем новую сборку */
+                        if (!s_assembling || hdr.seq != s_cur_seq || hdr.total != s_cur_total) {
+                            rx_assembly_finish();
+                            rx_assembly_start(hdr.seq, hdr.total);
+                        }
+                        if (s_slot_filled[hdr.block_no]) {
+                            printf("[RX] seq %u: duplicate block %u ignored\n",
+                                   hdr.seq, hdr.block_no + 1);
+                        } else {
+                            memcpy(s_slots[hdr.block_no], text, text_len);
+                            s_slot_len[hdr.block_no] = (uint8_t)text_len;
+                            s_slot_filled[hdr.block_no] = true;
+                            s_blocks_received++;
+                        }
+                        last_packet_tick = xTaskGetTickCount();
+                        /* Все блоки на месте — отдаём сразу, не дожидаясь тишины */
+                        if (s_blocks_received == s_cur_total) {
+                            rx_assembly_finish();
+                        }
                     }
-                    if (n < message.length) {
-                        ESP_LOGW(TAG, "Assembly buffer full, %d byte(s) dropped",
-                                 message.length - n);
-                    }
-                    s_assembly_blocks++;
-                } else {
+                } else if (s_assembling) {
+                    /* Битый кадр внутри сборки: место в сообщении неизвестно, дырку
+                       покажет счётчик слотов; таймер тишины продлеваем */
                     s_assembly_dropped++;
+                    last_packet_tick = xTaskGetTickCount();
                 }
-                s_assembling = true;
-                last_packet_tick = xTaskGetTickCount();
             }
         }
         vTaskDelay(pdMS_TO_TICKS(1));

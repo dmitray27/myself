@@ -25,6 +25,15 @@ _Static_assert(MAX_BLOCK_LEN >= 4,
                "MAX_BLOCK_LEN must hold the longest UTF-8 character (4 bytes), "
                "or afsk_utf8_block_len() splits it across blocks");
 
+/* Every block starts with a 3-byte header in front of the text, covered by
+ * the same CRC-8: message sequence number (wraps at 256), block index (from
+ * 0) and block count. The receiver places blocks by index, hands a message
+ * over only when all `total` blocks are in, and reports a gap otherwise -
+ * a block that never reached the decoder is invisible to it, so nothing
+ * short of a header can tell a complete message from a truncated one. */
+#define AFSK_HDR_LEN    3
+#define AFSK_MAX_BLOCKS 255         /* block index and count are one byte */
+
 #define BLOCK_GAP_MS    500         /* silence between blocks  */
 
 /* Silence after which the receiver finalizes the frame it is assembling.
@@ -50,7 +59,7 @@ _Static_assert(MAX_BLOCK_LEN >= 4,
  * UART-style 10-bit slots, then the trailing marks. Everything that has to
  * outlive a block (TX bit ring, TX idle timeout, RX assembly timeout) is
  * derived from these instead of being tuned by hand. */
-#define BLOCK_BITS      (PREAMBLE_BITS + (MAX_BLOCK_LEN + 1) * 10 + 10)
+#define BLOCK_BITS      (PREAMBLE_BITS + (AFSK_HDR_LEN + MAX_BLOCK_LEN + 1) * 10 + 10)
 #define BLOCK_AIR_MS    ((BLOCK_BITS * 1000) / BAUD_RATE)
 #define BLOCK_TIME_MS   (BLOCK_AIR_MS + BLOCK_GAP_MS + PTT_OVERHEAD_MS)
 
