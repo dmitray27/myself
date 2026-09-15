@@ -1,4 +1,4 @@
-package com.example.radio_bridge_dual
+package ru.dubinich.radiochat
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -274,8 +274,8 @@ class ChatForegroundService : Service() {
         private const val NOTIFICATION_ID = 1
         private const val ALERT_NOTIFICATION_ID = 2
         private const val ALERT_TIMEOUT_MS = 7_000L
-        const val ACTION_EXIT = "com.example.radio_bridge_dual.ACTION_EXIT"
-        private const val WIFI_LOCK_TAG = "radio_bridge_dual:wifi"
+        const val ACTION_EXIT = "ru.dubinich.radiochat.ACTION_EXIT"
+        private const val WIFI_LOCK_TAG = "radiochat:wifi"
 
         // Сервис живёт в том же процессе, что и активность: текст уведомления
         // обновляем напрямую, а не через startService — из фона его не вызвать

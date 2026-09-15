@@ -140,7 +140,7 @@ flutter test test/message_store_test.dart
 
 ## Известные ограничения
 
-- Package name и label пока `com.example.radio_bridge_dual` / `radio_bridge_dual`.
+- Package name `ru.dubinich.radiochat`, label «Радиочат»; Dart-пакет по-прежнему `radio_bridge_dual`.
 - Иконка foreground-уведомления — системная (Bluetooth), своей пока нет.
 - Каждая плата — отдельная точка доступа, поэтому один клиент видит только
   «свою» плату; сквозной тест TX → эфир → RX требует двух устройств.

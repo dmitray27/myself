@@ -112,7 +112,7 @@ flutter build apk --release # production APK → radiochat.apk
 
 ```bash
 adb install -t flutter/build/app/outputs/flutter-apk/app-debug.apk
-adb shell am start -n com.example.radio_bridge_dual/.MainActivity
+adb shell am start -n ru.dubinich.radiochat/.MainActivity
 adb logcat -s flutter:I
 ```
 

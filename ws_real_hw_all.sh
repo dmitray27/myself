@@ -182,13 +182,13 @@ if [ -n "$EMULATOR_PID" ] && kill -0 $EMULATOR_PID 2>/dev/null; then
       echo "Installing APK on $DEV"
       $ADB -s "$DEV" install -r -t "$APK" || fail "adb install on $DEV"
       # Grant notification permission so the app doesn't show a runtime dialog in headless mode.
-      $ADB -s "$DEV" shell pm grant com.example.radio_bridge_dual android.permission.POST_NOTIFICATIONS 2>/dev/null || true
+      $ADB -s "$DEV" shell pm grant ru.dubinich.radiochat android.permission.POST_NOTIFICATIONS 2>/dev/null || true
       echo "Starting main activity on $DEV"
       $ADB -s "$DEV" logcat -c 2>/dev/null || true
-      $ADB -s "$DEV" shell am start -n com.example.radio_bridge_dual/.MainActivity 2>/dev/null || true
+      $ADB -s "$DEV" shell am start -n ru.dubinich.radiochat/.MainActivity 2>/dev/null || true
       echo "Waiting for app to initialize ..."
       sleep 5
-      PID=$($ADB -s "$DEV" shell pidof com.example.radio_bridge_dual 2>/dev/null | tr -d '\r')
+      PID=$($ADB -s "$DEV" shell pidof ru.dubinich.radiochat 2>/dev/null | tr -d '\r')
       echo "App process id: ${PID:-none}"
       sleep 25
       echo "Relevant logcat from $DEV (flutter/runtime/crash):"

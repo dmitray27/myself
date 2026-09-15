@@ -137,7 +137,7 @@ Report written to: afsk_test_report.txt
 - Для реального телефона вместо эмулятора можно использовать debug или release APK:
   - debug: `adb install -t build/app/outputs/flutter-apk/app-debug.apk`
   - release: `adb install -t radiochat.apk`
-  - затем `adb shell am start -n com.example.radio_bridge_dual/.MainActivity` и `adb logcat -s flutter:I`.
+  - затем `adb shell am start -n ru.dubinich.radiochat/.MainActivity` и `adb logcat -s flutter:I`.
 
 ### Шаг 4: Ручной тест Android на телефоне
 
@@ -211,6 +211,6 @@ idf.py -p /dev/ttyUSB1 -C tx_rx_mes_200b_filter_verbose_wifi flash
 
 # 4. Android-ручник на телефоне
 adb install -t radiochat.apk
-adb shell am start -n com.example.radio_bridge_dual/.MainActivity
+adb shell am start -n ru.dubinich.radiochat/.MainActivity
 adb logcat -s flutter:I
 ```

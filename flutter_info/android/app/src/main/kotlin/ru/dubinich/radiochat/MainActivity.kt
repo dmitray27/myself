@@ -1,4 +1,4 @@
-package com.example.radio_bridge_dual
+package ru.dubinich.radiochat
 
 import android.content.Context
 import android.content.Intent

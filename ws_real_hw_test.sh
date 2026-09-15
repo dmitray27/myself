@@ -155,7 +155,7 @@ if [ -x "$ADB" ]; then
       $ADB -s "$DEV" install -r -t "$APK" || fail "adb install on $DEV"
       echo "Starting main activity on $DEV"
       $ADB -s "$DEV" logcat -c 2>/dev/null || true
-      $ADB -s "$DEV" shell am start -n com.example.radio_bridge_dual/.MainActivity 2>/dev/null || fail "am start on $DEV"
+      $ADB -s "$DEV" shell am start -n ru.dubinich.radiochat/.MainActivity 2>/dev/null || fail "am start on $DEV"
       sleep 15
       echo "Relevant logcat from $DEV:"
       $ADB -s "$DEV" logcat -d 2>/dev/null | grep -iE 'radio_bridge|flutter|chatconnection|websocket|esp32|network' | tail -80 || true
