@@ -138,6 +138,71 @@ flutter test test/message_store_test.dart
 
 ---
 
+## Публикация (Google Play и RuStore)
+
+Один проект, один `applicationId` (`ru.dubinich.radiochat`), один release-ключ
+для обоих магазинов. Подпись настраивается один раз по `android/SIGNING.md`:
+keystore лежит вне репозитория (например, `~/keys/radiochat-release.jks`),
+путь и пароли — в `android/key.properties` (в `.gitignore`).
+
+### Перед каждым релизом
+
+1. Поднять версию в `pubspec.yaml`: `version: 1.0.1+2` — часть после `+`
+   (`versionCode`) должна быть строго больше предыдущей загруженной, иначе
+   магазин отклонит сборку.
+2. Убедиться, что `android/key.properties` на месте и указывает на существующий
+   keystore (иначе сборка тихо подпишется debug-ключом — в логе будет
+   `key.properties не найден: release подписан debug-ключом`).
+
+### Google Play
+
+Требуется формат AAB:
+
+```bash
+flutter build appbundle --release
+# → build/app/outputs/bundle/release/app-release.aab
+```
+
+- В Play Console создать приложение, загрузить `.aab` во внутреннее тестирование
+  или production.
+- При первой загрузке Play включит **Play App Signing**: ваш ключ становится
+  ключом загрузки (upload key), а установленные из Play APK подписывает сам
+  Google своим ключом. Поэтому APK из Play и APK из RuStore/с сайта имеют разные
+  подписи и не обновляются поверх друг друга — это нормально.
+- Обязательно: ссылка на политику конфиденциальности (страница из
+  `flutter_info/privacy/index.html`, опубликованная через GitHub Pages),
+  описание (краткое ≤ 80, полное ≤ 4000 символов), минимум 2 скриншота
+  телефона, иконка 512×512, анкета «Безопасность данных» (данные не собираются).
+
+### RuStore
+
+Принимает APK и AAB:
+
+```bash
+flutter build apk --release
+# → build/app/outputs/flutter-apk/app-release.apk
+```
+
+- В RuStore Console создать приложение с тем же `applicationId`, загрузить
+  `.apk` (или `.aab`).
+- RuStore не переподписывает приложение: пользователи получают ваш ключ,
+  поэтому APK из RuStore обновляется поверх APK, установленного вручную с той же
+  подписью.
+- Тоже нужны ссылка на политику конфиденциальности, описание и скриншоты
+  (тексты те же, что для Play). Дополнительные SDK RuStore не требуются —
+  они нужны только для платежей и push-уведомлений, которых в приложении нет.
+
+### Проверка подписи перед загрузкой
+
+```bash
+$ANDROID_HOME/build-tools/<версия>/apksigner verify --print-certs \
+  build/app/outputs/flutter-apk/app-release.apk
+```
+
+В выводе `CN` должен быть ваш, а не `Android Debug`.
+
+---
+
 ## Известные ограничения
 
 - Package name `ru.dubinich.radiochat`, label «Радиочат»; Dart-пакет по-прежнему `radio_bridge_dual`.
