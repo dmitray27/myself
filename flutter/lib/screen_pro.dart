@@ -280,7 +280,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       padding: const EdgeInsets.only(left: 12),
                       alignment: Alignment.centerLeft,
                       child: const Text(
-                        'UV-82 Chat',
+                        'Radiochat Core',
                         style: TextStyle(color: Colors.black, fontSize: 14),
                       ),
                     ),

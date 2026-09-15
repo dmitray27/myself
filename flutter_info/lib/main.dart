@@ -57,7 +57,7 @@ class MyApp extends StatelessWidget {
     final isLinux = Platform.isLinux;
 
     return MaterialApp(
-      title: 'UV-82 Chat',
+      title: 'Radiochat Core',
       debugShowCheckedModeBanner: false,
       home: ChatScreen(isLinux: isLinux),
 
