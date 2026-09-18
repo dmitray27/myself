@@ -41,7 +41,7 @@ class AppInfo {
 class InfoButton extends StatelessWidget {
   final Color color;
 
-  const InfoButton({super.key, this.color = Colors.white});
+  const InfoButton({super.key, this.color = const Color(0x99FFFFFF)});
 
   @override
   Widget build(BuildContext context) {

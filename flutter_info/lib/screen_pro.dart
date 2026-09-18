@@ -95,7 +95,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         );
       case MessageStatus.failed:
         return Tooltip(
-          message: 'ESP32 не подтвердил приём',
+          message: 'УПТС-РК1 не подтвердил приём',
           child: Icon(
             Icons.error_outline,
             size: 12,
@@ -199,7 +199,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         return AlertDialog(
           title: const Text('Выйти из радиочата?'),
           content: const Text(
-            'Соединение с ESP32 будет закрыто, уведомления сняты, '
+            'Соединение с УПТС-РК1 будет закрыто, уведомления сняты, '
             'новые сообщения приходить не будут.',
           ),
           actions: [
@@ -251,12 +251,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         statusIcon = Icons.wifi_off;
         break;
       case ConnectionStatus.connecting:
-        statusText = 'Подключение к ESP32...';
+        statusText = 'Подключение к УПТС-РК1...';
         statusColor = Colors.orange;
         statusIcon = Icons.wifi_find;
         break;
       case ConnectionStatus.connected:
-        statusText = 'Подключено к ESP32';
+        statusText = 'Подключено к УПТС-РК1';
         statusColor = Colors.green;
         statusIcon = Icons.wifi;
         break;
@@ -306,7 +306,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             appBar: AppBar(
               leading: const InfoButton(),
               title: const Text('Радиочат', style: TextStyle(color: Colors.white)),
-              backgroundColor: Colors.green[800],
+              backgroundColor: Colors.green[900],
               actions: [
                 IconButton(
                   icon: Icon(_controller.soundEnabled
@@ -314,19 +314,19 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       : Icons.notifications_off),
                   onPressed: _controller.toggleSound,
                   tooltip: _controller.soundEnabled ? 'Выключить звук' : 'Включить звук',
-                  color: Colors.white,
+                  color: Colors.white.withValues(alpha: 0.7),
                 ),
                 IconButton(
                   icon: const Icon(Icons.edit),
                   onPressed: _showChangeNameDialog,
                   tooltip: 'Изменить имя',
-                  color: Colors.white,
+                  color: Colors.white.withValues(alpha: 0.7),
                 ),
                 IconButton(
                   icon: const Icon(Icons.power_settings_new),
                   onPressed: _confirmExit,
                   tooltip: 'Выйти',
-                  color: Colors.white,
+                  color: Colors.white.withValues(alpha: 0.7),
                 ),
               ],
             ),
@@ -407,7 +407,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                               Text(
                                 isConnected
                                     ? 'Нет сообщений\nОтправьте первое сообщение'
-                                    : 'Подключитесь к ESP32',
+                                    : 'Подключитесь к УПТС-РК1',
                                 textAlign: TextAlign.center,
                                 style: const TextStyle(color: Colors.grey),
                               ),
@@ -534,7 +534,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                           decoration: InputDecoration(
                             hintText: isConnected
                                 ? 'Введите сообщение...'
-                                : 'Нет связи с ESP32',
+                                : 'Нет связи с УПТС-РК1',
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(24),
                             ),
