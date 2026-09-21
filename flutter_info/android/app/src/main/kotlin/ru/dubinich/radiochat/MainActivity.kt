@@ -119,7 +119,10 @@ class MainActivity : FlutterActivity() {
             }
 
             override fun onLost(network: Network) {
-                runOnUiThread { completeBind(this, false) }
+                runOnUiThread {
+                    if (networkCallback === this) ChatForegroundService.setConnected(false)
+                    completeBind(this, false)
+                }
             }
         }
 

@@ -368,8 +368,10 @@ class ChatController extends ChangeNotifier {
       _deviceIp = deviceIp;
       if (ipChanged) _notify();
 
-      var bound = true;
-      if (deviceIp.startsWith('192.168.4.')) {
+      final onEsp32Network = deviceIp.startsWith('192.168.4.');
+      // На Android вне сети платы связи нет, даже если сокет ещё не заметил разрыва
+      var bound = !Platform.isAndroid || onEsp32Network;
+      if (onEsp32Network) {
         bound = await _bindToWifi(force: ipChanged);
       } else if (_boundIp != null) {
         await _unbindWifi();
