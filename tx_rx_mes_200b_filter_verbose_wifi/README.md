@@ -108,6 +108,44 @@ idf.py -B build_release_s3 -DIDF_TARGET=esp32s3 -DSDKCONFIG=sdkconfig.release.s3
 Переключатель — `idf.py menuconfig` → **AFSK Logging** → *Verbose diagnostics*
 (`CONFIG_AFSK_VERBOSE_LOG`). Подробности — в разделе «Логирование и производительность».
 
+### Единый образ для прошивки из браузера (merged-binary.bin)
+
+Пользователям без ESP-IDF плата прошивается через
+[ESP Launchpad](https://espressif.github.io/esp-launchpad/) (инструкция — кнопка
+с микросхемой в приложении). Для этого нужен один файл, в котором уже склеены
+загрузчик, таблица разделов и приложение по своим адресам. `idf.py merge-bin`
+(ESP-IDF ≥ 5.3) делает его из готовой сборки:
+
+```bash
+# ESP32-WROOM, release-профиль
+idf.py -B build_release -DSDKCONFIG=sdkconfig.release \
+    -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.release" build merge-bin
+cp build_release/merged-binary.bin merge_esp32.bin
+
+# ESP32-S3, release-профиль
+idf.py -B build_release_s3 -DIDF_TARGET=esp32s3 -DSDKCONFIG=sdkconfig.release.s3 \
+    -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.esp32s3;sdkconfig.defaults.release" build merge-bin
+cp build_release_s3/merged-binary.bin merge_esp32s3.bin
+```
+
+Для verbose-профиля — просто `idf.py build merge-bin`, файл будет в `build/merged-binary.bin`.
+
+В ESP-IDF без `merge-bin` то же самое делается esptool (адреса — из `build/flasher_args.json`):
+
+```bash
+cd build && esptool.py --chip esp32 merge_bin -o ../merge_esp32.bin @flash_args && cd ..
+```
+
+Образ записывается в Launchpad (вкладка DIY) по адресу **0x0** и подходит только
+для того чипа, под который собран: `merge_esp32.bin` — для ESP32-WROOM,
+`merge_esp32s3.bin` — для ESP32-S3. Обе платы комплекта (TX и RX) прошивать одной
+версией: прошивки с AFSK-заголовком и без него несовместимы по эфиру.
+Проверка адреса и содержимого образа:
+
+```bash
+esptool.py image_info --version 2 merge_esp32.bin
+```
+
 ---
 
 ## Параметры радиоканала
