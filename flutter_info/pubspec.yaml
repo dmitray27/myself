@@ -31,3 +31,4 @@ flutter:
   assets:
     - assets/73g_assets/sounds/notify.mp3
     - assets/info.json
+    - assets/flash_info.json
