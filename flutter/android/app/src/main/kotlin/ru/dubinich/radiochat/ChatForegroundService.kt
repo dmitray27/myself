@@ -200,9 +200,9 @@ class ChatForegroundService : Service() {
         }
 
         val text = if (isConnected) {
-            "Соединение с ESP32 поддерживается"
+            "Соединение с УПТС-РК1 поддерживается"
         } else {
-            "Соединение с ESP32 отсутствует — откройте приложение"
+            "Соединение с УПТС-РК1 отсутствует — откройте приложение"
         }
 
         val title = if (isConnected) "Радиочат активен" else "Радиочат приостановлен"
@@ -243,7 +243,7 @@ class ChatForegroundService : Service() {
 
         val channel = NotificationChannel(
             CHANNEL_ID,
-            "Соединение с ESP32",
+            "Соединение с УПТС-РК1",
             // Постоянное уведомление сервиса не должно звучать: звук идёт
             // по каналу входящих сообщений
             NotificationManager.IMPORTANCE_LOW,

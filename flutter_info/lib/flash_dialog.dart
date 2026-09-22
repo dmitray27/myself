@@ -4,7 +4,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-/// Содержимое окна «Прошивка ESP32», загружаемое из assets/flash_info.json.
+/// Содержимое окна «Прошивка УПТС-РК1», загружаемое из assets/flash_info.json.
 class FlashInfo {
   final String title;
   final String url;
@@ -30,7 +30,7 @@ class FlashInfo {
             .map((e) => e.toString())
             .toList();
     return FlashInfo(
-      title: json['title'] as String? ?? 'Прошивка ESP32',
+      title: json['title'] as String? ?? 'Прошивка УПТС-РК1',
       url: json['url'] as String? ?? '',
       intro: strings('intro'),
       stepsTitle: json['stepsTitle'] as String? ?? '',
@@ -56,7 +56,7 @@ class FlashButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return IconButton(
-      tooltip: 'Прошивка ESP32',
+      tooltip: 'Прошивка УПТС-РК1',
       onPressed: () => showFlashDialog(context),
       icon: Icon(Icons.memory, color: color),
     );

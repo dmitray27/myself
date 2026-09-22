@@ -38,7 +38,7 @@ enum IngestOutcome {
   addedNew,
 }
 
-/// Отправленный кадр, ждущий эха от УПТС-РК1.
+/// Отправленный кадр, ждущий эха от ESP32.
 class _PendingEcho {
   final String echoKey;
   final Message message;
