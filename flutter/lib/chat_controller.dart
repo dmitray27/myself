@@ -388,7 +388,7 @@ class ChatController extends ChangeNotifier {
           await _connection.disconnect();
         }
         _currentWifiName = 'Не подключено';
-        _networkHint = 'Подключитесь к WiFi ESP32';
+        _networkHint = 'Подключитесь к WiFi УПТС-РК1';
         _notify();
         return;
       }
@@ -429,7 +429,7 @@ class ChatController extends ChangeNotifier {
           .timeout(const Duration(seconds: 2));
       return response.statusCode == 200;
     } catch (e) {
-      debugPrint('ESP32 не ответил на ping: $e');
+      debugPrint('УПТС-РК1 не ответил на ping: $e');
       return false;
     }
   }
@@ -448,11 +448,11 @@ class ChatController extends ChangeNotifier {
           if (value.isNotEmpty) ssid = value;
         }
       }
-      _currentWifiName = ssid ?? 'Сеть ESP32';
+      _currentWifiName = ssid ?? 'Сеть УПТС-РК1';
       _notify();
     } catch (e) {
-      debugPrint('Ошибка получения имени сети от ESP32: $e');
-      _currentWifiName = 'Сеть ESP32';
+      debugPrint('Ошибка получения имени сети от УПТС-РК1: $e');
+      _currentWifiName = 'Сеть УПТС-РК1';
       _notify();
     }
   }
@@ -469,21 +469,21 @@ class ChatController extends ChangeNotifier {
 
     try {
       if (!await _bindToWifi()) {
-        debugPrint('❌ Не удалось привязаться к Wi-Fi ESP32');
-        _networkHint = 'Подключитесь к WiFi ESP32';
+        debugPrint('❌ Не удалось привязаться к Wi-Fi УПТС-РК1');
+        _networkHint = 'Подключитесь к WiFi УПТС-РК1';
         _notify();
         return;
       }
 
-      debugPrint('Проверяю ping ESP32...');
+      debugPrint('Проверяю ping УПТС-РК1...');
       if (!await _pingEsp32()) {
-        debugPrint('❌ ESP32 не отвечает на ping');
+        debugPrint('❌ УПТС-РК1 не отвечает на ping');
         _boundIp = null;
         return;
       }
       if (_shuttingDown) return;
 
-      debugPrint('ESP32 доступен, подключаю WebSocket...');
+      debugPrint('УПТС-РК1 доступен, подключаю WebSocket...');
       await _connection.connect();
     } finally {
       _setConnectAttemptRunning(false);
@@ -510,7 +510,7 @@ class ChatController extends ChangeNotifier {
   }
 
   Future<void> _onConnectionEstablished() async {
-    debugPrint('✅ Успешно подключено к ESP32');
+    debugPrint('✅ Успешно подключено к УПТС-РК1');
     await _startForegroundService();
     await _setServiceConnected(true);
     _sendUserName();
@@ -582,7 +582,7 @@ class ChatController extends ChangeNotifier {
     final trimmed = text.trim();
     if (trimmed.isEmpty) return false;
     if (!_connection.isConnected) {
-      _setSnack('Нет соединения с ESP32');
+      _setSnack('Нет соединения с УПТС-РК1');
       return false;
     }
     if (trimmed.characters.length > maxMessageLength) {
