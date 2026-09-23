@@ -193,6 +193,52 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
   }
 
+  /// Системный «Назад» на Android: спрашиваем, что делать, вместо того
+  /// чтобы молча закрыть Activity и оборвать соединение при живом сервисе.
+  Future<void> _onBackPressed() async {
+    final action = await showDialog<_BackAction>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Выйти из радиочата?'),
+          content: const Text(
+            '«Выйти» — приложение закроется, соединение с УПТС-РК1 '
+            'разорвётся, уведомление «Радиочат» будет снято, новые '
+            'сообщения приходить не будут.\n\n'
+            '«Свернуть» — приложение уйдёт в фон, связь с УПТС-РК1 '
+            'сохранится, о новых сообщениях будут приходить уведомления.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, _BackAction.cancel),
+              child: const Text('Отмена'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, _BackAction.minimize),
+              child: const Text('Свернуть'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, _BackAction.exit),
+              child: const Text('Выйти'),
+            ),
+          ],
+        );
+      },
+    );
+    if (!mounted) return;
+    switch (action) {
+      case _BackAction.minimize:
+        await _controller.moveToBackground();
+        break;
+      case _BackAction.exit:
+        await _exit();
+        break;
+      case _BackAction.cancel:
+      case null:
+        break;
+    }
+  }
+
   Future<void> _confirmExit() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -218,7 +264,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
 
     if (confirmed != true || !mounted) return;
+    await _exit();
+  }
 
+  Future<void> _exit() async {
     final closedByPlatform = await _controller.exit();
     if (closedByPlatform) return;
 
@@ -268,7 +317,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         break;
     }
 
-    return Column(
+    final body = Column(
       children: [
         if (widget.isLinux)
           Container(
@@ -564,5 +613,15 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         ),
       ],
     );
+
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _onBackPressed();
+      },
+      child: body,
+    );
   }
 }
+
+enum _BackAction { cancel, minimize, exit }

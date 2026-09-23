@@ -58,6 +58,10 @@ class MainActivity : FlutterActivity() {
                         ChatForegroundService.setConnected(connected)
                         result.success(true)
                     }
+                    "moveToBackground" -> {
+                        moveTaskToBack(true)
+                        result.success(true)
+                    }
                     "closeApp" -> {
                         // Та же цепочка, что и «Выйти» из уведомления. Ответ Dart уходит
                         // до начала остановки: дальше процесс будет убит и отвечать

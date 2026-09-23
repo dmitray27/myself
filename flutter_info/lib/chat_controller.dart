@@ -329,6 +329,17 @@ class ChatController extends ChangeNotifier {
     }
   }
 
+  /// Сворачивает приложение (как «Домой»): Activity уходит в фон, а Dart,
+  /// WebSocket и foreground-сервис продолжают работать.
+  Future<void> moveToBackground() async {
+    if (!Platform.isAndroid) return;
+    try {
+      await _networkChannel.invokeMethod<bool>('moveToBackground');
+    } catch (e) {
+      debugPrint('moveToBackground error: $e');
+    }
+  }
+
   // ---------------- Lifecycle ----------------
 
   void setForeground(bool isForeground) {
