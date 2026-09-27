@@ -1,0 +1,84 @@
+=== flutter ===
+Analyzing flutter...                                            
+No issues found! (ran in 1.3s)
+00:00 +0: loading flutter/test/message_store_test.dart
+00:00 +0: flutter/test/message_store_test.dart: MessageStore echo matching confirms echo by id, not by text
+00:00 +1: flutter/test/message_store_test.dart: MessageStore echo matching legacy echo without id still works
+00:00 +2: flutter/test/message_store_test.dart: MessageStore echo matching deduplicates history by id
+00:00 +3: flutter/test/message_store_test.dart: MessageStore echo matching same id from different senders is not a duplicate
+00:00 +4: flutter/test/message_store_test.dart: MessageStore echo matching same text with different ids is not a duplicate
+00:00 +5: flutter/test/chat_protocol_test.dart: buildMessageFrame new frame includes id
+00:00 +6: flutter/test/chat_protocol_test.dart: buildMessageFrame legacy frame omits id
+00:00 +7: flutter/test/chat_protocol_test.dart: validateName mirrors firmware name_is_valid
+00:00 +8: flutter/test/chat_protocol_test.dart: parseIncomingFrame parses new from:<id>:text
+00:00 +9: flutter/test/chat_protocol_test.dart: parseIncomingFrame parses legacy from:text
+00:00 +10: flutter/test/chat_protocol_test.dart: parseIncomingFrame legacy text with colon is not split into id
+00:00 +11: flutter/test/chat_protocol_test.dart: parseIncomingFrame id frame keeps colons inside text
+00:00 +12: flutter/test/chat_protocol_test.dart: parseIncomingFrame parses history with id
+00:00 +13: flutter/test/chat_protocol_test.dart: parseIncomingFrame ignores empty frames
+00:00 +14: flutter/test/chat_protocol_test.dart: parseIncomingFrame pings are recognized
+00:00 +15: flutter/test/chat_protocol_test.dart: parseIncomingFrame system messages are recognized
+00:00 +16: flutter/test/chat_protocol_test.dart: echoKeyFor returns id when present
+00:00 +17: flutter/test/chat_protocol_test.dart: echoKeyFor falls back to name:text without id
+00:00 +18: flutter/test/chat_protocol_test.dart: messageFitsFrame counts bytes correctly for cyrillic with id
+00:00 +19: All tests passed!
+RESULT flutter: analyze=0 test=0
+
+=== flutter_info ===
+Analyzing flutter_info...                                       
+No issues found! (ran in 0.9s)
+00:00 +0: loading flutter_info/test/message_store_test.dart
+00:00 +0: flutter_info/test/message_store_test.dart: MessageStore echo matching confirms echo by id, not by text
+00:00 +1: flutter_info/test/message_store_test.dart: MessageStore echo matching legacy echo without id still works
+00:00 +2: flutter_info/test/message_store_test.dart: MessageStore echo matching deduplicates history by id
+00:00 +3: flutter_info/test/message_store_test.dart: MessageStore echo matching same id from different senders is not a duplicate
+00:00 +4: flutter_info/test/message_store_test.dart: MessageStore echo matching same text with different ids is not a duplicate
+00:00 +5: flutter_info/test/chat_protocol_test.dart: buildMessageFrame new frame includes id
+00:00 +6: flutter_info/test/chat_protocol_test.dart: buildMessageFrame legacy frame omits id
+00:00 +7: flutter_info/test/chat_protocol_test.dart: validateName mirrors firmware name_is_valid
+00:00 +8: flutter_info/test/chat_protocol_test.dart: parseIncomingFrame parses new from:<id>:text
+00:00 +9: flutter_info/test/chat_protocol_test.dart: parseIncomingFrame parses legacy from:text
+00:00 +10: flutter_info/test/chat_protocol_test.dart: parseIncomingFrame legacy text with colon is not split into id
+00:00 +11: flutter_info/test/chat_protocol_test.dart: parseIncomingFrame id frame keeps colons inside text
+00:00 +12: flutter_info/test/chat_protocol_test.dart: parseIncomingFrame parses history with id
+00:00 +13: flutter_info/test/chat_protocol_test.dart: parseIncomingFrame ignores empty frames
+00:00 +14: flutter_info/test/chat_protocol_test.dart: parseIncomingFrame pings are recognized
+00:00 +15: flutter_info/test/chat_protocol_test.dart: parseIncomingFrame system messages are recognized
+00:00 +16: flutter_info/test/chat_protocol_test.dart: echoKeyFor returns id when present
+00:00 +17: flutter_info/test/chat_protocol_test.dart: echoKeyFor falls back to name:text without id
+00:00 +18: flutter_info/test/chat_protocol_test.dart: messageFitsFrame counts bytes correctly for cyrillic with id
+00:00 +19: All tests passed!
+RESULT flutter_info: analyze=0 test=0
+
+=== flutter_firmware ===
+Analyzing flutter_firmware...                                   
+No issues found! (ran in 1.6s)
+00:00 +0: loading flutter_firmware/test/message_store_test.dart
+00:00 +0: flutter_firmware/test/message_store_test.dart: MessageStore echo matching confirms echo by id, not by text
+00:00 +1: flutter_firmware/test/message_store_test.dart: MessageStore echo matching legacy echo without id still works
+00:00 +2: flutter_firmware/test/message_store_test.dart: MessageStore echo matching deduplicates history by id
+00:00 +3: flutter_firmware/test/message_store_test.dart: MessageStore echo matching same id from different senders is not a duplicate
+00:00 +4: flutter_firmware/test/message_store_test.dart: MessageStore echo matching same text with different ids is not a duplicate
+00:00 +5: flutter_firmware/test/flash_dialog_test.dart: FlashInfo loads real assets/flash_info.json
+00:00 +6: flutter_firmware/test/flash_dialog_test.dart: FlashInfo fromJson tolerates missing fields
+00:00 +7: flutter_firmware/test/flash_dialog_test.dart: FlashButton / FlashDialog opens instruction with steps, links and Закрыть
+00:00 +8: flutter_firmware/test/flash_dialog_test.dart: FlashButton / FlashDialog opens instruction with steps, links and Закрыть
+00:00 +9: flutter_firmware/test/flash_dialog_test.dart: FlashButton / FlashDialog opens instruction with steps, links and Закрыть
+00:00 +10: flutter_firmware/test/flash_dialog_test.dart: FlashButton / FlashDialog opens instruction with steps, links and Закрыть
+00:00 +11: flutter_firmware/test/flash_dialog_test.dart: FlashButton / FlashDialog opens instruction with steps, links and Закрыть
+00:00 +12: flutter_firmware/test/flash_dialog_test.dart: FlashButton / FlashDialog opens instruction with steps, links and Закрыть
+00:00 +13: flutter_firmware/test/flash_dialog_test.dart: FlashButton / FlashDialog opens instruction with steps, links and Закрыть
+00:00 +14: flutter_firmware/test/flash_dialog_test.dart: FlashButton / FlashDialog opens instruction with steps, links and Закрыть
+00:00 +15: flutter_firmware/test/flash_dialog_test.dart: FlashButton / FlashDialog opens instruction with steps, links and Закрыть
+00:00 +16: flutter_firmware/test/flash_dialog_test.dart: FlashButton / FlashDialog opens instruction with steps, links and Закрыть
+00:00 +17: flutter_firmware/test/flash_dialog_test.dart: FlashButton / FlashDialog opens instruction with steps, links and Закрыть
+00:00 +18: flutter_firmware/test/flash_dialog_test.dart: FlashButton / FlashDialog opens instruction with steps, links and Закрыть
+00:00 +19: flutter_firmware/test/flash_dialog_test.dart: FlashButton / FlashDialog opens instruction with steps, links and Закрыть
+00:00 +20: flutter_firmware/test/flash_dialog_test.dart: FlashButton / FlashDialog opens instruction with steps, links and Закрыть
+00:00 +21: flutter_firmware/test/flash_dialog_test.dart: FlashButton / FlashDialog opens instruction with steps, links and Закрыть
+00:01 +22: flutter_firmware/test/flash_dialog_test.dart: DownloadButton / DownloadDialog lists both chips and opens the matching URL
+00:01 +23: flutter_firmware/test/flash_dialog_test.dart: DownloadButton / DownloadDialog shows snackbar when the link cannot be opened
+00:01 +24: All tests passed!
+RESULT flutter_firmware: analyze=0 test=0
+
+OVERALL: OK (2026-09-27T10:55Z, flutter 3.32.8)
