@@ -1,0 +1,6 @@
+# Скопируйте в android/key.properties и заполните. Файл key.properties и *.jks
+# в .gitignore — в git они попасть не должны. Подробности: SIGNING.md
+storeFile=/home/dima/keys/radiochat-release.jks
+storePassword=ПАРОЛЬ_ХРАНИЛИЩА
+keyAlias=radiochat
+keyPassword=ПАРОЛЬ_КЛЮЧА
