@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:window_manager/window_manager.dart';
 import 'chat_controller.dart';
-import 'flash_dialog.dart';
 import 'info_dialog.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -354,11 +353,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         Expanded(
           child: Scaffold(
             appBar: AppBar(
-              leadingWidth: 96,
-              leading: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [InfoButton(), FlashButton()],
-              ),
+              leading: const InfoButton(),
               title: const Text('Радиочат', style: TextStyle(color: Colors.white)),
               backgroundColor: Colors.green[900],
               actions: [

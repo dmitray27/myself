@@ -354,10 +354,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         Expanded(
           child: Scaffold(
             appBar: AppBar(
-              leadingWidth: 96,
+              leadingWidth: 144,
               leading: const Row(
                 mainAxisSize: MainAxisSize.min,
-                children: [InfoButton(), FlashButton()],
+                children: [InfoButton(), FlashButton(), DownloadButton()],
               ),
               title: const Text('Радиочат', style: TextStyle(color: Colors.white)),
               backgroundColor: Colors.green[900],
