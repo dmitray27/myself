@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.5)
+set(PROJECT_NAME 73g_tx_rx_mes_300b_filter_verbose_wifi)
+set(SUPPORTED_TARGETS esp32 esp32s3)
+include($ENV{IDF_PATH}/tools/cmake/project.cmake)
+project(${PROJECT_NAME})
