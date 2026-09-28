@@ -6,7 +6,7 @@ cd "$(dirname "$0")"
 REPORT=flutter_test_report.txt
 : > "$REPORT"
 overall=0
-for d in flutter flutter_info flutter_firmware; do
+for d in flutter flutter_info flutter_firmware flutter_color; do
   echo "=== $d ===" | tee -a "$REPORT"
   (cd "$d" && flutter pub get >/dev/null 2>&1)
   (cd "$d" && flutter analyze 2>&1) | tee -a "$REPORT"; a=${PIPESTATUS[0]}
