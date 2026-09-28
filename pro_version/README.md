@@ -201,7 +201,7 @@ idf.py build flash monitor
 cd pro_version/flutter_pro
 flutter pub get
 flutter analyze
-flutter test                     # 59 тестов: протокол, статусы, повтор, история, шифрование
+flutter test                     # 60 тестов: протокол, статусы, повтор, история, шифрование
 flutter build apk
 ```
 

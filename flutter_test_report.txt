@@ -1,67 +1,69 @@
 === flutter ===
 Analyzing flutter...                                            
 No issues found! (ran in 0.8s)
-00:00 +0: loading test/message_store_test.dart
-00:00 +0: test/message_store_test.dart: MessageStore echo matching confirms echo by id, not by text
-00:00 +1: test/message_store_test.dart: MessageStore echo matching legacy echo without id still works
-00:00 +2: test/message_store_test.dart: MessageStore echo matching deduplicates history by id
-00:00 +3: test/message_store_test.dart: MessageStore echo matching same id from different senders is not a duplicate
-00:00 +4: test/message_store_test.dart: MessageStore echo matching same text with different ids is not a duplicate
-00:00 +5: test/chat_protocol_test.dart: buildMessageFrame new frame includes id
-00:00 +6: test/chat_protocol_test.dart: buildMessageFrame legacy frame omits id
-00:00 +7: test/chat_protocol_test.dart: validateName mirrors firmware name_is_valid
-00:00 +8: test/chat_protocol_test.dart: parseIncomingFrame parses new from:<id>:text
-00:00 +9: test/chat_protocol_test.dart: parseIncomingFrame parses legacy from:text
-00:00 +10: test/chat_protocol_test.dart: parseIncomingFrame legacy text with colon is not split into id
-00:00 +11: test/chat_protocol_test.dart: parseIncomingFrame id frame keeps colons inside text
-00:00 +12: test/chat_protocol_test.dart: parseIncomingFrame parses history with id
-00:00 +13: test/chat_protocol_test.dart: parseIncomingFrame ignores empty frames
-00:00 +14: test/chat_protocol_test.dart: parseIncomingFrame pings are recognized
-00:00 +15: test/chat_protocol_test.dart: parseIncomingFrame system messages are recognized
-00:00 +16: test/chat_protocol_test.dart: echoKeyFor returns id when present
-00:00 +17: test/chat_protocol_test.dart: echoKeyFor falls back to name:text without id
-00:00 +18: test/chat_protocol_test.dart: messageFitsFrame counts bytes correctly for cyrillic with id
-00:00 +19: All tests passed!
+00:00 +0: loading test/info_dialog_test.dart
+00:00 +0: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +1: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +2: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +3: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +4: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +5: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +6: test/chat_protocol_test.dart: buildMessageFrame new frame includes id
+00:00 +7: test/chat_protocol_test.dart: buildMessageFrame legacy frame omits id
+00:00 +8: test/chat_protocol_test.dart: validateName mirrors firmware name_is_valid
+00:00 +9: test/chat_protocol_test.dart: parseIncomingFrame parses new from:<id>:text
+00:00 +10: test/chat_protocol_test.dart: parseIncomingFrame parses legacy from:text
+00:00 +11: test/chat_protocol_test.dart: parseIncomingFrame legacy text with colon is not split into id
+00:00 +12: test/chat_protocol_test.dart: parseIncomingFrame id frame keeps colons inside text
+00:00 +13: test/chat_protocol_test.dart: parseIncomingFrame parses history with id
+00:00 +14: test/chat_protocol_test.dart: parseIncomingFrame ignores empty frames
+00:00 +15: test/chat_protocol_test.dart: parseIncomingFrame pings are recognized
+00:00 +16: test/chat_protocol_test.dart: parseIncomingFrame system messages are recognized
+00:00 +17: test/chat_protocol_test.dart: echoKeyFor returns id when present
+00:00 +18: test/chat_protocol_test.dart: echoKeyFor falls back to name:text without id
+00:00 +19: test/chat_protocol_test.dart: messageFitsFrame counts bytes correctly for cyrillic with id
+00:00 +20: All tests passed!
 RESULT flutter: analyze=0 test=0
 
 === flutter_info ===
 Analyzing flutter_info...                                       
-No issues found! (ran in 1.0s)
-00:00 +0: loading test/message_store_test.dart
-00:00 +0: test/message_store_test.dart: MessageStore echo matching confirms echo by id, not by text
-00:00 +1: test/message_store_test.dart: MessageStore echo matching legacy echo without id still works
-00:00 +2: test/message_store_test.dart: MessageStore echo matching deduplicates history by id
-00:00 +3: test/message_store_test.dart: MessageStore echo matching same id from different senders is not a duplicate
-00:00 +4: test/message_store_test.dart: MessageStore echo matching same text with different ids is not a duplicate
-00:00 +5: test/chat_protocol_test.dart: buildMessageFrame new frame includes id
-00:00 +6: test/chat_protocol_test.dart: buildMessageFrame legacy frame omits id
-00:00 +7: test/chat_protocol_test.dart: validateName mirrors firmware name_is_valid
-00:00 +8: test/chat_protocol_test.dart: parseIncomingFrame parses new from:<id>:text
-00:00 +9: test/chat_protocol_test.dart: parseIncomingFrame parses legacy from:text
-00:00 +10: test/chat_protocol_test.dart: parseIncomingFrame legacy text with colon is not split into id
-00:00 +11: test/chat_protocol_test.dart: parseIncomingFrame id frame keeps colons inside text
-00:00 +12: test/chat_protocol_test.dart: parseIncomingFrame parses history with id
-00:00 +13: test/chat_protocol_test.dart: parseIncomingFrame ignores empty frames
-00:00 +14: test/chat_protocol_test.dart: parseIncomingFrame pings are recognized
-00:00 +15: test/chat_protocol_test.dart: parseIncomingFrame system messages are recognized
-00:00 +16: test/chat_protocol_test.dart: echoKeyFor returns id when present
-00:00 +17: test/chat_protocol_test.dart: echoKeyFor falls back to name:text without id
-00:00 +18: test/chat_protocol_test.dart: messageFitsFrame counts bytes correctly for cyrillic with id
-00:00 +19: All tests passed!
+No issues found! (ran in 0.9s)
+00:00 +0: loading test/info_dialog_test.dart
+00:00 +0: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +1: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +2: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +3: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +4: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +5: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +6: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +7: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +8: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +9: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +10: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +11: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +12: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +13: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +14: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +15: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +16: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +17: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +18: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +19: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +20: All tests passed!
 RESULT flutter_info: analyze=0 test=0
 
 === flutter_firmware ===
 Analyzing flutter_firmware...                                   
 No issues found! (ran in 0.8s)
-00:00 +0: loading test/message_store_test.dart
-00:00 +0: test/message_store_test.dart: MessageStore echo matching confirms echo by id, not by text
-00:00 +1: test/message_store_test.dart: MessageStore echo matching legacy echo without id still works
-00:00 +2: test/message_store_test.dart: MessageStore echo matching deduplicates history by id
-00:00 +3: test/message_store_test.dart: MessageStore echo matching same id from different senders is not a duplicate
-00:00 +4: test/message_store_test.dart: MessageStore echo matching same text with different ids is not a duplicate
-00:00 +5: test/flash_dialog_test.dart: FlashInfo loads real assets/flash_info.json
-00:00 +6: test/flash_dialog_test.dart: FlashInfo fromJson tolerates missing fields
-00:00 +7: test/flash_dialog_test.dart: FlashButton / FlashDialog opens instruction with steps, links and Закрыть
+00:00 +0: loading test/info_dialog_test.dart
+00:00 +0: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +1: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +2: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +3: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +4: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +5: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +6: test/flash_dialog_test.dart: FlashInfo loads real assets/flash_info.json
+00:00 +7: test/flash_dialog_test.dart: FlashInfo fromJson tolerates missing fields
 00:00 +8: test/flash_dialog_test.dart: FlashButton / FlashDialog opens instruction with steps, links and Закрыть
 00:00 +9: test/flash_dialog_test.dart: FlashButton / FlashDialog opens instruction with steps, links and Закрыть
 00:00 +10: test/flash_dialog_test.dart: FlashButton / FlashDialog opens instruction with steps, links and Закрыть
@@ -76,9 +78,10 @@ No issues found! (ran in 0.8s)
 00:00 +19: test/flash_dialog_test.dart: FlashButton / FlashDialog opens instruction with steps, links and Закрыть
 00:00 +20: test/flash_dialog_test.dart: FlashButton / FlashDialog opens instruction with steps, links and Закрыть
 00:00 +21: test/flash_dialog_test.dart: FlashButton / FlashDialog opens instruction with steps, links and Закрыть
-00:01 +22: test/flash_dialog_test.dart: DownloadButton / DownloadDialog lists both chips and opens the matching URL
-00:01 +23: test/flash_dialog_test.dart: DownloadButton / DownloadDialog shows snackbar when the link cannot be opened
-00:01 +24: All tests passed!
+00:00 +22: test/flash_dialog_test.dart: FlashButton / FlashDialog opens instruction with steps, links and Закрыть
+00:01 +23: test/flash_dialog_test.dart: DownloadButton / DownloadDialog lists both chips and opens the matching URL
+00:01 +24: test/flash_dialog_test.dart: DownloadButton / DownloadDialog shows snackbar when the link cannot be opened
+00:02 +25: All tests passed!
 RESULT flutter_firmware: analyze=0 test=0
 
 === flutter_color ===
@@ -88,26 +91,27 @@ No issues found! (ran in 0.8s)
 00:00 +0: test/app_color_test.dart: exactly seven rainbow colors, default green
 00:00 +1: test/app_color_test.dart: select persists and load restores
 00:00 +2: test/app_color_test.dart: color dialog shows 7 swatches and applies choice
-00:00 +3: test/app_color_test.dart: color dialog shows 7 swatches and applies choice
-00:00 +4: test/app_color_test.dart: color dialog shows 7 swatches and applies choice
-00:00 +5: test/app_color_test.dart: color dialog shows 7 swatches and applies choice
-00:00 +6: test/app_color_test.dart: color dialog shows 7 swatches and applies choice
-00:00 +7: test/app_color_test.dart: color dialog shows 7 swatches and applies choice
-00:00 +8: test/chat_protocol_test.dart: buildMessageFrame new frame includes id
-00:00 +9: test/chat_protocol_test.dart: buildMessageFrame legacy frame omits id
+00:00 +3: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +4: test/message_store_test.dart: MessageStore echo matching confirms echo by id, not by text
+00:00 +5: test/chat_protocol_test.dart: buildMessageFrame new frame includes id
+00:00 +6: test/chat_protocol_test.dart: buildMessageFrame new frame includes id
+00:00 +7: test/chat_protocol_test.dart: buildMessageFrame new frame includes id
+00:00 +8: test/message_store_test.dart: MessageStore echo matching same id from different senders is not a duplicate
+00:00 +9: test/message_store_test.dart: MessageStore echo matching same id from different senders is not a duplicate
 00:00 +10: test/chat_protocol_test.dart: validateName mirrors firmware name_is_valid
-00:00 +11: test/chat_protocol_test.dart: parseIncomingFrame parses new from:<id>:text
-00:00 +12: test/chat_protocol_test.dart: parseIncomingFrame parses legacy from:text
-00:00 +13: test/chat_protocol_test.dart: parseIncomingFrame legacy text with colon is not split into id
-00:00 +14: test/chat_protocol_test.dart: parseIncomingFrame id frame keeps colons inside text
-00:00 +15: test/chat_protocol_test.dart: parseIncomingFrame parses history with id
-00:00 +16: test/chat_protocol_test.dart: parseIncomingFrame ignores empty frames
-00:00 +17: test/chat_protocol_test.dart: parseIncomingFrame pings are recognized
-00:00 +18: test/chat_protocol_test.dart: parseIncomingFrame system messages are recognized
-00:00 +19: test/chat_protocol_test.dart: echoKeyFor returns id when present
-00:00 +20: test/chat_protocol_test.dart: echoKeyFor falls back to name:text without id
-00:00 +21: test/chat_protocol_test.dart: messageFitsFrame counts bytes correctly for cyrillic with id
-00:00 +22: All tests passed!
+00:00 +11: test/chat_protocol_test.dart: validateName mirrors firmware name_is_valid
+00:00 +12: test/chat_protocol_test.dart: parseIncomingFrame parses new from:<id>:text
+00:00 +13: test/chat_protocol_test.dart: parseIncomingFrame parses legacy from:text
+00:00 +14: test/chat_protocol_test.dart: parseIncomingFrame legacy text with colon is not split into id
+00:00 +15: test/chat_protocol_test.dart: parseIncomingFrame id frame keeps colons inside text
+00:00 +16: test/chat_protocol_test.dart: parseIncomingFrame parses history with id
+00:00 +17: test/chat_protocol_test.dart: parseIncomingFrame ignores empty frames
+00:00 +18: test/chat_protocol_test.dart: parseIncomingFrame pings are recognized
+00:00 +19: test/chat_protocol_test.dart: parseIncomingFrame system messages are recognized
+00:00 +20: test/chat_protocol_test.dart: echoKeyFor returns id when present
+00:00 +21: test/chat_protocol_test.dart: echoKeyFor falls back to name:text without id
+00:00 +22: test/chat_protocol_test.dart: messageFitsFrame counts bytes correctly for cyrillic with id
+00:00 +23: All tests passed!
 RESULT flutter_color: analyze=0 test=0
 
-OVERALL: OK (2026-09-28T16:56Z, flutter 3.32.8)
+OVERALL: OK (2026-09-28T17:00Z, flutter 3.32.8)

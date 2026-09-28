@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -131,12 +130,10 @@ class _InfoTextState extends State<_InfoText> {
   Widget build(BuildContext context) {
     final info = widget.info;
     final theme = Theme.of(context).textTheme;
-    // Прокрутка пальцем, колесом, а на десктопе ещё и перетаскиванием мышью
-    // (по умолчанию Flutter не даёт тянуть контент мышью)
-    return ScrollConfiguration(
-      behavior: ScrollConfiguration.of(context).copyWith(
-        dragDevices: PointerDeviceKind.values.toSet(),
-      ),
+    // Текст выделяемый (долгое нажатие / мышь), с системным меню
+    // «Копировать»/«Выделить всё». Перетаскивание мышью выделяет, а не
+    // прокручивает — прокрутка колесом, пальцем и ползунком.
+    return SelectionArea(
       child: Scrollbar(
         controller: _scroll,
         thumbVisibility: true,

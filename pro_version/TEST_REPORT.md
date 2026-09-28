@@ -10,4 +10,4 @@
 ## Приложение pro_version/flutter_pro
 
 - flutter analyze: No issues found! (ran in 0.8s)
-- flutter test: +59: All tests passed!
+- flutter test: +60: All tests passed!
