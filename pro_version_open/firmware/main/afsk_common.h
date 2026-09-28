@@ -1,0 +1,109 @@
+#pragma once
+#include <stdint.h>
+#include <stddef.h>
+#include "sdkconfig.h"
+
+/* Shared AFSK link parameters (identical for TX and RX). */
+#define MARK_FREQ       1200        /* Hz, logical '1' */
+#define SPACE_FREQ      2200        /* Hz, logical '0' */
+#ifndef BAUD_RATE
+#define BAUD_RATE       200         /* bits per second */
+#endif
+#ifndef PREAMBLE_BITS
+#define PREAMBLE_BITS   640         /* leading '1's before a frame */
+#endif
+#define SAMPLE_RATE     48000       /* Hz, I2S RX sample rate */
+
+/* Framing: payload bytes per block and the pause the transmitter keeps
+ * between the blocks of one message. */
+#define MAX_BLOCK_LEN   50          /* payload bytes per block */
+
+/* afsk_utf8_block_len() keeps multi-byte characters whole by shortening the
+ * block; a block that cannot hold the longest UTF-8 sequence leaves it no
+ * choice but to split one, so the payload has to be at least 4 bytes. */
+_Static_assert(MAX_BLOCK_LEN >= 4,
+               "MAX_BLOCK_LEN must hold the longest UTF-8 character (4 bytes), "
+               "or afsk_utf8_block_len() splits it across blocks");
+
+/* Every block starts with a 3-byte header in front of the text, covered by
+ * the same CRC-8: message sequence number (wraps at 256), block index (from
+ * 0) and block count. The receiver places blocks by index, hands a message
+ * over only when all `total` blocks are in, and reports a gap otherwise -
+ * a block that never reached the decoder is invisible to it, so nothing
+ * short of a header can tell a complete message from a truncated one. */
+#define AFSK_HDR_LEN    3
+#define AFSK_MAX_BLOCKS 255         /* block index and count are one byte */
+
+/* Control frames reuse the header with total == 0 (a value no data block
+ * can carry): block_no holds the control type, seq the sequence number the
+ * frame refers to, and the payload is the sender's station id (hex of the
+ * last two MAC bytes, AFSK_STATION_LEN chars). The receiver of a complete
+ * message keys an ACK so the sender can report "delivered" instead of just
+ * "on the air". Control frames are never acknowledged themselves. */
+#define AFSK_CTRL_ACK       1
+#define AFSK_STATION_LEN    4
+#define AFSK_ACK_FRAME_LEN  (AFSK_HDR_LEN + AFSK_STATION_LEN)
+
+/* Pause before keying the ACK: the sender's radio needs time to drop PTT
+ * and switch back to receive after its last block. */
+#define ACK_DELAY_MS        400
+
+#define BLOCK_GAP_MS    500         /* silence between blocks  */
+
+/* Silence after which the receiver finalizes the frame it is assembling.
+ * Shared so the inter-block pause can be checked against it (see the
+ * _Static_assert in afsk_decoder.c) and so host tests can pace their
+ * synthetic gaps the same way. */
+#define SIGNAL_TIMEOUT_MS 2000
+
+/* PTT keying for a voice radio (opto-isolator in place of the headset PTT
+ * button). PTT_LEAD_MS lets the radio switch to transmit before the preamble
+ * starts, PTT_TAIL_MS keeps it keyed so the last bit is not clipped.
+ * Set TX_PTT_ENABLE to 0 for a direct wired link. These live here rather than
+ * in tx_ad9851.h because the block timings below - and the receiver's idle
+ * timeouts - are derived from them. */
+#ifndef TX_PTT_ENABLE
+#define TX_PTT_ENABLE   1
+#endif
+#define PTT_LEAD_MS     300
+#define PTT_TAIL_MS     100
+#define PTT_OVERHEAD_MS (TX_PTT_ENABLE ? (PTT_LEAD_MS + PTT_TAIL_MS) : 0)
+
+/* Bits keyed for one full block: preamble, then payload and CRC byte in
+ * UART-style 10-bit slots, then the trailing marks. Everything that has to
+ * outlive a block (TX bit ring, TX idle timeout, RX assembly timeout) is
+ * derived from these instead of being tuned by hand. */
+#define BLOCK_BITS      (PREAMBLE_BITS + (AFSK_HDR_LEN + MAX_BLOCK_LEN + 1) * 10 + 10)
+#define BLOCK_AIR_MS    ((BLOCK_BITS * 1000) / BAUD_RATE)
+#define BLOCK_TIME_MS   (BLOCK_AIR_MS + BLOCK_GAP_MS + PTT_OVERHEAD_MS)
+
+/* Upper bound on how long tx_ad9851_wait_idle() may wait for the ISR to drain
+ * the bit ring: the whole block on the air plus PTT lead/tail, plus 50% and
+ * half a second of margin for clock tolerance. A timeout shorter than the
+ * block itself releases the transmitter mid-transmission and the next block
+ * is silently dropped, which is why this is computed, not a constant. */
+#define TX_IDLE_TIMEOUT_MS (BLOCK_AIR_MS + BLOCK_AIR_MS / 2 + PTT_OVERHEAD_MS + 500)
+
+/* ACK frame on the air and how long the sender waits for it: the receiver
+ * finishes assembly on the last block, pauses ACK_DELAY_MS, keys PTT and
+ * sends one short frame. Twice that plus a second covers a receiver whose
+ * transmitter is still busy with a previous frame. */
+#define ACK_BITS        (PREAMBLE_BITS + (AFSK_ACK_FRAME_LEN + 1) * 10 + 10)
+#define ACK_AIR_MS      ((ACK_BITS * 1000) / BAUD_RATE)
+#define ACK_TIMEOUT_MS  (2 * (ACK_DELAY_MS + PTT_OVERHEAD_MS + ACK_AIR_MS) + 1000)
+
+/* Diagnostic chatter: preamble progress, idle level meter, per-block RX
+ * report, full WS frame and TX block text. 0 gives a quiet log with CRC
+ * failures and assembled-message headers only. Comes from menuconfig
+ * (CONFIG_AFSK_VERBOSE_LOG, see sdkconfig.defaults.release); a -DAFSK_VERBOSE=N
+ * compiler flag overrides it. */
+#ifndef AFSK_VERBOSE
+#ifdef CONFIG_AFSK_VERBOSE_LOG
+#define AFSK_VERBOSE    1
+#else
+#define AFSK_VERBOSE    0
+#endif
+#endif
+
+/* CRC-8 (poly 0x07, init 0x00). Single shared implementation. */
+uint8_t afsk_crc8(const uint8_t *data, size_t len);

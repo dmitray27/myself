@@ -1,0 +1,672 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <inttypes.h>
+#include <unistd.h>
+#include <errno.h>
+#include <math.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/queue.h"
+#include "driver/i2s_std.h"
+#include "esp_log.h"
+#include "esp_system.h"
+#include "esp_heap_caps.h"
+#include "esp_rom_crc.h"
+#include "nvs_flash.h"
+#include "tx_ad9851.h"
+#include "afsk_protocol.h"
+#include "afsk_decoder.h"
+#include "wifi_link.h"
+
+static const char *TAG = "MAIN";
+
+/* ---------------- TX (core 0) ---------------- */
+/* MAX_BLOCK_LEN, BLOCK_GAP_MS and the derived block timings live in
+ * afsk_common.h: TX, RX and the timeouts have to agree on them. */
+#define BUF_SIZE        8192
+
+/* ---------------- RX (core 1) ---------------- */
+/* I2S pins come from Kconfig ("AFSK Pin Configuration") so the same sources
+ * build for WROOM and for S3 by swapping sdkconfig.defaults. */
+#define I2S_BCK_PIN     ((gpio_num_t)CONFIG_PIN_I2S_BCK)
+#define I2S_WS_PIN      ((gpio_num_t)CONFIG_PIN_I2S_WS)
+#define I2S_DATA_PIN    ((gpio_num_t)CONFIG_PIN_I2S_DATA)
+#define SAMPLES_PER_BIT (SAMPLE_RATE / BAUD_RATE)
+
+/* I2S slot layout used below: 24 data bits in a 32-bit slot, both slots
+ * enabled. The sample extraction (>> RX_SAMPLE_SHIFT, step of
+ * RX_SLOTS_PER_FRAME) is derived from these constants, so the slot config and
+ * the unpacking cannot drift apart. */
+#define RX_DATA_BITS        24
+#define RX_SLOT_BITS        32
+#define RX_SAMPLE_SHIFT     (RX_SLOT_BITS - RX_DATA_BITS)
+#define RX_SLOTS_PER_FRAME  2
+
+#define RX_ASSEMBLY_MAX 8192
+#define MESSAGE_IDLE_MS (BLOCK_TIME_MS + BLOCK_TIME_MS / 2)
+
+static afsk_decoder_t decoder;
+static afsk_message_t message;
+
+/* Подтверждения по эфиру. Приёмник кладёт seq собранного сообщения в
+   s_ack_out_queue — tx_task ключит ACK-кадр (приоритет перед сообщениями
+   из очереди). Принятые ACK идут в s_ack_in_queue, где их ждёт tx_task после
+   передачи своего сообщения. */
+typedef struct {
+    uint8_t seq;
+    char station[AFSK_STATION_LEN + 1];
+} ack_in_t;
+
+static QueueHandle_t s_ack_out_queue = NULL;
+static QueueHandle_t s_ack_in_queue = NULL;
+
+/* Счётчики для индикатора канала в приложении. Поля пишут разные задачи
+   (rx_task — приём, tx_task — передача), но каждое поле — только одна;
+   снимок уходит в wifi_link_stats_update из rx_task раз в полсекунды. */
+static link_stats_t s_stats;
+
+/* Блоков в сообщении не больше, чем влезает в буфер сборки при самом коротком
+   блоке (MAX_BLOCK_LEN минус 3 байта, которые afsk_utf8_block_len() может
+   отдать следующему блоку ради целого UTF-8 символа). */
+#define RX_MAX_BLOCKS ((RX_ASSEMBLY_MAX / (MAX_BLOCK_LEN - 3)) + 1)
+_Static_assert(RX_MAX_BLOCKS <= AFSK_MAX_BLOCKS, "RX_MAX_BLOCKS exceeds header range");
+
+/* Ассемблер-сборщик сообщений вынесен в глобальные массивы: так исключаем
+   возможность повреждения указателей на стеке rx_task. Блоки раскладываются
+   по слотам согласно номеру в заголовке и склеиваются, только когда пришли
+   все total блоков. */
+static char s_assembly[RX_ASSEMBLY_MAX + 1];
+static char s_broadcast_buf[RX_ASSEMBLY_MAX + 64];
+static uint8_t s_slots[RX_MAX_BLOCKS][MAX_BLOCK_LEN];
+static uint8_t s_slot_len[RX_MAX_BLOCKS];
+static bool s_slot_filled[RX_MAX_BLOCKS];
+static uint8_t s_cur_seq = 0;
+static uint8_t s_cur_total = 0;
+static uint32_t s_blocks_received = 0;   /* уникальных блоков текущего seq */
+static uint32_t s_assembly_dropped = 0;  /* кадров с CRC FAIL за время сборки */
+static bool s_assembling = false;
+
+static void rx_assembly_reset(void)
+{
+    memset(s_slot_filled, 0, sizeof(s_slot_filled));
+    s_blocks_received = 0;
+    s_assembly_dropped = 0;
+    s_cur_total = 0;
+    s_assembling = false;
+}
+
+static void rx_assembly_start(uint8_t seq, uint8_t total)
+{
+    rx_assembly_reset();
+    s_cur_seq = seq;
+    s_cur_total = total;
+    s_assembling = true;
+}
+
+/* Завершает сборку текущего seq: полное сообщение уходит в чат, неполное —
+   только служебным уведомлением. Тело в UART не печатается (см. AGENTS.md). */
+static void rx_assembly_finish(void)
+{
+    if (!s_assembling) {
+        return;
+    }
+
+    if (s_blocks_received < s_cur_total) {
+        uint32_t lost = s_cur_total - s_blocks_received;
+        printf("\n########################################\n");
+        printf("[RX] INCOMPLETE MESSAGE: seq %u, %" PRIu32 " of %u blocks received\n",
+               s_cur_seq, s_blocks_received, s_cur_total);
+        printf("[RX] WARNING: %" PRIu32 " block(s) lost (%" PRIu32 " CRC error(s))\n",
+               lost, s_assembly_dropped);
+        printf("########################################\n");
+
+        /* Сообщение с дырками в чат не отдаём: вместо искажённого текста
+           клиент видит служебное уведомление о потере */
+        char notice[144];
+        snprintf(notice, sizeof(notice),
+                 "Сообщение из эфира принято не полностью (получено блоков: %" PRIu32 " из %u)",
+                 s_blocks_received, s_cur_total);
+        wifi_link_notify_all(notice);
+        s_stats.rx_incomplete++;
+        rx_assembly_reset();
+        return;
+    }
+
+    int assembly_len = 0;
+    for (int i = 0; i < s_cur_total; i++) {
+        if (assembly_len + s_slot_len[i] > RX_ASSEMBLY_MAX) {
+            ESP_LOGW(TAG, "Assembly buffer full, message seq %u dropped", s_cur_seq);
+            rx_assembly_reset();
+            return;
+        }
+        memcpy(s_assembly + assembly_len, s_slots[i], s_slot_len[i]);
+        assembly_len += s_slot_len[i];
+    }
+    s_assembly[assembly_len] = '\0';
+
+    uint32_t crc = esp_rom_crc32_le(0, (const uint8_t *)s_assembly, (uint32_t)assembly_len);
+    printf("\n########################################\n");
+    printf("[RX] FULL MESSAGE: %d bytes in %u blocks, CRC32: %08" PRIX32 ", seq %u\n",
+           assembly_len, s_cur_total, crc, s_cur_seq);
+    if (s_assembly_dropped > 0) {
+        printf("[RX] NOTE: %" PRIu32 " CRC-failed frame(s) ignored during assembly\n",
+               s_assembly_dropped);
+    }
+    printf("########################################\n");
+
+    /* Генерируем id для сообщения, принятого с эфира: клиент
+       ожидает кадр Remote:<id>:<text>. Префикс 'r' отличает id от
+       счётчика HTTP-сообщений в wifi_link.c. Копируем ровно assembly_len
+       байт, чтобы встроенный '\0' в payload не обрезал broadcast. */
+    static uint32_t rx_msg_id = 0;
+    char id_buf[16];
+    snprintf(id_buf, sizeof(id_buf), "r%lx", (unsigned long)++rx_msg_id);
+    size_t id_len = strlen(id_buf);
+    if (id_len + 1 + assembly_len < sizeof(s_broadcast_buf)) {
+        memcpy(s_broadcast_buf, id_buf, id_len);
+        s_broadcast_buf[id_len] = ':';
+        memcpy(s_broadcast_buf + id_len + 1, s_assembly, assembly_len);
+        s_broadcast_buf[id_len + 1 + assembly_len] = '\0';
+    } else {
+        s_broadcast_buf[0] = '\0';
+    }
+
+    wifi_link_broadcast("Remote", s_broadcast_buf);
+    s_stats.rx_messages++;
+
+    /* Подтверждаем приём отправителю: ключит tx_task, здесь только seq */
+    uint8_t ack_seq = s_cur_seq;
+    if (s_ack_out_queue && xQueueSend(s_ack_out_queue, &ack_seq, 0) != pdPASS) {
+        ESP_LOGW(TAG, "ACK queue full, seq %u not acknowledged", ack_seq);
+    }
+    rx_assembly_reset();
+}
+
+/* ACK-кадр в эфир: пауза, чтобы рация отправителя успела перейти на приём,
+   затем один короткий блок с нашим id станции */
+static void tx_send_ack(uint8_t seq)
+{
+    uint8_t frame[AFSK_ACK_FRAME_LEN];
+    size_t frame_len = afsk_pack_ack(frame, sizeof(frame), seq, wifi_link_station_id());
+    if (frame_len == 0) {
+        ESP_LOGE(TAG, "ACK seq %u: cannot pack", seq);
+        return;
+    }
+    vTaskDelay(pdMS_TO_TICKS(ACK_DELAY_MS));
+    ESP_LOGI(TAG, "TX ACK seq %u", seq);
+    s_stats.tx_busy = true;
+    if (tx_ad9851_send_block(frame, frame_len)) {
+        tx_ad9851_wait_idle();
+    } else {
+        ESP_LOGW(TAG, "Failed to send ACK seq %u", seq);
+    }
+    s_stats.tx_busy = false;
+}
+
+/* true, если все блоки ушли в эфир; *seq_out — номер, который вернётся в ACK */
+static bool tx_send_message(const char *text, size_t len, uint8_t *seq_out)
+{
+    if (len == 0) {
+        return false;
+    }
+
+    int blocks = 0;
+    for (int s = 0; s < (int)len; ) {
+        s += afsk_utf8_block_len(text, s, (int)len, MAX_BLOCK_LEN);
+        blocks++;
+    }
+    if (blocks > AFSK_MAX_BLOCKS) {
+        ESP_LOGE(TAG, "Message of %d bytes needs %d blocks, header allows %d — not sent",
+                 (int)len, blocks, AFSK_MAX_BLOCKS);
+        return false;
+    }
+
+    /* CRC32 всего сообщения печатается и здесь, и приёмником в FULL MESSAGE:
+       тест сверяет содержимое, не печатая тело из rx_task */
+    static uint8_t tx_seq = 0;
+    afsk_block_hdr_t hdr = { .seq = tx_seq++, .block_no = 0, .total = (uint8_t)blocks };
+    *seq_out = hdr.seq;
+    s_stats.tx_busy = true;
+    uint32_t crc = esp_rom_crc32_le(0, (const uint8_t *)text, len);
+    ESP_LOGI(TAG, "Message: %d bytes, Blocks: %d, CRC32: %08" PRIX32 ", Seq: %u",
+             (int)len, blocks, crc, hdr.seq);
+
+    int start = 0;
+    for (int i = 0; i < blocks; i++) {
+        int block_len = afsk_utf8_block_len(text, start, (int)len, MAX_BLOCK_LEN);
+
+        hdr.block_no = (uint8_t)i;
+        uint8_t frame[AFSK_HDR_LEN + MAX_BLOCK_LEN];
+        size_t frame_len = afsk_pack_block(frame, sizeof(frame), &hdr,
+                                           (const uint8_t *)&text[start], block_len);
+        if (frame_len == 0) {
+            ESP_LOGE(TAG, "TX Block %d/%d: cannot pack, skipping", i + 1, blocks);
+            start += block_len;
+            continue;
+        }
+
+        if (AFSK_VERBOSE) {
+            ESP_LOGI(TAG, "TX Block %d/%d (seq %u): %d bytes: %.*s", i + 1, blocks,
+                     hdr.seq, block_len, block_len, &text[start]);
+        } else {
+            ESP_LOGI(TAG, "TX Block %d/%d (seq %u): %d bytes", i + 1, blocks,
+                     hdr.seq, block_len);
+        }
+
+        if (tx_ad9851_send_block(frame, frame_len)) {
+            tx_ad9851_wait_idle();
+        } else {
+            ESP_LOGW(TAG, "Failed to send block, skipping");
+        }
+
+        start += block_len;
+
+        if (i < blocks - 1) {
+            vTaskDelay(pdMS_TO_TICKS(BLOCK_GAP_MS));
+        }
+    }
+
+    s_stats.tx_busy = false;
+    ESP_LOGI(TAG, "All blocks sent");
+    return true;
+}
+
+/* Отправляет накопившиеся ACK. true, если что-то было отправлено */
+static bool tx_drain_acks(void)
+{
+    bool sent = false;
+    uint8_t ack_seq;
+    while (xQueueReceive(s_ack_out_queue, &ack_seq, 0) == pdPASS) {
+        tx_send_ack(ack_seq);
+        sent = true;
+    }
+    return sent;
+}
+
+/* После передачи ждём ACK с нашим seq не дольше ACK_TIMEOUT_MS. Следующее
+   сообщение из очереди в это время не ключим — передача заглушила бы
+   ответ, — но чужие сообщения подтверждаем, иначе две платы, отправившие
+   одновременно, ждали бы друг друга до таймаута. */
+static bool tx_wait_ack(uint8_t seq, char station[AFSK_STATION_LEN + 1])
+{
+    TickType_t deadline = xTaskGetTickCount() + pdMS_TO_TICKS(ACK_TIMEOUT_MS);
+    while (1) {
+        TickType_t now = xTaskGetTickCount();
+        if ((int32_t)(deadline - now) <= 0) {
+            return false;
+        }
+        if (tx_drain_acks()) {
+            /* Пока ключили чужой ACK, наш мог пропасть — даём абоненту ещё одно окно */
+            deadline = xTaskGetTickCount() + pdMS_TO_TICKS(ACK_TIMEOUT_MS);
+        }
+        TickType_t wait = deadline - now;
+        if (wait > pdMS_TO_TICKS(100)) {
+            wait = pdMS_TO_TICKS(100);
+        }
+        ack_in_t ack;
+        if (xQueueReceive(s_ack_in_queue, &ack, wait) == pdPASS) {
+            if (ack.seq == seq) {
+                strlcpy(station, ack.station, AFSK_STATION_LEN + 1);
+                return true;
+            }
+            ESP_LOGW(TAG, "Stale ACK seq %u from %s ignored (waiting for %u)",
+                     ack.seq, ack.station, seq);
+        }
+    }
+}
+
+static void tx_task(void *pvParameters)
+{
+    QueueHandle_t tx_queue = (QueueHandle_t)pvParameters;
+    ESP_LOGI(TAG, "TX task started on core %d", xPortGetCoreID());
+
+    while (1) {
+        tx_drain_acks();
+
+        tx_item_t *item = NULL;
+        if (xQueueReceive(tx_queue, &item, pdMS_TO_TICKS(50)) != pdPASS || !item) {
+            continue;
+        }
+
+        /* Запоздавшие ACK предыдущих сообщений к новому не относятся */
+        xQueueReset(s_ack_in_queue);
+
+        uint8_t seq = 0;
+        if (!tx_send_message(item->text, strlen(item->text), &seq)) {
+            wifi_link_status(item->id, "failed", NULL);
+            tx_item_free(item);
+            continue;
+        }
+        s_stats.tx_messages++;
+        wifi_link_status(item->id, "aired", NULL);
+
+        char station[AFSK_STATION_LEN + 1] = {0};
+        if (tx_wait_ack(seq, station)) {
+            s_stats.tx_acked++;
+            ESP_LOGI(TAG, "Seq %u delivered to %s", seq, station);
+            wifi_link_status(item->id, "delivered", station);
+        } else {
+            s_stats.tx_noack++;
+            ESP_LOGW(TAG, "Seq %u: no ACK within %d ms", seq, ACK_TIMEOUT_MS);
+            wifi_link_status(item->id, "noack", NULL);
+        }
+        tx_item_free(item);
+    }
+}
+
+static void console_task(void *pvParameters)
+{
+    QueueHandle_t tx_queue = (QueueHandle_t)pvParameters;
+    ESP_LOGI(TAG, "Console task started on core %d", xPortGetCoreID());
+
+    char *line = (char *)malloc(BUF_SIZE);
+    if (!line) {
+        ESP_LOGE(TAG, "FATAL: Failed to allocate console buffer!");
+        vTaskDelete(NULL);
+        return;
+    }
+
+    int len = 0;
+    bool line_truncated = false;
+
+    printf("\r\n[MAIN] === AFSK Transceiver Ready ===\r\n");
+    printf("[MAIN] Type message and press Enter:\r\n");
+    fflush(stdout);
+
+    while (1) {
+        int ch = getchar();
+        if (ch == EOF) {
+            vTaskDelay(pdMS_TO_TICKS(10));
+            continue;
+        }
+
+        if (ch == '\n' || ch == '\r') {
+            if (line_truncated) {
+                ESP_LOGW(TAG, "Line too long (> %d bytes) — discarded, nothing sent",
+                         BUF_SIZE - 1);
+                len = 0;
+                line_truncated = false;
+                printf("[MAIN] Enter next message: \r\n");
+                fflush(stdout);
+                continue;
+            }
+
+            if (len > 0) {
+                line[len] = '\0';
+
+                (void)tx_queue;
+                if (!wifi_link_enqueue(line, NULL, pdMS_TO_TICKS(100))) {
+                    ESP_LOGW(TAG, "TX queue full, console message dropped");
+                } else {
+                    putchar('\n');
+                    fflush(stdout);
+                    printf("[MAIN] Enter next message: \r\n");
+                    fflush(stdout);
+                }
+
+                len = 0;
+            }
+            continue;
+        }
+
+        if (line_truncated) {
+            continue;
+        }
+
+        if (len < BUF_SIZE - 1) {
+            line[len++] = (char)ch;
+            putchar(ch);
+            fflush(stdout);
+        } else {
+            line_truncated = true;
+        }
+    }
+}
+
+static void rx_task(void *pvParameters)
+{
+    (void)pvParameters;
+    ESP_LOGI(TAG, "RX task started on core %d", xPortGetCoreID());
+
+    i2s_chan_handle_t rx_chan = NULL;
+    i2s_chan_config_t chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG(I2S_NUM_0, I2S_ROLE_SLAVE);
+    chan_cfg.dma_desc_num = 16;
+    chan_cfg.dma_frame_num = 256;
+    ESP_ERROR_CHECK(i2s_new_channel(&chan_cfg, NULL, &rx_chan));
+
+    i2s_std_config_t std_cfg = {
+        .clk_cfg = I2S_STD_CLK_DEFAULT_CONFIG(SAMPLE_RATE),
+        .slot_cfg = {
+            .data_bit_width = (i2s_data_bit_width_t)RX_DATA_BITS,
+            .slot_bit_width = (i2s_slot_bit_width_t)RX_SLOT_BITS,
+            .slot_mode = I2S_SLOT_MODE_STEREO,
+            .slot_mask = I2S_STD_SLOT_BOTH,
+            .ws_width = RX_DATA_BITS,
+            .ws_pol = false,
+            .bit_shift = true,
+        },
+        .gpio_cfg = {
+            .mclk = I2S_GPIO_UNUSED,
+            .bclk = I2S_BCK_PIN,
+            .ws = I2S_WS_PIN,
+            .dout = I2S_GPIO_UNUSED,
+            .din = I2S_DATA_PIN,
+            .invert_flags = {
+                .mclk_inv = false,
+                .bclk_inv = false,
+                .ws_inv = false,
+            },
+        },
+    };
+
+    ESP_LOGI(TAG, "Initializing I2S Slave...");
+    ESP_ERROR_CHECK(i2s_channel_init_std_mode(rx_chan, &std_cfg));
+    ESP_ERROR_CHECK(i2s_channel_enable(rx_chan));
+    ESP_LOGI(TAG, "I2S Slave enabled");
+
+    afsk_decoder_init(&decoder, SAMPLE_RATE);
+
+    printf("\n========================================\n");
+    printf("AFSK DECODER (Quadrature + matched filter + DPLL)\n");
+    printf("Sample Rate: %d Hz\n", SAMPLE_RATE);
+    printf("Baud Rate: %d\n", BAUD_RATE);
+    printf("Samples per bit: %d\n", SAMPLES_PER_BIT);
+    printf("Mark: %d Hz | Space: %d Hz\n", MARK_FREQ, SPACE_FREQ);
+    printf("Message assembled after %d ms of silence\n", MESSAGE_IDLE_MS);
+    printf("========================================\n");
+    printf("[RX] Waiting for AFSK signal...\n");
+
+    int32_t *buffer = (int32_t *)heap_caps_malloc(512 * sizeof(int32_t), MALLOC_CAP_DMA);
+    if (!buffer) {
+        ESP_LOGE(TAG, "Failed to allocate DMA buffer");
+        vTaskDelete(NULL);
+        return;
+    }
+
+    rx_assembly_reset();
+    TickType_t last_packet_tick = 0;
+
+    uint32_t packets_received = 0;
+    uint32_t crc_errors = 0;
+    size_t bytes_read = 0;
+    TickType_t last_stat_tick = xTaskGetTickCount();
+
+    TickType_t last_stats_push = xTaskGetTickCount();
+
+    while (1) {
+        /* Тишина дольше MESSAGE_IDLE_MS: недостающие блоки уже не придут */
+        if (s_assembling &&
+            (xTaskGetTickCount() - last_packet_tick) >= pdMS_TO_TICKS(MESSAGE_IDLE_MS)) {
+            rx_assembly_finish();
+        }
+
+        /* Снимок статистики для приложения: дешёвый memcpy, рассылка — в wifi_link */
+        if (xTaskGetTickCount() - last_stats_push >= pdMS_TO_TICKS(500)) {
+            last_stats_push = xTaskGetTickCount();
+            s_stats.rx_frames = packets_received;
+            s_stats.crc_errors = crc_errors;
+            s_stats.frames_aborted = decoder.frames_aborted;
+            s_stats.rx_busy = decoder.state != WAITING_FOR_PREAMBLE || s_assembling;
+            if (decoder.noise_floor > 0 && decoder.peak_level > decoder.noise_floor) {
+                s_stats.signal_db = (int32_t)(20.0f * log10f(decoder.peak_level /
+                                                             decoder.noise_floor));
+            } else {
+                s_stats.signal_db = 0;
+            }
+            int pct = decoder.preamble_best * 100 / PREAMBLE_BITS;
+            s_stats.preamble_pct = (uint8_t)(pct > 100 ? 100 : (pct < 0 ? 0 : pct));
+            wifi_link_stats_update(&s_stats);
+        }
+
+        esp_err_t ret = i2s_channel_read(rx_chan, buffer, 512 * sizeof(int32_t),
+                                         &bytes_read, pdMS_TO_TICKS(100));
+        if (ret != ESP_OK || bytes_read == 0) {
+            TickType_t now = xTaskGetTickCount();
+            if (AFSK_VERBOSE && now - last_stat_tick >= pdMS_TO_TICKS(10000)) {
+                last_stat_tick = now;
+                printf("[STAT] Waiting for AFSK signal...\n");
+            }
+            vTaskDelay(pdMS_TO_TICKS(10));
+            continue;
+        }
+
+        int samples = bytes_read / sizeof(int32_t);
+
+        /* The I2S link is stereo (both slots), but the microphone feeds one
+         * channel only, so the decoder is fed the left slot alone: step by two
+         * int32 words and drop the right one. Nothing is lost - the right slot
+         * carries no signal. The shift unpacks the 24-bit sample from the
+         * 32-bit slot. */
+        for (int i = 0; i < samples; i += RX_SLOTS_PER_FRAME) {
+            int32_t sample = buffer[i] >> RX_SAMPLE_SHIFT;
+
+            if (afsk_decoder_process_sample(&decoder, sample, &message)) {
+                packets_received++;
+                if (!message.crc_valid) crc_errors++;
+
+                /* Служебный кадр (ACK) — не часть сборки, уходит в tx_task и список
+                   абонентов */
+                uint8_t ctrl_type = 0;
+                ack_in_t ack = {0};
+                if (message.crc_valid &&
+                    afsk_unpack_control((const uint8_t *)message.text, message.length,
+                                        &ctrl_type, &ack.seq, ack.station)) {
+                    if (ctrl_type == AFSK_CTRL_ACK) {
+                        printf("[RX] ACK seq %u from station %s\n", ack.seq, ack.station);
+                        if (s_ack_in_queue) {
+                            xQueueSend(s_ack_in_queue, &ack, 0);
+                        }
+                        wifi_link_peer_seen(ack.station);
+                    } else {
+                        printf("[RX] Unknown control frame type %u ignored\n", ctrl_type);
+                    }
+                    continue;
+                }
+
+                afsk_block_hdr_t hdr;
+                const uint8_t *text = NULL;
+                size_t text_len = 0;
+                bool hdr_ok = message.crc_valid &&
+                              afsk_unpack_block((const uint8_t *)message.text,
+                                                message.length, &hdr, &text, &text_len);
+
+                /* По-блочная диагностика (~300 байт ≈ 25 мс UART при запасе DMA
+                   ~85 мс) безопасна, но в боевой сборке отключается вместе с
+                   остальным выводом декодера. CRC-ошибки печатаем всегда. */
+                if (AFSK_VERBOSE) {
+                    printf("\n========================================\n");
+                    printf("[RX] Message received!\n");
+                    printf("[RX] Length: %d bytes\n", message.length);
+                    printf("[RX] CRC: %s\n", message.crc_valid ? "OK" : "FAIL");
+                    if (hdr_ok) {
+                        printf("[RX] Block %u/%u of seq %u\n",
+                               hdr.block_no + 1, hdr.total, hdr.seq);
+                        printf("[RX] --- Text ---\n");
+                        printf("%.*s\n", (int)text_len, (const char *)text);
+                    }
+                    printf("========================================\n");
+                    printf("[RX] Stats: Packets: %" PRIu32 " | CRC errors: %" PRIu32
+                           " | Frames aborted: %" PRIu32 "\n",
+                           packets_received, crc_errors, decoder.frames_aborted);
+                }
+                if (!message.crc_valid) {
+                    printf("[RX] CRC FAIL: expected 0x%02X, got 0x%02X\n",
+                           message.calculated_crc, message.received_crc);
+                } else if (!hdr_ok) {
+                    printf("[RX] BAD HEADER: %d-byte frame ignored\n", message.length);
+                }
+
+                if (hdr_ok) {
+                    if (hdr.total > RX_MAX_BLOCKS) {
+                        printf("[RX] seq %u: %u blocks exceed RX_MAX_BLOCKS (%d), ignored\n",
+                               hdr.seq, hdr.total, RX_MAX_BLOCKS);
+                    } else {
+                        /* Блок другого сообщения — текущее (если было) закрываем
+                           как есть, начинаем новую сборку */
+                        if (!s_assembling || hdr.seq != s_cur_seq || hdr.total != s_cur_total) {
+                            rx_assembly_finish();
+                            rx_assembly_start(hdr.seq, hdr.total);
+                        }
+                        if (s_slot_filled[hdr.block_no]) {
+                            printf("[RX] seq %u: duplicate block %u ignored\n",
+                                   hdr.seq, hdr.block_no + 1);
+                        } else {
+                            memcpy(s_slots[hdr.block_no], text, text_len);
+                            s_slot_len[hdr.block_no] = (uint8_t)text_len;
+                            s_slot_filled[hdr.block_no] = true;
+                            s_blocks_received++;
+                        }
+                        last_packet_tick = xTaskGetTickCount();
+                        /* Все блоки на месте — отдаём сразу, не дожидаясь тишины */
+                        if (s_blocks_received == s_cur_total) {
+                            rx_assembly_finish();
+                        }
+                    }
+                } else if (s_assembling) {
+                    /* Битый кадр внутри сборки: место в сообщении неизвестно, дырку
+                       покажет счётчик слотов; таймер тишины продлеваем */
+                    s_assembly_dropped++;
+                    last_packet_tick = xTaskGetTickCount();
+                }
+            }
+        }
+        vTaskDelay(pdMS_TO_TICKS(1));
+    }
+}
+
+void app_main(void)
+{
+    ESP_LOGI(TAG, "=== AFSK Transceiver (TX core0 / RX core1) ===");
+
+    esp_err_t ret = nvs_flash_init();
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        ret = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK(ret);
+
+    /* Build the shared NCO table before any task can touch the decoder:
+     * a lazy init inside rx_task would race with a second decoder user. */
+    afsk_decoder_tables_init();
+
+    tx_ad9851_init();
+    wifi_link_init();
+
+    QueueHandle_t tx_queue = wifi_link_get_tx_queue();
+    s_ack_out_queue = xQueueCreate(8, sizeof(uint8_t));
+    s_ack_in_queue = xQueueCreate(4, sizeof(ack_in_t));
+    if (!s_ack_out_queue || !s_ack_in_queue) {
+        ESP_LOGE(TAG, "Failed to create ACK queues");
+        return;
+    }
+
+    xTaskCreatePinnedToCore(tx_task, "tx_task", 8192, tx_queue, 10, NULL, 0);
+    /* Console goes on core 0 next to the transmitter: its getchar() poll loop
+     * has no business sharing a core with the I2S receiver. */
+    xTaskCreatePinnedToCore(console_task, "console_task", 4096, tx_queue, 5, NULL, 0);
+    xTaskCreatePinnedToCore(rx_task, "rx_task", 8192, NULL, 10, NULL, 1);
+
+    ESP_LOGI(TAG, "System ready. TX on Core 0, RX on Core 1");
+}

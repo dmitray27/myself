@@ -1,0 +1,22 @@
+idf_component_register(
+    SRCS
+        "main.c"
+        "tx_ad9851.c"
+        "afsk_protocol.c"
+        "afsk_decoder.c"
+        "wifi_link.c"
+    INCLUDE_DIRS
+        "."
+    REQUIRES
+        driver
+        esp_driver_gpio
+        esp_driver_gptimer
+        esp_driver_i2s
+        esp_timer
+        nvs_flash
+        freertos
+        esp_wifi
+        esp_http_server
+        esp_netif
+        esp_event
+)
