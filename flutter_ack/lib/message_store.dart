@@ -2,7 +2,28 @@ import 'dart:collection';
 
 import 'chat_protocol.dart';
 
-enum MessageStatus { sending, delivered, failed }
+/// Путь своего сообщения. Локальное эхо от ESP32 — только [accepted]
+/// (принято в очередь платы); доставкой считается лишь ACK от удалённой
+/// станции ([delivered]) — его шлёт PRO-прошивка кадром status:.
+enum MessageStatus {
+  /// Ждёт эха от платы.
+  sending,
+
+  /// Плата приняла в очередь передачи (эхо получено).
+  accepted,
+
+  /// Ушло в эфир, ждём ACK.
+  aired,
+
+  /// Удалённая станция подтвердила приём.
+  delivered,
+
+  /// ACK не пришёл: доставка неизвестна.
+  noack,
+
+  /// Не отправлено.
+  failed,
+}
 
 class Message {
   final String id;
@@ -12,6 +33,9 @@ class Message {
   final DateTime timestamp;
   MessageStatus status;
 
+  /// Станция, подтвердившая приём (из status:<id>:delivered:<станция>).
+  String ackStation;
+
   Message(
     this.id,
     this.from,
@@ -19,13 +43,14 @@ class Message {
     this.isMe, {
     DateTime? timestamp,
     this.status = MessageStatus.delivered,
+    this.ackStation = '',
   }) : timestamp = timestamp ?? DateTime.now();
 }
 
 /// Что сделал стор с входящим кадром — по этому решается, нужны ли
 /// прокрутка, звук и уведомление.
 enum IngestOutcome {
-  /// Кадр — эхо нашего сообщения, оно помечено доставленным.
+  /// Кадр — эхо нашего сообщения: плата приняла его в очередь.
   echoConfirmed,
 
   /// Повтор из буфера прошивки, в список не добавлен.
@@ -70,8 +95,7 @@ class MessageStore {
 
   bool get hasPendingEcho => _pendingEcho.isNotEmpty;
 
-  /// Своё сообщение показывается сразу, но неподтверждённым: доставкой
-  /// считается возврат кадра прошивкой.
+  /// Своё сообщение показывается сразу как [MessageStatus.sending].
   Message addOutgoing(String id, String from, String text, {DateTime? now}) {
     final at = now ?? DateTime.now();
     final message = Message(
@@ -108,7 +132,10 @@ class MessageStore {
     final echoIndex =
         _pendingEcho.indexWhere((pending) => pending.echoKey == frame.echoKey);
     if (echoIndex >= 0) {
-      _pendingEcho.removeAt(echoIndex).message.status = MessageStatus.delivered;
+      final message = _pendingEcho.removeAt(echoIndex).message;
+      if (message.status == MessageStatus.sending) {
+        message.status = MessageStatus.accepted;
+      }
       return IngestOutcome.echoConfirmed;
     }
 
@@ -126,6 +153,31 @@ class MessageStore {
     final id = frame.id.isNotEmpty ? frame.id : echoKeyFor(frame.from, frame.text);
     _append(Message(id, frame.from, frame.text, isMine, timestamp: now));
     return frame.isHistory ? IngestOutcome.addedHistory : IngestOutcome.addedNew;
+  }
+
+  /// Статус доставки из прошивки. false, если сообщение не найдено или
+  /// статус — шаг назад (повторный aired после delivered не откатывает).
+  bool applyStatus(String id, RadioState state, {String detail = ''}) {
+    final index = _messages.lastIndexWhere((m) => m.isMe && m.id == id);
+    if (index < 0) return false;
+    final message = _messages[index];
+    if (message.status == MessageStatus.delivered) return false;
+    switch (state) {
+      case RadioState.aired:
+        if (message.status == MessageStatus.noack) return false;
+        message.status = MessageStatus.aired;
+      case RadioState.delivered:
+        message.status = MessageStatus.delivered;
+        message.ackStation = detail;
+      case RadioState.noack:
+        message.status = MessageStatus.noack;
+      case RadioState.failed:
+        message.status = MessageStatus.failed;
+      case RadioState.unknown:
+        return false;
+    }
+    _pendingEcho.removeWhere((p) => p.message == message);
+    return true;
   }
 
   /// Подтверждения по оборванному соединению уже не придут.

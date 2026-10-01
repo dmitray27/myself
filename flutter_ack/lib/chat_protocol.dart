@@ -16,7 +16,40 @@ enum IncomingKind {
 
   /// Обычное сообщение "<имя>:<id>:<текст>".
   chat,
+
+  /// Статус доставки по эфиру "status:<id>:<state>[:<detail>]"
+  /// (PRO-прошивка, wifi_link_status в main/wifi_link.c).
+  status,
 }
+
+/// Состояние из кадра status:. Отдельно от [MessageStatus]: прошивка
+/// не знает про локальные состояния клиента.
+enum RadioState { aired, delivered, noack, failed, unknown }
+
+RadioState parseRadioState(String s) {
+  switch (s) {
+    case 'aired':
+      return RadioState.aired;
+    case 'delivered':
+      return RadioState.delivered;
+    case 'noack':
+      return RadioState.noack;
+    case 'failed':
+      return RadioState.failed;
+  }
+  return RadioState.unknown;
+}
+
+/// Имена, совпадающие с префиксами служебных кадров PRO-прошивки
+/// (name_is_valid в main/wifi_link.c).
+const Set<String> kReservedNames = {
+  'status',
+  'stat',
+  'peers',
+  'hist',
+  'ping',
+  'pong'
+};
 
 class IncomingFrame {
   final IncomingKind kind;
@@ -39,6 +72,11 @@ class IncomingFrame {
   /// переподключения. Показывается в чате, но без звука и уведомления.
   final bool isHistory;
 
+  /// Для [IncomingKind.status]: состояние и деталь (станция, подтвердившая
+  /// приём, или причина отказа).
+  final RadioState radioState;
+  final String detail;
+
   const IncomingFrame._(
     this.kind, {
     this.from = '',
@@ -46,6 +84,8 @@ class IncomingFrame {
     this.text = '',
     this.echoKey = '',
     this.isHistory = false,
+    this.radioState = RadioState.unknown,
+    this.detail = '',
   });
 
   static const IncomingFrame ignored = IncomingFrame._(IncomingKind.ignore);
@@ -105,6 +145,7 @@ String? validateName(String name) {
   if (utf8.encode(name).length > kMaxNameBytes) {
     return 'Имя слишком длинное (до $kMaxNameBytes байт)';
   }
+  if (kReservedNames.contains(name)) return 'Имя "$name" зарезервировано';
   return null;
 }
 
@@ -138,6 +179,21 @@ IncomingFrame parseIncomingFrame(String raw) {
   }
 
   if (message == 'ping') return IncomingFrame.ping;
+
+  // Служебный кадр PRO-прошивки. Имена с таким префиксом плата не
+  // принимает (kReservedNames), поэтому с чатом он не путается.
+  if (message.startsWith('status:')) {
+    final parts = message.substring(7).split(':');
+    if (parts.length < 2 || !looksLikeMessageId(parts[0])) {
+      return IncomingFrame.ignored;
+    }
+    return IncomingFrame._(
+      IncomingKind.status,
+      id: parts[0],
+      radioState: parseRadioState(parts[1]),
+      detail: parts.length > 2 ? parts.sublist(2).join(':') : '',
+    );
+  }
 
   if (message.startsWith('System:')) {
     return IncomingFrame._(

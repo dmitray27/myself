@@ -1,6 +1,6 @@
 === flutter ===
 Analyzing flutter...                                            
-No issues found! (ran in 0.8s)
+No issues found! (ran in 1.2s)
 00:00 +0: loading test/info_dialog_test.dart
 00:00 +0: test/info_dialog_test.dart: info dialog text is selectable and copyable
 00:00 +1: test/info_dialog_test.dart: info dialog text is selectable and copyable
@@ -27,7 +27,7 @@ RESULT flutter: analyze=0 test=0
 
 === flutter_info ===
 Analyzing flutter_info...                                       
-No issues found! (ran in 0.9s)
+No issues found! (ran in 1.0s)
 00:00 +0: loading test/info_dialog_test.dart
 00:00 +0: test/info_dialog_test.dart: info dialog text is selectable and copyable
 00:00 +1: test/info_dialog_test.dart: info dialog text is selectable and copyable
@@ -35,20 +35,20 @@ No issues found! (ran in 0.9s)
 00:00 +3: test/info_dialog_test.dart: info dialog text is selectable and copyable
 00:00 +4: test/info_dialog_test.dart: info dialog text is selectable and copyable
 00:00 +5: test/info_dialog_test.dart: info dialog text is selectable and copyable
-00:00 +6: test/info_dialog_test.dart: info dialog text is selectable and copyable
-00:00 +7: test/info_dialog_test.dart: info dialog text is selectable and copyable
-00:00 +8: test/info_dialog_test.dart: info dialog text is selectable and copyable
-00:00 +9: test/info_dialog_test.dart: info dialog text is selectable and copyable
-00:00 +10: test/info_dialog_test.dart: info dialog text is selectable and copyable
-00:00 +11: test/info_dialog_test.dart: info dialog text is selectable and copyable
-00:00 +12: test/info_dialog_test.dart: info dialog text is selectable and copyable
-00:00 +13: test/info_dialog_test.dart: info dialog text is selectable and copyable
-00:00 +14: test/info_dialog_test.dart: info dialog text is selectable and copyable
-00:00 +15: test/info_dialog_test.dart: info dialog text is selectable and copyable
-00:00 +16: test/info_dialog_test.dart: info dialog text is selectable and copyable
-00:00 +17: test/info_dialog_test.dart: info dialog text is selectable and copyable
-00:00 +18: test/info_dialog_test.dart: info dialog text is selectable and copyable
-00:00 +19: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +6: test/chat_protocol_test.dart: buildMessageFrame new frame includes id
+00:00 +7: test/chat_protocol_test.dart: buildMessageFrame legacy frame omits id
+00:00 +8: test/chat_protocol_test.dart: validateName mirrors firmware name_is_valid
+00:00 +9: test/chat_protocol_test.dart: parseIncomingFrame parses new from:<id>:text
+00:00 +10: test/chat_protocol_test.dart: parseIncomingFrame parses legacy from:text
+00:00 +11: test/chat_protocol_test.dart: parseIncomingFrame legacy text with colon is not split into id
+00:00 +12: test/chat_protocol_test.dart: parseIncomingFrame id frame keeps colons inside text
+00:00 +13: test/chat_protocol_test.dart: parseIncomingFrame parses history with id
+00:00 +14: test/chat_protocol_test.dart: parseIncomingFrame ignores empty frames
+00:00 +15: test/chat_protocol_test.dart: parseIncomingFrame pings are recognized
+00:00 +16: test/chat_protocol_test.dart: parseIncomingFrame system messages are recognized
+00:00 +17: test/chat_protocol_test.dart: echoKeyFor returns id when present
+00:00 +18: test/chat_protocol_test.dart: echoKeyFor falls back to name:text without id
+00:00 +19: test/chat_protocol_test.dart: messageFitsFrame counts bytes correctly for cyrillic with id
 00:00 +20: All tests passed!
 RESULT flutter_info: analyze=0 test=0
 
@@ -92,15 +92,15 @@ No issues found! (ran in 0.8s)
 00:00 +1: test/app_color_test.dart: select persists and load restores
 00:00 +2: test/app_color_test.dart: color dialog shows 7 swatches and applies choice
 00:00 +3: test/info_dialog_test.dart: info dialog text is selectable and copyable
-00:00 +4: test/message_store_test.dart: MessageStore echo matching confirms echo by id, not by text
-00:00 +5: test/chat_protocol_test.dart: buildMessageFrame new frame includes id
-00:00 +6: test/chat_protocol_test.dart: buildMessageFrame new frame includes id
-00:00 +7: test/chat_protocol_test.dart: buildMessageFrame new frame includes id
-00:00 +8: test/message_store_test.dart: MessageStore echo matching same id from different senders is not a duplicate
-00:00 +9: test/message_store_test.dart: MessageStore echo matching same id from different senders is not a duplicate
-00:00 +10: test/chat_protocol_test.dart: validateName mirrors firmware name_is_valid
-00:00 +11: test/chat_protocol_test.dart: validateName mirrors firmware name_is_valid
-00:00 +12: test/chat_protocol_test.dart: parseIncomingFrame parses new from:<id>:text
+00:00 +4: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +5: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +6: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +7: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +8: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +9: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +10: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +11: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +12: test/info_dialog_test.dart: info dialog text is selectable and copyable
 00:00 +13: test/chat_protocol_test.dart: parseIncomingFrame parses legacy from:text
 00:00 +14: test/chat_protocol_test.dart: parseIncomingFrame legacy text with colon is not split into id
 00:00 +15: test/chat_protocol_test.dart: parseIncomingFrame id frame keeps colons inside text
@@ -114,4 +114,40 @@ No issues found! (ran in 0.8s)
 00:00 +23: All tests passed!
 RESULT flutter_color: analyze=0 test=0
 
-OVERALL: OK (2026-09-28T17:00Z, flutter 3.32.8)
+=== flutter_ack ===
+Analyzing flutter_ack...                                        
+No issues found! (ran in 0.8s)
+00:00 +0: loading test/ack_status_test.dart
+00:00 +0: test/ack_status_test.dart: status: frame parsing parses state and detail
+00:00 +1: test/ack_status_test.dart: status: frame parsing unknown state and bad id
+00:00 +2: test/ack_status_test.dart: status: frame parsing reserved names are rejected
+00:00 +3: test/ack_status_test.dart: MessageStore ACK statuses echo -> accepted, aired -> delivered with station
+00:00 +4: test/ack_status_test.dart: MessageStore ACK statuses noack and failed, unknown id
+00:00 +5: test/ack_status_test.dart: MessageStore ACK statuses status does not apply to foreign messages
+00:00 +6: test/app_color_test.dart: exactly seven rainbow colors, default green
+00:00 +7: test/app_color_test.dart: select persists and load restores
+00:00 +8: test/app_color_test.dart: color dialog shows 7 swatches and applies choice
+00:00 +9: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +10: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +11: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +12: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +13: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +14: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:01 +15: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:01 +16: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:01 +17: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:01 +18: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:01 +19: test/chat_protocol_test.dart: parseIncomingFrame parses legacy from:text
+00:01 +20: test/chat_protocol_test.dart: parseIncomingFrame legacy text with colon is not split into id
+00:01 +21: test/chat_protocol_test.dart: parseIncomingFrame id frame keeps colons inside text
+00:01 +22: test/chat_protocol_test.dart: parseIncomingFrame parses history with id
+00:01 +23: test/chat_protocol_test.dart: parseIncomingFrame ignores empty frames
+00:01 +24: test/chat_protocol_test.dart: parseIncomingFrame pings are recognized
+00:01 +25: test/chat_protocol_test.dart: parseIncomingFrame system messages are recognized
+00:01 +26: test/chat_protocol_test.dart: echoKeyFor returns id when present
+00:01 +27: test/chat_protocol_test.dart: echoKeyFor falls back to name:text without id
+00:01 +28: test/chat_protocol_test.dart: messageFitsFrame counts bytes correctly for cyrillic with id
+00:01 +29: All tests passed!
+RESULT flutter_ack: analyze=0 test=0
+
+OVERALL: OK (2026-10-01T13:31Z, flutter 3.32.8)

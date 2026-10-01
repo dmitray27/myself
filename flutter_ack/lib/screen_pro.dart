@@ -80,30 +80,53 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     return '$h:$m';
   }
 
-  Widget _buildStatusIcon(Message msg, bool isDark) {
+  /// Только «принято абонентом» означает, что удалённая станция
+  /// подтвердила приём по эфиру (PRO-прошивка, кадр status:).
+  String _statusLabel(Message msg) {
     switch (msg.status) {
       case MessageStatus.sending:
-        return Icon(
-          Icons.schedule,
-          size: 12,
-          color: isDark ? Colors.white70 : Colors.black54,
-        );
+        return 'Отправляется на УПТС-РК1';
+      case MessageStatus.accepted:
+        return 'Принято УПТС-РК1, ждёт эфира';
+      case MessageStatus.aired:
+        return 'Передано в эфир, ждём подтверждения';
       case MessageStatus.delivered:
-        return Icon(
-          Icons.done,
-          size: 12,
-          color: isDark ? Colors.white70 : Colors.black54,
-        );
+        return msg.ackStation.isEmpty
+            ? 'Принято абонентом'
+            : 'Принято абонентом ${msg.ackStation}';
+      case MessageStatus.noack:
+        return 'Нет подтверждения из эфира';
       case MessageStatus.failed:
-        return Tooltip(
-          message: 'УПТС-РК1 не подтвердил приём',
-          child: Icon(
-            Icons.error_outline,
-            size: 12,
-            color: isDark ? Colors.red[300] : Colors.red[700],
-          ),
-        );
+        return 'УПТС-РК1 не подтвердил приём';
     }
+  }
+
+  /// Одна галочка — ушло в эфир, две — подтверждено абонентом.
+  Widget _buildStatusIcon(Message msg, bool isDark) {
+    final dim = isDark ? Colors.white70 : Colors.black54;
+    final IconData icon;
+    Color color = dim;
+    switch (msg.status) {
+      case MessageStatus.sending:
+        icon = Icons.schedule;
+      case MessageStatus.accepted:
+        icon = Icons.hourglass_bottom;
+      case MessageStatus.aired:
+        icon = Icons.done;
+      case MessageStatus.delivered:
+        icon = Icons.done_all;
+        color = isDark ? Colors.lightGreenAccent : Colors.green[800]!;
+      case MessageStatus.noack:
+        icon = Icons.hearing_disabled;
+        color = isDark ? Colors.orange[300]! : Colors.orange[800]!;
+      case MessageStatus.failed:
+        icon = Icons.error_outline;
+        color = isDark ? Colors.red[300]! : Colors.red[700]!;
+    }
+    return Tooltip(
+      message: _statusLabel(msg),
+      child: Icon(icon, size: 12, color: color),
+    );
   }
 
   void _showSnackBar(String message) {

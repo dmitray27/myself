@@ -13,13 +13,13 @@ void main() {
       final frame1 = parseIncomingFrame('User:id1:Hello');
       final outcome1 = store.ingest(frame1, myName: 'User');
       expect(outcome1, IngestOutcome.echoConfirmed);
-      expect(store.messages[0].status, MessageStatus.delivered);
+      expect(store.messages[0].status, MessageStatus.accepted);
 
       // Второе эхо с тем же текстом, но другим id — не должно сбить счёт
       final frame2 = parseIncomingFrame('User:id2:Hello');
       final outcome2 = store.ingest(frame2, myName: 'User');
       expect(outcome2, IngestOutcome.echoConfirmed);
-      expect(store.messages[1].status, MessageStatus.delivered);
+      expect(store.messages[1].status, MessageStatus.accepted);
     });
 
     test('legacy echo without id still works', () {

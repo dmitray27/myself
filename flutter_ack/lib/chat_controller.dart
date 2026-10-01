@@ -557,6 +557,12 @@ class ChatController extends ChangeNotifier {
       case IncomingKind.system:
         _setSnack(frame.text);
         return;
+      case IncomingKind.status:
+        if (_store.applyStatus(frame.id, frame.radioState,
+            detail: frame.detail)) {
+          _notify();
+        }
+        return;
       case IncomingKind.chat:
         break;
     }
