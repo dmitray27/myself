@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Семь фиксированных цветов радуги, из которых пользователь выбирает
-/// основной цвет приложения (шапка, свои сообщения, тема).
+/// Фиксированные цвета, из которых пользователь выбирает основной цвет
+/// приложения (шапка, свои сообщения, тема): семь цветов радуги плюс
+/// белый (чёрные текст и иконки, светлая тема) и чёрный (белые текст и
+/// иконки, тёмная тема).
 enum AppColor {
   red('Красный', Colors.red),
   orange('Оранжевый', Colors.orange),
@@ -10,12 +12,35 @@ enum AppColor {
   green('Зелёный', Colors.green),
   lightBlue('Голубой', Colors.lightBlue),
   blue('Синий', Colors.indigo),
-  violet('Фиолетовый', Colors.purple);
+  violet('Фиолетовый', Colors.purple),
+  white('Белый', Colors.grey,
+      barColor: Colors.white, onBar: Colors.black, themeMode: ThemeMode.light),
+  black('Чёрный', Colors.grey,
+      barColor: Colors.black, onBar: Colors.white, themeMode: ThemeMode.dark);
 
-  const AppColor(this.label, this.swatch);
+  const AppColor(
+    this.label,
+    this.swatch, {
+    Color? barColor,
+    this.onBar = Colors.white,
+    this.themeMode = ThemeMode.system,
+  }) : _barColor = barColor;
 
   final String label;
   final MaterialColor swatch;
+  final Color? _barColor;
+
+  /// Цвет текста и иконок в шапке.
+  final Color onBar;
+
+  /// Тема: по системе для цветов радуги, фиксированная для белого/чёрного.
+  final ThemeMode themeMode;
+
+  /// Цвет шапки.
+  Color get barColor => _barColor ?? swatch[900]!;
+
+  /// Фон экрана для белого/чёрного; null — по теме.
+  Color? get background => _barColor;
 
   static const AppColor defaultColor = AppColor.green;
   static const _prefKey = 'app_color';
@@ -40,7 +65,7 @@ enum AppColor {
   }
 }
 
-/// Диалог выбора цвета: семь кружков, текущий отмечен галочкой.
+/// Диалог выбора цвета: кружки цветов, текущий отмечен галочкой.
 Future<void> showColorDialog(BuildContext context) {
   return showDialog<void>(
     context: context,
@@ -65,17 +90,17 @@ Future<void> showColorDialog(BuildContext context) {
                         width: 44,
                         height: 44,
                         decoration: BoxDecoration(
-                          color: c.swatch,
+                          color: c.barColor,
                           shape: BoxShape.circle,
                           border: Border.all(
                             color: selected == c
                                 ? Theme.of(context).colorScheme.onSurface
-                                : Colors.transparent,
-                            width: 3,
+                                : Theme.of(context).colorScheme.outlineVariant,
+                            width: selected == c ? 3 : 1,
                           ),
                         ),
                         child: selected == c
-                            ? const Icon(Icons.check, color: Colors.white)
+                            ? Icon(Icons.check, color: c.onBar)
                             : null,
                       ),
                     ),

@@ -71,6 +71,7 @@ class MyApp extends StatelessWidget {
             seedColor: appColor.swatch,
             brightness: Brightness.light,
           ),
+          scaffoldBackgroundColor: appColor.background,
           useMaterial3: true,
           appBarTheme: const AppBarTheme(
             centerTitle: true,
@@ -85,6 +86,7 @@ class MyApp extends StatelessWidget {
             seedColor: appColor.swatch,
             brightness: Brightness.dark,
           ),
+          scaffoldBackgroundColor: appColor.background,
           useMaterial3: true,
           appBarTheme: const AppBarTheme(
             centerTitle: true,
@@ -93,7 +95,7 @@ class MyApp extends StatelessWidget {
         ),
 
         // Автоматически переключается в зависимости от системы
-        themeMode: ThemeMode.system,
+        themeMode: appColor.themeMode,
 
         // Для десктопа – стильные скроллбары
         builder: (context, child) {

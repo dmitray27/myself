@@ -10,8 +10,16 @@ void main() {
     AppColor.current.value = AppColor.defaultColor;
   });
 
-  test('exactly seven rainbow colors, default green', () {
-    expect(AppColor.values.length, 7);
+  test('seven rainbow colors plus white and black, default green', () {
+    expect(AppColor.values.length, 9);
+    expect(AppColor.white.barColor, Colors.white);
+    expect(AppColor.white.onBar, Colors.black);
+    expect(AppColor.white.themeMode, ThemeMode.light);
+    expect(AppColor.black.barColor, Colors.black);
+    expect(AppColor.black.onBar, Colors.white);
+    expect(AppColor.black.themeMode, ThemeMode.dark);
+    expect(AppColor.green.barColor, Colors.green[900]);
+    expect(AppColor.green.themeMode, ThemeMode.system);
     expect(AppColor.defaultColor, AppColor.green);
     expect(AppColor.fromName('violet'), AppColor.violet);
     expect(AppColor.fromName('nonsense'), AppColor.green);
@@ -26,7 +34,7 @@ void main() {
     expect(AppColor.current.value, AppColor.red);
   });
 
-  testWidgets('color dialog shows 7 swatches and applies choice',
+  testWidgets('color dialog shows 9 swatches and applies choice',
       (tester) async {
     await tester.pumpWidget(MaterialApp(
       home: Builder(
