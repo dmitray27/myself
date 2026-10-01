@@ -360,6 +360,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               leading: InfoButton(color: onBar),
               title: Text('Радиочат', style: TextStyle(color: appColor.onBar)),
               backgroundColor: appColor.barColor,
+              surfaceTintColor: Colors.transparent,
               actions: [
                 IconButton(
                   icon: Icon(_controller.soundEnabled
