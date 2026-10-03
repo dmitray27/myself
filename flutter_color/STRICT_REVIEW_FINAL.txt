@@ -1,0 +1,251 @@
+STRICT REVIEW: flutter_color
+===========================
+
+Финальный сводный файл по критическим замечаниям P1.
+
+
+P1.1 — Неполная очистка ws-соединения
+--------------------------------------
+Файлы:
+- lib/chat_connection.dart
+- lib/chat_controller.dart
+
+Проблема:
+Когда WebSocket падает, код делает только _handleError(), но не выполняет teardown и не очищает socket/subscription. Это оставляет мёртвый сокет в памяти, что может дать странное поведение при смене Wi-Fi, sleep/wake, background/foreground и при перегрузке/переподключении.
+
+Правильная последовательность:
+
+onError/onDone
+  -> onDisconnected?.call()
+  -> _teardown()
+  -> _setStatus(ConnectionStatus.error, message)
+
+А не так:
+
+onError/onDone
+  -> _setStatus(ConnectionStatus.error, message)
+  -> socket и subscription остаются живыми ❌
+
+Исправление:
+```dart
+_subscription = socket.frames.listen(
+    (frame) => onFrame?.call(frame.toString()),
+    onError: (error) async {
+        debugPrint('WebSocket error: $error');
+        await onDisconnected?.call();
+        await _teardown();
+        _setStatus(ConnectionStatus.error, 'WebSocket ошибка');
+    },
+    onDone: () async {
+        debugPrint('WebSocket closed by server');
+        await onDisconnected?.call();
+        await _teardown();
+        _setStatus(ConnectionStatus.error, 'Соединение закрыто сервером');
+    },
+    cancelOnError: true,
+);
+```
+
+Исправление в `_teardown()`:
+```dart
+Future<void> _teardown() async {
+    final subscription = _subscription;
+    final socket = _socket;
+    _subscription = null;
+    _socket = null;
+
+    if (subscription != null) {
+        try {
+            await subscription.cancel().timeout(cancelTimeout);
+        } catch (e) {
+            debugPrint('Ошибка/таймаут отписки: $e');
+        }
+    }
+
+    if (socket != null) {
+        try {
+            await socket.close().timeout(closeTimeout);
+        } catch (e) {
+            debugPrint('Ошибка/таймаут при закрытии канала: $e');
+        }
+    }
+}
+```
+
+Итог:
+В реальном Android/Wi‑Fi сценарии это реальный bug, который стоит закрыть до релиза.
+
+
+P1.2 — dispose() с незавершённым async cleanup
+----------------------------------------------
+Файл:
+- lib/chat_controller.dart
+
+Проблема:
+dispose() вызывает unawaited() для асинхронного cleanup, затем сразу super.dispose(). Это оставляет cleanup без гарантии завершения и может приводить к зависанию foreground service/уведомлений на Android.
+
+Исправление:
+```dart
+@override
+void dispose() {
+    _disposed = true;
+    _connection
+        ..onFrame = null
+        ..onChanged = null
+        ..onConnected = null
+        ..onDisconnected = null;
+    _notificationPlayer.dispose();
+    snackBar.dispose();
+
+    _performCleanup();
+    super.dispose();
+}
+
+Future<void> _performCleanup() async {
+    try {
+        await _stopMonitoringAndDisconnect();
+        if (_exitedViaPlatform) return;
+        await _stopForegroundService();
+        await _unbindWifi();
+    } catch (e) {
+        debugPrint('Error during cleanup: $e');
+    }
+}
+```
+
+Итог:
+Не оставляй текущий `unawaited(...then(...))` без гарантии завершения. На Android это опасно.
+
+
+P1.3 — Дедупликация live-сообщений без id
+------------------------------------------
+Файл:
+- lib/message_store.dart
+
+Проблема:
+Система дедуплицирует историю и эхо, но для live-сообщений без id нет проверки повторов. Дубль может попасть в чат и показать одно и то же сообщение дважды.
+
+Исправление:
+```dart
+if (frame.id.isNotEmpty) {
+    if (_messages.any((m) => m.id == frame.id && m.from == frame.from)) {
+        return frame.isHistory ? IngestOutcome.addedHistory : IngestOutcome.duplicateIgnored;
+    }
+} else {
+    if (_alreadyShownRecently(frame.from, frame.text, isMine, window: Duration(seconds: 5))) {
+        return frame.isHistory ? IngestOutcome.addedHistory : IngestOutcome.duplicateIgnored;
+    }
+}
+```
+
+Новый метод:
+```dart
+bool _alreadyShownRecently(
+    String from,
+    String text,
+    bool isMe, {
+    required Duration window,
+}) {
+    final now = DateTime.now();
+    return _messages.any((m) {
+        return m.from == from &&
+            m.text == text &&
+            m.isMe == isMe &&
+            now.difference(m.timestamp).compareTo(window) <= 0;
+    });
+}
+```
+
+Итог:
+Сообщения в чате должны быть идемпотентными. Добавь временное окно дедупликации для live-кадров без id.
+
+
+P1.4 — Отсутствие heartbeat watchdog
+-------------------------------------
+Файлы:
+- lib/chat_connection.dart
+- lib/chat_controller.dart
+
+Проблема:
+WebSocket может "зависнуть" без закрытия. Приложение будет считать, что соединение живо, хотя данные не приходят, а пользователь видит "Подключено".
+
+Исправление (рекомендуемое):
+```dart
+Timer? _heartbeatTimer;
+DateTime? _lastFrameTime;
+static const _heartbeatTimeout = Duration(seconds: 15);
+static const _heartbeatCheckInterval = Duration(seconds: 5);
+```
+
+```dart
+void _startHeartbeatMonitor() {
+    _heartbeatTimer?.cancel();
+    _heartbeatTimer = Timer.periodic(_heartbeatCheckInterval, (_) {
+        if (!_connection.isConnected) return;
+
+        final now = DateTime.now();
+        if (_lastFrameTime != null) {
+            final elapsed = now.difference(_lastFrameTime!);
+            if (elapsed > _heartbeatTimeout) {
+                debugPrint('⚠️ Heartbeat timeout: no frames for ${elapsed.inSeconds}s');
+                _connection.disconnect();
+                _pollBackoff.onFailure();
+                _notify();
+                return;
+            }
+        }
+    });
+}
+```
+
+И обновлять время последнего кадра в `_onFrame()`:
+```dart
+void _onFrame(String message) {
+    if (_disposed) return;
+    _lastFrameTime = DateTime.now();
+    // остальной код
+}
+```
+
+Итог:
+С heartbeat watchdog приложение не будет "залипать" в статусе "Подключено" при зависшем сокете.
+
+
+РЕЗЮМЕ
+-------
+Все 4 пункта P1 относятся к реальным edge-case сценариям на Android/Wi‑Fi:
+- неочищенный socket
+- незавершённый cleanup
+- дубли live-сообщений
+- зависший heartbeat
+
+Это не "проект сломан", но до релиза эти пункты нужно закрыть, чтобы обеспечить стабильность реального чата.
+
+ПЛАН ПРАВОК ПО ФАЙЛАМ
+----------------------
+
+1. lib/chat_connection.dart (строки 100-105, 182-185):
+   - Заменить onError и onDone в socket.frames.listen()
+   - Вместо _handleError() вызывать async функцию, которая делает:
+     * await onDisconnected?.call()
+     * await _teardown()
+     * _setStatus(ConnectionStatus.error, message)
+
+2. lib/chat_controller.dart (строки 155-172):
+   - Убрать unawaited(...then(...))
+   - Добавить _performCleanup() метод
+   - Вызвать _performCleanup() в dispose()
+
+3. lib/chat_controller.dart (добавить heartbeat):
+   - Добавить поля: _heartbeatTimer, _lastFrameTime
+   - Добавить _startHeartbeatMonitor()
+   - В init() вызвать _startHeartbeatMonitor()
+   - В _onFrame() обновлять _lastFrameTime
+   - В _onConnectionEstablished() сбросить _lastFrameTime
+   - В _onConnectionClosed() отменить _heartbeatTimer
+   - В dispose() отменить _heartbeatTimer
+
+4. lib/message_store.dart (строки 101-129):
+   - В ingest() добавить проверку дедупликации для всех кадров (не только history)
+   - Добавить _alreadyShownRecently() метод
+   - Использовать его для live-кадров без id
