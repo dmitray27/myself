@@ -1,0 +1,102 @@
+STRICT REVIEW: flutter_color
+=============================
+
+P1.1 — Неполная очистка ws-соединения
+
+Файлы:
+- lib/chat_connection.dart
+- lib/chat_controller.dart
+
+ПРОБЛЕМА
+--------
+Когда WebSocket падает, код делает только _handleError(), но не завершает teardown и не очищает socket/subscription. В результате состояние UI становится error, но соединение остаётся "живым" в памяти. Это может дать странное поведение при смене Wi-Fi, sleep/wake, background/foreground и при быстром переподключении.
+
+ТЕКУЩИЙ КОД (проблемный)
+------------------------
+В chat_connection.dart строки 100-105:
+
+_subscription = socket.frames.listen(
+    (frame) => onFrame?.call(frame.toString()),
+    onError: (error) => _handleError('WebSocket ошибка'),
+    onDone: () => _handleError('Соединение закрыто сервером'),
+    cancelOnError: true,
+);
+
+В chat_connection.dart строки 182-185:
+
+void _handleError(String error) {
+    if (_status == ConnectionStatus.disconnected || _isDisconnecting) return;
+    _setStatus(ConnectionStatus.error, error);
+}
+
+
+ЧТО ДОЛЖНО БЫТЬ
+----------------
+Заменить onError и onDone в socket.frames.listen():
+
+_subscription = socket.frames.listen(
+    (frame) => onFrame?.call(frame.toString()),
+    onError: (error) async {
+        debugPrint('WebSocket error: $error');
+        await onDisconnected?.call();
+        await _teardown();
+        _setStatus(ConnectionStatus.error, 'WebSocket ошибка');
+    },
+    onDone: () async {
+        debugPrint('WebSocket closed by server');
+        await onDisconnected?.call();
+        await _teardown();
+        _setStatus(ConnectionStatus.error, 'Соединение закрыто сервером');
+    },
+    cancelOnError: true,
+);
+
+
+ПОЧЕМУ ЭТО ВАЖНО
+----------------
+Правильная последовательность должна быть:
+
+onError/onDone
+  -> onDisconnected?.call()
+  -> _teardown()
+  -> _setStatus(ConnectionStatus.error, message)
+
+
+А сейчас происходит:
+
+onError/onDone
+  -> _setStatus(ConnectionStatus.error, message)
+  -> socket и subscription ОСТАЮТСЯ ЖИВЫМИ в памяти ❌
+
+
+ИСПРАВЛЕНИЕ В _teardown()
+--------------------------
+Убедиться, что _teardown() правильно очищает ресурсы:
+
+Future<void> _teardown() async {
+    final subscription = _subscription;
+    final socket = _socket;
+    _subscription = null;
+    _socket = null;
+
+    if (subscription != null) {
+        try {
+            await subscription.cancel().timeout(cancelTimeout);
+        } catch (e) {
+            debugPrint('Ошибка/таймаут отписки: $e');
+        }
+    }
+
+    if (socket != null) {
+        try {
+            await socket.close().timeout(closeTimeout);
+        } catch (e) {
+            debugPrint('Ошибка/таймаут при закрытии канала: $e');
+        }
+    }
+}
+
+
+ИТОГ
+----
+Это не "критическая сборка падает" проблема, но это реальный bug для реального Wi-Fi/Android сценария. Перед релизом этот пункт стоит закрыть.
