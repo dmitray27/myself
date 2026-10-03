@@ -1,0 +1,455 @@
+STRICT REVIEW: flutter_color
+=============================
+
+P1.2 — dispose() с незавершённым async cleanup
+
+Файл:
+- lib/chat_controller.dart (строки 155-172)
+
+ПРОБЛЕМА
+--------
+dispose() вызывает unawaited() для асинхронного cleanup, потом сразу же вызывает super.dispose(). Это может привести к тому, что:
+
+1. Приложение закрывается
+2. Activity уничтожается
+3. _stopForegroundService() не успевает выполниться
+4. Foreground service остаётся висящим в памяти
+5. Уведомление остаётся в системе
+
+На Android это реальный способ "зависить" в памяти после закрытия приложения.
+
+ТЕКУЩИЙ КОД (проблемный)
+------------------------
+В chat_controller.dart:
+
+@override
+void dispose() {
+    _disposed = true;
+    _connection
+        ..onFrame = null
+        ..onChanged = null
+        ..onConnected = null
+        ..onDisconnected = null;
+    _notificationPlayer.dispose();
+    snackBar.dispose();
+    
+    // ❌ ПРОБЛЕМА: unawaited + then(), но super.dispose() вызывается СРАЗУ
+    unawaited(_stopMonitoringAndDisconnect().then((_) async {
+        if (_exitedViaPlatform) return;
+        await _stopForegroundService();
+        await _unbindWifi();
+    }));
+    
+    super.dispose();  // ❌ Может быть вызван ДО завершения then()
+}
+
+
+ЧТО ДОЛЖНО БЫТЬ (вариант 1 - более строгий)
+---------------------------------------------
+@override
+void dispose() {
+    _disposed = true;
+    
+    // 1. Отключить все слушатели
+    _connection
+        ..onFrame = null
+        ..onChanged = null
+        ..onConnected = null
+        ..onDisconnected = null;
+    
+    // 2. Синхронно очистить локальные ресурсы
+    _notificationPlayer.dispose();
+    snackBar.dispose();
+    
+    // 3. Асинхронная очистка через Future цепочку
+    _performCleanup();
+    
+    super.dispose();
+}
+
+// НОВЫЙ МЕТОД: отделённая цепочка очистки
+Future<void> _performCleanup() async {
+    try {
+        await _stopMonitoringAndDisconnect();
+        
+        if (_exitedViaPlatform) return;
+        
+        await _stopForegroundService();
+        await _unbindWifi();
+    } catch (e) {
+        debugPrint('Error during cleanup: $e');
+    }
+}
+
+
+ЧТО ДОЛЖНО БЫТЬ (вариант 2 - более мягкий)
+--------------------------------------------
+@override
+void dispose() {
+    _disposed = true;
+    
+    _connection
+        ..onFrame = null
+        ..onChanged = null
+        ..onConnected = null
+        ..onDisconnected = null;
+    
+    _notificationPlayer.dispose();
+    snackBar.dispose();
+    
+    // Запустить cleanup, но не ждать
+    _performCleanupInBackground();
+    
+    super.dispose();
+}
+
+Future<void> _performCleanupInBackground() async {
+    try {
+        await _stopMonitoringAndDisconnect();
+        
+        if (_exitedViaPlatform) {
+            return;
+        }
+        
+        // Эти вызовы должны быть быстрыми (<1 сек)
+        final serviceStop = _stopForegroundService();
+        final wifiUnbind = _unbindWifi();
+        
+        // Ждём обоих, но не более 2 сек
+        await Future.wait(
+            [serviceStop, wifiUnbind],
+            eagerError: false,
+        ).timeout(
+            Duration(seconds: 2),
+            onTimeout: () {
+                debugPrint('Cleanup timeout, but continuing anyway');
+            },
+        );
+    } catch (e) {
+        debugPrint('Error during background cleanup: $e');
+    }
+}
+
+
+ПОЧЕМУ ЭТО ВАЖНО
+----------------
+Сценарий на реальном Android:
+
+1. Пользователь нажимает "Выход" в приложении
+2. dispose() вызывается
+3. unawaited() запускает _stopMonitoringAndDisconnect()
+4. super.dispose() вызывается СРАЗУ (не ждёт, пока завершится)
+5. Dart GC может удалить объекты
+6. Platform channel (_stopForegroundService) не успевает выполниться
+7. Foreground service остаётся висящим
+
+Результат: Приложение вроде закрылось, но уведомление и сервис остаются в памяти.
+
+
+ИТОГ
+----
+Выбери вариант 1 или 2, но не оставляй текущий код. Это реальная утечка ресурсов на Android перед релизом.
+
+
+
+
+P1.3 — Дедупликация live-сообщений без id
+
+Файл:
+- lib/message_store.dart (строки 101-129)
+
+ПРОБЛЕМА
+--------
+Система дедуплицирует историю и эхо, но для обычных "живых" сообщений БЕЗ id не проверяет повтор.
+
+Сценарий:
+1. ESP32 отправляет: Remote:Hello (без id)
+2. Flutter добавляет в _messages
+3. Через 100 мс то же сообщение приходит снова (ошибка сети или буфер ESP32)
+4. _alreadyShown() проверяет только для history, не для live
+5. Дубль добавляется в чат
+
+Результат: Пользователь видит одно сообщение дважды.
+
+ТЕКУЩИЙ КОД (проблемный)
+------------------------
+В message_store.dart:
+
+IngestOutcome ingest(
+    IncomingFrame frame, {
+    required String myName,
+    DateTime? now,
+}) {
+    final echoIndex = _pendingEcho.indexWhere((pending) => pending.echoKey == frame.echoKey);
+    if (echoIndex >= 0) {
+        _pendingEcho.removeAt(echoIndex).message.status = MessageStatus.delivered;
+        return IngestOutcome.echoConfirmed;
+    }
+
+    final isMine = frame.isHistory && frame.from == myName;
+    
+    // ❌ ПРОБЛЕМА: дедупликация только для history, не для live-кадров
+    if (frame.isHistory && _alreadyShown(frame.id, frame.from, frame.text, isMine)) {
+        return IngestOutcome.duplicateIgnored;
+    }
+
+    final id = frame.id.isNotEmpty ? frame.id : echoKeyFor(frame.from, frame.text);
+    _append(Message(id, frame.from, frame.text, isMine, timestamp: now));
+    return frame.isHistory ? IngestOutcome.addedHistory : IngestOutcome.addedNew;
+}
+
+
+ЧТО ДОЛЖНО БЫТЬ
+----------------
+IngestOutcome ingest(
+    IncomingFrame frame, {
+    required String myName,
+    DateTime? now,
+}) {
+    // Проверка эхо: по id
+    final echoIndex = _pendingEcho.indexWhere((pending) => pending.echoKey == frame.echoKey);
+    if (echoIndex >= 0) {
+        _pendingEcho.removeAt(echoIndex).message.status = MessageStatus.delivered;
+        return IngestOutcome.echoConfirmed;
+    }
+
+    final isMine = frame.isHistory && frame.from == myName;
+    
+    // ✅ Проверка дедупликации для ВСЕХ кадров (не только history)
+    if (frame.id.isNotEmpty) {
+        // Ищем по id
+        if (_messages.any((m) => m.id == frame.id && m.from == frame.from)) {
+            return frame.isHistory ? IngestOutcome.addedHistory : IngestOutcome.duplicateIgnored;
+        }
+    } else {
+        // ✅ Нет id → ищем по (from, text) с временным окном
+        if (_alreadyShownRecently(frame.from, frame.text, isMine, window: Duration(seconds: 5))) {
+            return frame.isHistory ? IngestOutcome.addedHistory : IngestOutcome.duplicateIgnored;
+        }
+    }
+
+    // Добавляем новый кадр
+    final id = frame.id.isNotEmpty ? frame.id : echoKeyFor(frame.from, frame.text);
+    _append(Message(id, frame.from, frame.text, isMine, timestamp: now));
+    return frame.isHistory ? IngestOutcome.addedHistory : IngestOutcome.addedNew;
+}
+
+// ✅ НОВЫЙ МЕТОД: проверка за последние N секунд
+bool _alreadyShownRecently(
+    String from,
+    String text,
+    bool isMe, {
+    required Duration window,
+}) {
+    final now = DateTime.now();
+    return _messages.any((m) {
+        return m.from == from &&
+            m.text == text &&
+            m.isMe == isMe &&
+            now.difference(m.timestamp).compareTo(window) <= 0;
+    });
+}
+
+
+ПОЧЕМУ ЭТО ВАЖНО
+----------------
+Сообщения в чате должны быть идемпотентными. Один и тот же текст, присланный дважды, не должен превращаться в два разных сообщения.
+
+Особенно важно для:
+- Чата с буфером истории на ESP32
+- Нестабильного Wi-Fi (потери пакетов)
+- Сценариев переподключения
+
+
+ИТОГ
+----
+Добавь _alreadyShownRecently() и проверяй дедупликацию для всех кадров, не только для history.
+
+
+
+
+P1.4 — Отсутствие heartbeat watchdog
+
+Файлы:
+- lib/chat_connection.dart
+- lib/chat_controller.dart
+
+ПРОБЛЕМА
+--------
+WebSocket может "зависнуть" без закрытия, а приложение будет считать, что connection alive, пока поток данных не прервётся.
+
+Сценарий на реальной сети:
+1. Приложение подключено и получает сообщения
+2. Wi-Fi роут теряет питание, но сокет не закрывается (TCP таймаут 30+ минут)
+3. Приложение видит: isConnected = true, пользователь видит "Подключено ✓"
+4. Но никакие данные не приходят, и сокет молча мёртв
+5. Когда пользователь попытается отправить сообщение → timeout
+
+Итог: Ложное чувство "всё работает", но соединение мёртво.
+
+
+ТЕКУЩИЙ КОД (проблемный)
+------------------------
+В chat_controller.dart нет никакого heartbeat watchdog. Периодический опрос _checkConnection() делает ping, но если соединение "зависнет" и не вернёт ошибку, оно будет считаться живым.
+
+
+ЧТО ДОЛЖНО БЫТЬ (вариант 1 - явный heartbeat)
+-----------------------------------------------
+В chat_controller.dart добавить:
+
+class ChatController extends ChangeNotifier {
+    // ... существующие поля ...
+    
+    Timer? _heartbeatTimer;
+    DateTime? _lastFrameTime;
+    static const _heartbeatTimeout = Duration(seconds: 15);
+    static const _heartbeatCheckInterval = Duration(seconds: 5);
+    
+    Future<void> init() async {
+        _store = MessageStore(...);
+        _connection = ChatConnection(...);
+        
+        await _initPreferences();
+        await _initNotifications();
+        
+        // ✅ НОВОЕ: Инициализировать heartbeat
+        _startHeartbeatMonitor();
+        
+        scheduleMicrotask(_startConnectionMonitoring);
+    }
+    
+    // ✅ НОВЫЙ МЕТОД: Heartbeat watchdog
+    void _startHeartbeatMonitor() {
+        _heartbeatTimer?.cancel();
+        _heartbeatTimer = Timer.periodic(_heartbeatCheckInterval, (_) {
+            if (!_connection.isConnected) {
+                return;  // Не подключены — не проверяем
+            }
+            
+            final now = DateTime.now();
+            if (_lastFrameTime != null) {
+                final elapsed = now.difference(_lastFrameTime!);
+                
+                if (elapsed > _heartbeatTimeout) {
+                    debugPrint('⚠️ Heartbeat timeout: no frames for ${elapsed.inSeconds}s');
+                    // ✅ Соединение зависло → переподключиться
+                    _connection.disconnect();
+                    _pollBackoff.onFailure();
+                    _notify();
+                    return;
+                }
+            }
+        });
+    }
+    
+    void _onFrame(String message) {
+        if (_disposed) return;
+        
+        // ✅ Обновляем время последнего кадра
+        _lastFrameTime = DateTime.now();
+        
+        debugPrint('📥 WebSocket: $message');
+        // ... остальной код ...
+    }
+    
+    Future<void> _onConnectionEstablished() async {
+        debugPrint('✅ Успешно подключено к ESP32');
+        
+        // ✅ Сброс heartbeat при подключении
+        _lastFrameTime = DateTime.now();
+        
+        await _startForegroundService();
+        await _setServiceConnected(true);
+        _sendUserName();
+    }
+    
+    Future<void> _onConnectionClosed() async {
+        // ✅ Отключить heartbeat при разрыве
+        _heartbeatTimer?.cancel();
+        _heartbeatTimer = null;
+        _lastFrameTime = null;
+        
+        await _setServiceConnected(false);
+        if (_store.failAllPending()) {
+            _notify();
+        }
+    }
+    
+    @override
+    void dispose() {
+        _disposed = true;
+        _heartbeatTimer?.cancel();  // ✅ Очистить heartbeat
+        _connection
+            ..onFrame = null
+            ..onChanged = null
+            ..onConnected = null
+            ..onDisconnected = null;
+        _notificationPlayer.dispose();
+        snackBar.dispose();
+        
+        unawaited(_stopMonitoringAndDisconnect().then((_) async {
+            if (_exitedViaPlatform) return;
+            await _stopForegroundService();
+            await _unbindWifi();
+        }));
+        super.dispose();
+    }
+}
+
+
+ЧТО ДОЛЖНО БЫТЬ (вариант 2 - простой в polling loop)
+-----------------------------------------------------
+Если вариант 1 кажется слишком сложным, добавить просто в _checkConnection():
+
+Future<void> _checkConnection() async {
+    if (_shuttingDown) return;
+    if (_isConnectAttemptRunning || _connection.isBusy) {
+        _scheduleConnectionCheck();
+        return;
+    }
+
+    // ✅ Добавить проверку heartbeat
+    if (_connection.isConnected && _lastFrameTime != null) {
+        final elapsed = DateTime.now().difference(_lastFrameTime!);
+        if (elapsed > Duration(seconds: 15)) {
+            debugPrint('⚠️ No heartbeat for ${elapsed.inSeconds}s, reconnecting');
+            await _connection.disconnect();
+            _pollBackoff.onFailure();
+        }
+    }
+
+    // ... остальной код _checkConnection ...
+}
+
+// В _onFrame() добавить:
+void _onFrame(String message) {
+    if (_disposed) return;
+    _lastFrameTime = DateTime.now();  // ✅ Обновить время
+    // ... остальной код ...
+}
+
+// В _onConnectionEstablished():
+Future<void> _onConnectionEstablished() async {
+    _lastFrameTime = DateTime.now();  // ✅ Сброс при подключении
+    // ... остальной код ...
+}
+
+
+ПОЧЕМУ ЭТО ВАЖНО
+----------------
+Сценарий реального пользователя:
+- Приложение работает часами
+- Wi-Fi временно теряется (в метро, в лифте)
+- Сокет "зависает" вместо нормального закрытия
+- Приложение всё ещё показывает "Подключено"
+- Пользователь пытается отправить сообщение → timeout
+
+С heartbeat watchdog:
+- За 15 сек без данных система понимает, что соединение мертво
+- Автоматически переподключается
+- Пользователь видит кратковременный "Подключение..." вместо зависания
+
+
+ИТОГ
+----
+Выбери вариант 1 (явный heartbeat) или вариант 2 (в polling loop). Вариант 2 проще, но менее надежен. Для production рекомендуется вариант 1.
