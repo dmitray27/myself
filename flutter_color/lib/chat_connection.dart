@@ -20,7 +20,8 @@ abstract class ChatSocket {
 }
 
 class WebSocketChatSocket implements ChatSocket {
-  WebSocketChatSocket(String url, {Duration pingInterval = const Duration(seconds: 5)})
+  WebSocketChatSocket(String url,
+      {Duration pingInterval = const Duration(seconds: 5)})
       : _channel = IOWebSocketChannel.connect(url, pingInterval: pingInterval);
 
   final WebSocketChannel _channel;
@@ -99,8 +100,8 @@ class ChatConnection {
       _socket = socket;
       _subscription = socket.frames.listen(
         (frame) => onFrame?.call(frame.toString()),
-        onError: (error) => _handleError('WebSocket ошибка'),
-        onDone: () => _handleError('Соединение закрыто сервером'),
+        onError: (error) => _handleBroken('WebSocket ошибка'),
+        onDone: () => _handleBroken('Соединение закрыто сервером'),
         cancelOnError: true,
       );
 
@@ -179,9 +180,23 @@ class ChatConnection {
     }
   }
 
-  void _handleError(String error) {
+  /// Канал оборвался сам (ошибка потока или закрытие платой): сразу
+  /// закрываем сокет и уведомляем снаружи, не дожидаясь следующего опроса.
+  Future<void> _handleBroken(String error) async {
     if (_status == ConnectionStatus.disconnected || _isDisconnecting) return;
-    _setStatus(ConnectionStatus.error, error);
+    if (_isConnecting) {
+      // Обрыв во время рукопожатия: connect() сам сделает teardown
+      _setStatus(ConnectionStatus.error, error);
+      return;
+    }
+    _isDisconnecting = true;
+    try {
+      await onDisconnected?.call();
+      await _teardown();
+    } finally {
+      _setStatus(ConnectionStatus.error, error);
+      _isDisconnecting = false;
+    }
   }
 
   void _setStatus(ConnectionStatus status, String error) {

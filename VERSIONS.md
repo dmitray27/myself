@@ -254,8 +254,8 @@ AFSK 200 бод, преамбула 640 бит, блок до 50 байт + за
 export PATH=$PATH:<путь к flutter>/bin
 ./run_flutter_tests.sh          # analyze + test для flutter, flutter_info, flutter_firmware, flutter_color, flutter_ack
                                 # → flutter_test_report.txt
-cd pro_version/flutter_pro && flutter analyze && flutter test        # 60 тестов
-cd pro_version_open/flutter_pro && flutter analyze && flutter test   # 50 тестов
+cd pro_version/flutter_pro && flutter analyze && flutter test        # 63 теста
+cd pro_version_open/flutter_pro && flutter analyze && flutter test   # 53 теста
 
 cd <версия> && flutter build apk --release      # Android
 cd <версия> && flutter build linux --release    # Linux
