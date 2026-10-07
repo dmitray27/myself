@@ -200,6 +200,132 @@ AFSK 200 бод, преамбула 640 бит, блок до 50 байт + за
 → `idf.py -p /dev/ttyUSB0 flash`. Готовые образы для `flutter_firmware`
 (кнопка `download`) — отдельно для ESP32-WROOM и ESP32-S3.
 
+## Протокол клиент ↔ плата (подробно)
+
+Одинаков для всех версий; PRO-прошивка только добавляет кадры.
+
+### Подключение
+1. Телефон/ПК подключается к Wi-Fi `AFSK-TRX-xxxx` (xxxx — два последних байта MAC платы;
+   пароль `afsk12345` (`CONFIG_AFSK_AP_PASSWORD` в menuconfig), в PRO меняется через `/config`).
+2. Приложение проверяет `GET http://192.168.4.1/ping` (ответ `200`, таймаут 2 с),
+   затем открывает `ws://192.168.4.1:81` (рукопожатие до 8 с).
+3. Сразу после открытия шлёт `setName:<имя>`; плата ответа не присылает
+   (PRO: `System:name busy`, если имя занято другим клиентом этой платы).
+4. Плата досылает историю: до 20 кадров `hist:<имя>:<id>:<текст>`.
+5. Пауза ≥ 100 мс (`WS_MIN_MSG_INTERVAL_MS` в прошивке) до первого `msg:`.
+
+### Кадры от клиента
+| Кадр | Назначение |
+|---|---|
+| `setName:<имя>` | Имя абонента для истории/`name busy`. В текст сообщений не подставляется — имя едет в каждом `msg:`. |
+| `msg:<имя>:<id>:<текст>` | Сообщение в эфир. `<id>` — короткая строка base36 (время + счётчик), генерирует клиент; по нему сверяется эхо и статусы. |
+| `msg:<имя>:<текст>` | Legacy-формат без id (старые клиенты); эхо сверяется по `имя:текст`. |
+
+### Кадры от платы
+| Кадр | Кто шлёт | Что значит |
+|---|---|---|
+| `<имя>:<id>:<текст>` | обе | Эхо своего сообщения (= «плата приняла») или сообщение из эфира от другой станции. Префикса `msg:` нет. |
+| `hist:<имя>:<id>:<текст>` | обе | Досылка истории при подключении; клиент отбрасывает уже показанные (по `имя:id`, без id — по `имя:текст`). |
+| `System:<текст>` | обе | Служебная строка платы (например, `INCOMPLETE MESSAGE`). Имя клиента не может начинаться с `System`. |
+| `status:<id>:accepted` | PRO | Поставлено в очередь передачи. |
+| `status:<id>:aired` | PRO | Все блоки ушли в эфир. |
+| `status:<id>:delivered[:<станция>]` | PRO | Пришёл ACK (станция — 4 знака ID удалённой платы). |
+| `status:<id>:noack` | PRO | ACK не пришёл за `ACK_TIMEOUT_MS`. |
+| `status:<id>:failed` | PRO | Передать не удалось (эфир занят/ошибка TX). |
+| `stat:{json}` | PRO | Статистика канала (то же, что `GET /stat`). |
+| `peers:<станция>=<сек>,…` | PRO | Станции, от которых были ACK (до 8, устаревание 900 с). |
+| `System:name busy` | PRO | Отказ в `setName:`. |
+
+### HTTP
+| Запрос | Прошивка | Ответ |
+|---|---|---|
+| `GET /ping` | обе | `200`, живость платы; клиенты опрашивают при потере WS (интервал 2 с → до 10 с при неудачах). |
+| `GET /info` | обе | JSON `{"ssid":…,"ip":…}` — имя сети и IP платы. |
+| `POST /send` | обе | Тело как кадр `msg:`; запасной путь, если WS не открылся. |
+| `GET /stat` | PRO | JSON статистики. |
+| `GET /config`, `POST /config` | PRO | SSID/пароль AP, в NVS; применяется после перезагрузки. |
+
+### Путь сообщения (имя всегда вместе с текстом)
+```
+телефон A ──WS──► плата A ──AFSK (эфир)──► плата B ──WS──► телефон B
+msg:Иван:m3k9z1a:Привет    "Иван:m3k9z1a:Привет"        Иван:m3k9z1a:Привет
+                            (один кадр, до 1024 байт,     пузырь: имя «Иван»,
+                             блоки по 50 байт + заголовок) ниже текст «Привет»
+PRO: ◄── ACK(seq, станция B) ──  → телефону A: status:m3k9z1a:delivered:B
+```
+Имя — часть полезной нагрузки и считается в лимите кадра; получатель
+показывает имя над текстом (`msg.from`, затем `msg.text`). Своё эхо ложится
+вправо (имя совпало с моим). Имена по протоколу не уникальны.
+
+### Лимиты и таймауты
+| Параметр | Значение | Где |
+|---|---|---|
+| Кадр `msg:…` целиком | 1024 байта UTF-8 (`kMaxFrameBytes`, `WS_MAX_FRAME_LEN`) | клиент проверяет до отправки, плата отвергает |
+| Текст в поле ввода | 300 символов (`maxMessageLength`), счётчик виден за 50 до лимита | `chat_controller.dart`, `screen_pro.dart` |
+| Имя | 15 символов в UI (`maxNameLength`), 31 байт в прошивке; без `:`, не `System*` | `validateName` |
+| Эхо платы | 6 с (`echoTimeout`) → статус «ошибка», повтор по нажатию | клиент |
+| Рукопожатие WS / закрытие | 8 с / 8 с, отписка 2 с | `ChatConnection` |
+| WS ping/pong | каждые 5 с (`pingInterval`); без pong канал закрывается и сразу разрывается с очисткой | `WebSocketChatSocket` |
+| Опрос `/ping` при потере связи | 2 с, после 3 неудач ×2 до 10 с (`PollBackoff`) | клиент |
+| Клиентов WS на плате | 4 | `WS_MAX_CLIENTS` |
+| История на плате | 20 кадров | `HISTORY_SIZE` |
+| AFSK | 1200/2200 Гц, 200 бод, преамбула 640 бит, блок 50 байт + 3 заголовок, пауза 500 мс между блоками, PTT 300/100 мс | `afsk_common.h` |
+| ACK (PRO) | задержка 400 мс, таймаут `2·(400 + PTT + эфир ACK) + 1000` мс | `afsk_common.h` |
+| Автоповтор (PRO-клиент) | 3 попытки, пауза 5 с × номер попытки | `maxAttempts`, `retryBackoff` |
+
+## Состав каждой копии (файлы)
+
+Общее для всех `lib/`: `main.dart` (точка входа, тема, окно Linux),
+`chat_connection.dart` (WebSocket: рукопожатие, разрыв, статус, `PollBackoff`),
+`chat_controller.dart` (состояние чата, Wi-Fi/`/ping`, отправка, имя, звук,
+уведомления, Android-сервис), `chat_protocol.dart` (сборка/разбор кадров,
+лимиты, `validateName`), `message_store.dart` (список сообщений, статусы,
+дедупликация), `info_dialog.dart` (окно «i», `SelectionArea`),
+`screen_pro.dart` (экран чата: AppBar, лента, поле ввода, диалоги).
+Android: `android/app/src/main/kotlin/.../MainActivity.kt` (MethodChannel:
+`bindToWifi`, сервис, `closeApp`), `ChatForegroundService.kt` (уведомление,
+WifiLock, кнопка «Выйти»). `assets/info.json` — `title`, `credits`,
+`manualTitle`, `manual` для окна «i»; `assets/73g_assets/` — звук/иконки.
+Тесты общие: `chat_protocol_test`, `message_store_test`, `info_dialog_test`,
+`chat_connection_test`.
+
+| Копия | Свои файлы сверх общего | Зависимости сверх общих* |
+|---|---|---|
+| `flutter/` | — | — |
+| `flutter_info/` | `privacy/index.html` | — |
+| `flutter_firmware/` | `lib/flash_dialog.dart`, `assets/flash_info.json`, `test/flash_dialog_test.dart` | `url_launcher` |
+| `flutter_color/` | `lib/app_color.dart`, `test/app_color_test.dart`, `privacy/` | — |
+| `flutter_ack/` | то же + `test/ack_status_test.dart`; `chat_protocol`/`message_store`/`screen_pro` расширены статусами | — |
+| `pro_version/flutter_pro/` | `lib/pro_panels.dart`, `lib/history_store.dart`, `lib/group_cipher.dart`, `flash_dialog.dart`, тесты `group_cipher_test`, `history_store_test`, `flash_dialog_test` | `url_launcher`, `path_provider`, `pointycastle`, `crypto` |
+| `pro_version_open/flutter_pro/` | как PRO без `group_cipher*` | `url_launcher`, `path_provider` |
+
+\* Общие зависимости: `http`, `web_socket_channel`, `network_info_plus`,
+`shared_preferences`, `flutter_local_notifications`, `audioplayers`,
+`characters`, `window_manager` (Linux). Android `applicationId`
+`ru.dubinich.radiochat` у всех.
+
+### Статусы своего сообщения
+| Иконка | Статус | Базовые копии | `flutter_ack` / PRO |
+|---|---|---|---|
+| часы | `sending` — ушло на плату, эха нет | ✓ | ✓ |
+| галочка | `accepted` — эхо платы | ✓ (конечный) | песочные часы |
+| одна галочка | `aired` — ушло в эфир | – | ✓ |
+| две зелёные галочки | `delivered` — ACK (долгое нажатие: «Принято абонентом XXXX») | – | ✓ |
+| перечёркнутое ухо (оранж.) | `noack` — нет ACK | – | ✓ |
+| восклицательный знак | `failed` — нет эха 6 с / `status:failed`; тап = повтор | ✓ | ✓ |
+
+### История изменений общих модулей (что уже исправлено во всех копиях)
+- `ChatConnection`: при ошибке/закрытии WebSocket сокет закрывается сразу,
+  вызывается `onDisconnected` (неотправленные → «ошибка»), статус `error`;
+  раньше мёртвый сокет жил до следующего опроса.
+- Окно «i»: `SelectionArea` — выделение и копирование текста.
+- `flutter_color`/`flutter_ack`: `surfaceTintColor: Colors.transparent` у
+  AppBar, чтобы белый/чёрный были точными (`#FFFFFF`/`#000000`), без оттенка
+  Material 3.
+- Файлы `flutter_color/STRICT_REVIEW_*.txt` — внешнее ревью; принято P1.1
+  (teardown), отклонены P1.2 (dispose уже сериализован), P1.3 (дедуп по тексту
+  скрыл бы намеренные повторы), P1.4 (heartbeat уже есть: WS ping 5 с).
+
 ## Матрица функций
 
 | Функция | flutter | info | firmware | color | ack | PRO | PRO open |
@@ -261,12 +387,15 @@ cd <версия> && flutter build apk --release      # Android
 cd <версия> && flutter build linux --release    # Linux
 ```
 
-Тестов на сегодня: flutter 20, flutter_info 20, flutter_firmware 25,
-flutter_color 23, flutter_ack 29, PRO 60, PRO open 50; `flutter analyze` чисто во всех.
+Тестов на сегодня: flutter 23, flutter_info 23, flutter_firmware 28,
+flutter_color 26, flutter_ack 32, PRO 63, PRO open 53; `flutter analyze` чисто во всех
+(в каждой копии по 3 теста `chat_connection_test.dart` на обрыв WebSocket).
 После смены версии обязателен `flutter pub get` (наборы зависимостей разные).
 
 Проверено в эмуляторе Android 14: кнопки «Назад»/«Свернуть»/«Выйти» (базовые
-копии). Не проверено без железа: ACK-тайминги PRO в эфире, UI PRO в эмуляторе.
+копии); `flutter_ack` — палитра (белый/чёрный), все статусы ACK по mock-кадрам
+`status:` (`UI_TEST_REPORT.md`, скриншоты в `ui_test/screenshots/`).
+Не проверено без железа: ACK-тайминги PRO в эфире, UI PRO в эмуляторе.
 
 ## Чего нет ни в одной версии (задел)
 
