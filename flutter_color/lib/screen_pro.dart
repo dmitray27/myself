@@ -363,6 +363,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               surfaceTintColor: Colors.transparent,
               actions: [
                 IconButton(
+                  iconSize: 20,
+                  padding: EdgeInsets.zero,
+                  constraints:
+                      const BoxConstraints(minWidth: 36, minHeight: 36),
                   icon: Icon(_controller.soundEnabled
                       ? Icons.notifications_active
                       : Icons.notifications_off),
@@ -371,18 +375,30 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   color: onBar,
                 ),
                 IconButton(
+                  iconSize: 20,
+                  padding: EdgeInsets.zero,
+                  constraints:
+                      const BoxConstraints(minWidth: 36, minHeight: 36),
                   icon: const Icon(Icons.palette),
                   onPressed: () => showColorDialog(context),
                   tooltip: 'Цвет приложения',
                   color: onBar,
                 ),
                 IconButton(
+                  iconSize: 20,
+                  padding: EdgeInsets.zero,
+                  constraints:
+                      const BoxConstraints(minWidth: 36, minHeight: 36),
                   icon: const Icon(Icons.edit),
                   onPressed: _showChangeNameDialog,
                   tooltip: 'Изменить имя',
                   color: onBar,
                 ),
                 IconButton(
+                  iconSize: 20,
+                  padding: EdgeInsets.zero,
+                  constraints:
+                      const BoxConstraints(minWidth: 36, minHeight: 36),
                   icon: const Icon(Icons.power_settings_new),
                   onPressed: _confirmExit,
                   tooltip: 'Выйти',
@@ -603,7 +619,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                               vertical: 12,
                             ),
                             suffixIcon: IconButton(
-                              icon: const Icon(Icons.send),
+                              icon: const Icon(Icons.send, size: 20),
                               onPressed: isConnected ? _send : null,
                             ),
                           ),
