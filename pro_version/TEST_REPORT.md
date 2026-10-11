@@ -9,5 +9,19 @@
 
 ## Приложение pro_version/flutter_pro
 
-- flutter analyze: No issues found! (ran in 0.8s)
-- flutter test: +63: All tests passed!
+- flutter analyze: No issues found! (ran in 1.0s)
+- flutter test: +67: All tests passed!
+
+## Дополнение (2026-10-11): ревью 2 — 4 правки во всех копиях
+
+- `MessageStore.ingest`: позднее эхо/`hist:` по своему id после таймаута или
+  разрыва переводит сообщение из `failed` в `accepted`, дубликата нет (+4 теста
+  `MessageStore late echo`).
+- Имена `hist`/`ping`/`pong` уже были в `kReservedNames` и в `name_is_valid`
+  прошивки PRO — без изменений.
+- `MainActivity.onAvailable`: `bindProcessToNetwork` только в UI-потоке после
+  проверки `networkCallback === this` (запоздавший колбэк старого запроса не
+  привязывает процесс к старой сети).
+- `ChatForegroundService`: при «Выйти» `cancelAll()` — снимается и уведомление
+  входящего сообщения (id 1001 из Dart).
+- flutter analyze: No issues found!; flutter test: +67: All tests passed!

@@ -98,10 +98,15 @@ const int kMaxNameBytes = 31;
 /// Те же правила, что name_is_valid() в прошивке: не пустое, без ':'
 /// и не начинается с "System" (иначе можно подделать служебные кадры).
 /// Возвращает текст ошибки или null.
+/// Служебные префиксы кадров платы: такое имя парсер принял бы за
+/// историю или ping, а не за абонента.
+const Set<String> kReservedNames = {'hist', 'ping', 'pong'};
+
 String? validateName(String name) {
   if (name.isEmpty) return 'Имя не может быть пустым';
   if (name.contains(':')) return 'Имя не может содержать двоеточие';
   if (name.startsWith('System')) return 'Имя не может начинаться с "System"';
+  if (kReservedNames.contains(name)) return 'Имя "$name" зарезервировано';
   if (utf8.encode(name).length > kMaxNameBytes) {
     return 'Имя слишком длинное (до $kMaxNameBytes байт)';
   }

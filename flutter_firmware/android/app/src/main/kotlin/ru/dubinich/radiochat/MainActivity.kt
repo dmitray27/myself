@@ -107,15 +107,21 @@ class MainActivity : FlutterActivity() {
 
         val callback = object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
-                val ok = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    cm.bindProcessToNetwork(network)
-                } else {
-                    @Suppress("DEPRECATION")
-                    ConnectivityManager.setProcessDefaultNetwork(network)
-                }
                 // Колбэк приходит в фоновом потоке, а MethodChannel.Result
-                // обязан вызываться в главном потоке
-                runOnUiThread { completeBind(this, ok) }
+                // обязан вызываться в главном потоке. Привязку тоже делаем
+                // там, уже убедившись, что колбэк не снят unbind(): иначе
+                // запоздавшее событие старого запроса привязало бы процесс
+                // к старой сети
+                runOnUiThread {
+                    if (networkCallback !== this) return@runOnUiThread
+                    val ok = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        cm.bindProcessToNetwork(network)
+                    } else {
+                        @Suppress("DEPRECATION")
+                        ConnectivityManager.setProcessDefaultNetwork(network)
+                    }
+                    completeBind(this, ok)
+                }
             }
 
             override fun onUnavailable() {

@@ -217,4 +217,51 @@ void main() {
       expect(store.messages.map((m) => m.id), ['2', '3']);
     });
   });
+
+  group('MessageStore late echo', () {
+    test('late echo by id restores failed message instead of duplicating', () {
+      final store = MessageStore();
+      store.markFailed(store.addOutgoing('id9', 'User', 'Late'));
+      expect(store.messages.single.status, MessageStatus.failed);
+
+      final outcome =
+          store.ingest(parseIncomingFrame('User:id9:Late'), myName: 'User');
+      expect(outcome, IngestOutcome.echoConfirmed);
+      expect(store.messages.length, 1);
+      expect(store.messages.single.status, MessageStatus.accepted);
+      expect(store.messages.single.isMe, true);
+    });
+
+    test('history frame restores failed message after reconnect', () {
+      final store = MessageStore();
+      final m = store.addOutgoing('id7', 'User', 'Hi');
+      store.markFailed(m);
+      expect(m.status, MessageStatus.failed);
+
+      final outcome =
+          store.ingest(parseIncomingFrame('hist:User:id7:Hi'), myName: 'User');
+      expect(outcome, IngestOutcome.echoConfirmed);
+      expect(store.messages.length, 1);
+      expect(m.status, MessageStatus.accepted);
+    });
+
+    test('late legacy echo without id matches own text', () {
+      final store = MessageStore();
+      final m = store.addOutgoing('', 'User', 'Old');
+      store.markFailed(m);
+      final outcome =
+          store.ingest(parseIncomingFrame('User:Old'), myName: 'User');
+      expect(outcome, IngestOutcome.echoConfirmed);
+      expect(store.messages.length, 1);
+      expect(m.status, MessageStatus.accepted);
+    });
+
+    test('same message from another station with my name is not swallowed', () {
+      final store = MessageStore();
+      final outcome =
+          store.ingest(parseIncomingFrame('User:idX:Hello'), myName: 'User');
+      expect(outcome, IngestOutcome.addedNew);
+      expect(store.messages.length, 1);
+    });
+  });
 }

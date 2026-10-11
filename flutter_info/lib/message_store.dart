@@ -112,6 +112,17 @@ class MessageStore {
       return IngestOutcome.echoConfirmed;
     }
 
+    // Эхо, пришедшее после таймаута или разрыва: сообщение уже помечено
+    // неудачным, но плата его приняла. Возвращаем статус и не дублируем.
+    final late = _ownMessage(frame.id, frame.text, myName: myName, from: frame.from);
+    if (late != null) {
+      if (late.status == MessageStatus.failed) {
+        late.status = MessageStatus.delivered;
+        return IngestOutcome.echoConfirmed;
+      }
+      return IngestOutcome.duplicateIgnored;
+    }
+
     // В истории собственные сообщения не отличить по очереди эха (она очищена
     // при разрыве), поэтому опираемся на имя
     final isMine = frame.isHistory && frame.from == myName;
@@ -153,6 +164,16 @@ class MessageStore {
       _pendingEcho.remove(pending);
     }
     return true;
+  }
+
+  Message? _ownMessage(String id, String text,
+      {required String myName, required String from}) {
+    if (from != myName) return null;
+    for (final m in _messages) {
+      if (!m.isMe) continue;
+      if (id.isNotEmpty ? m.id == id : m.text == text) return m;
+    }
+    return null;
   }
 
   bool _alreadyShown(String id, String from, String text, bool isMe) {

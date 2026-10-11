@@ -147,9 +147,9 @@ class ChatForegroundService : Service() {
         // Сначала гасим экран приложения: живой Dart-движок продолжал бы
         // опрос платы и поднял бы сервис обратно
         MainActivity.closeApp()
-        val manager = notificationManager()
-        manager.cancel(ALERT_NOTIFICATION_ID)
-        manager.cancel(NOTIFICATION_ID)
+        // cancelAll: вместе с уведомлениями сервиса снимается и уведомление
+        // о входящем сообщении, которое показывает Dart (свой id)
+        notificationManager().cancelAll()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             stopForeground(STOP_FOREGROUND_REMOVE)
         } else {
@@ -309,8 +309,7 @@ class ChatForegroundService : Service() {
             MainActivity.closeApp()
             val manager =
                 context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            manager.cancel(ALERT_NOTIFICATION_ID)
-            manager.cancel(NOTIFICATION_ID)
+            manager.cancelAll()
             scheduleProcessKill()
         }
 

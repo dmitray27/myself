@@ -427,14 +427,23 @@ static bool looks_like_id(const char *s, size_t len)
     return true;
 }
 
-// Имя без ':' (разделитель кадра) и не "System": иначе клиент смог бы
-// подделать служебные уведомления
+// Имя без ':' (разделитель кадра), не "System" и не префикс служебного
+// кадра (hist/ping/pong): иначе клиент смог бы подделать служебные кадры
 static bool name_is_valid(const char *name)
 {
     if (name[0] == '\0' || strchr(name, ':') != NULL) {
         return false;
     }
-    return strncmp(name, "System", 6) != 0;
+    if (strncmp(name, "System", 6) == 0) {
+        return false;
+    }
+    static const char *reserved[] = {"hist", "ping", "pong"};
+    for (size_t i = 0; i < sizeof(reserved) / sizeof(reserved[0]); i++) {
+        if (strcmp(name, reserved[i]) == 0) {
+            return false;
+        }
+    }
+    return true;
 }
 
 static int hex_val(char c)

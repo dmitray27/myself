@@ -1,35 +1,5 @@
 === flutter ===
 Analyzing flutter...                                            
-No issues found! (ran in 0.8s)
-00:00 +0: loading test/chat_connection_test.dart
-00:00 +0: test/chat_connection_test.dart: server close tears down socket and notifies onDisconnected at once
-00:00 +1: test/chat_connection_test.dart: stream error is handled the same way
-00:00 +2: test/chat_connection_test.dart: explicit disconnect does not double-notify
-00:00 +3: test/info_dialog_test.dart: info dialog text is selectable and copyable
-00:00 +4: test/info_dialog_test.dart: info dialog text is selectable and copyable
-00:00 +5: test/info_dialog_test.dart: info dialog text is selectable and copyable
-00:00 +6: test/info_dialog_test.dart: info dialog text is selectable and copyable
-00:00 +7: test/info_dialog_test.dart: info dialog text is selectable and copyable
-00:00 +8: test/info_dialog_test.dart: info dialog text is selectable and copyable
-00:00 +9: test/chat_protocol_test.dart: buildMessageFrame new frame includes id
-00:00 +10: test/chat_protocol_test.dart: buildMessageFrame legacy frame omits id
-00:00 +11: test/chat_protocol_test.dart: validateName mirrors firmware name_is_valid
-00:00 +12: test/chat_protocol_test.dart: parseIncomingFrame parses new from:<id>:text
-00:00 +13: test/chat_protocol_test.dart: parseIncomingFrame parses legacy from:text
-00:00 +14: test/chat_protocol_test.dart: parseIncomingFrame legacy text with colon is not split into id
-00:00 +15: test/chat_protocol_test.dart: parseIncomingFrame id frame keeps colons inside text
-00:00 +16: test/chat_protocol_test.dart: parseIncomingFrame parses history with id
-00:00 +17: test/chat_protocol_test.dart: parseIncomingFrame ignores empty frames
-00:00 +18: test/chat_protocol_test.dart: parseIncomingFrame pings are recognized
-00:00 +19: test/chat_protocol_test.dart: parseIncomingFrame system messages are recognized
-00:00 +20: test/chat_protocol_test.dart: echoKeyFor returns id when present
-00:00 +21: test/chat_protocol_test.dart: echoKeyFor falls back to name:text without id
-00:00 +22: test/chat_protocol_test.dart: messageFitsFrame counts bytes correctly for cyrillic with id
-00:00 +23: All tests passed!
-RESULT flutter: analyze=0 test=0
-
-=== flutter_info ===
-Analyzing flutter_info...                                       
 No issues found! (ran in 0.9s)
 00:00 +0: loading test/chat_connection_test.dart
 00:00 +0: test/chat_connection_test.dart: server close tears down socket and notifies onDisconnected at once
@@ -41,21 +11,59 @@ No issues found! (ran in 0.9s)
 00:00 +6: test/info_dialog_test.dart: info dialog text is selectable and copyable
 00:00 +7: test/info_dialog_test.dart: info dialog text is selectable and copyable
 00:00 +8: test/info_dialog_test.dart: info dialog text is selectable and copyable
-00:00 +9: test/chat_protocol_test.dart: buildMessageFrame new frame includes id
-00:00 +10: test/chat_protocol_test.dart: buildMessageFrame legacy frame omits id
-00:00 +11: test/chat_protocol_test.dart: validateName mirrors firmware name_is_valid
-00:00 +12: test/chat_protocol_test.dart: parseIncomingFrame parses new from:<id>:text
-00:00 +13: test/chat_protocol_test.dart: parseIncomingFrame parses legacy from:text
-00:00 +14: test/chat_protocol_test.dart: parseIncomingFrame legacy text with colon is not split into id
-00:00 +15: test/chat_protocol_test.dart: parseIncomingFrame id frame keeps colons inside text
-00:00 +16: test/chat_protocol_test.dart: parseIncomingFrame parses history with id
-00:00 +17: test/chat_protocol_test.dart: parseIncomingFrame ignores empty frames
-00:00 +18: test/chat_protocol_test.dart: parseIncomingFrame pings are recognized
-00:00 +19: test/chat_protocol_test.dart: parseIncomingFrame system messages are recognized
-00:00 +20: test/chat_protocol_test.dart: echoKeyFor returns id when present
-00:00 +21: test/chat_protocol_test.dart: echoKeyFor falls back to name:text without id
-00:00 +22: test/chat_protocol_test.dart: messageFitsFrame counts bytes correctly for cyrillic with id
-00:00 +23: All tests passed!
+00:00 +9: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +10: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +11: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +12: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +13: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +14: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +15: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:01 +16: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:01 +17: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:01 +18: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:01 +19: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:01 +20: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:01 +21: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:01 +22: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:01 +23: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:01 +24: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:01 +25: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:01 +26: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:01 +27: All tests passed!
+RESULT flutter: analyze=0 test=0
+
+=== flutter_info ===
+Analyzing flutter_info...                                       
+No issues found! (ran in 1.1s)
+00:00 +0: loading test/chat_connection_test.dart
+00:00 +0: test/chat_connection_test.dart: server close tears down socket and notifies onDisconnected at once
+00:00 +1: test/chat_connection_test.dart: stream error is handled the same way
+00:00 +2: test/chat_connection_test.dart: explicit disconnect does not double-notify
+00:00 +3: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +4: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +5: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +6: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +7: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +8: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +9: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +10: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +11: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +12: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +13: test/chat_protocol_test.dart: buildMessageFrame new frame includes id
+00:00 +14: test/chat_protocol_test.dart: buildMessageFrame legacy frame omits id
+00:00 +15: test/chat_protocol_test.dart: validateName mirrors firmware name_is_valid
+00:00 +16: test/chat_protocol_test.dart: parseIncomingFrame parses new from:<id>:text
+00:00 +17: test/chat_protocol_test.dart: parseIncomingFrame parses legacy from:text
+00:00 +18: test/chat_protocol_test.dart: parseIncomingFrame legacy text with colon is not split into id
+00:00 +19: test/chat_protocol_test.dart: parseIncomingFrame id frame keeps colons inside text
+00:00 +20: test/chat_protocol_test.dart: parseIncomingFrame parses history with id
+00:00 +21: test/chat_protocol_test.dart: parseIncomingFrame ignores empty frames
+00:00 +22: test/chat_protocol_test.dart: parseIncomingFrame pings are recognized
+00:00 +23: test/chat_protocol_test.dart: parseIncomingFrame system messages are recognized
+00:00 +24: test/chat_protocol_test.dart: echoKeyFor returns id when present
+00:00 +25: test/chat_protocol_test.dart: echoKeyFor falls back to name:text without id
+00:00 +26: test/chat_protocol_test.dart: messageFitsFrame counts bytes correctly for cyrillic with id
+00:00 +27: All tests passed!
 RESULT flutter_info: analyze=0 test=0
 
 === flutter_firmware ===
@@ -71,12 +79,12 @@ No issues found! (ran in 0.8s)
 00:00 +6: test/info_dialog_test.dart: info dialog text is selectable and copyable
 00:00 +7: test/info_dialog_test.dart: info dialog text is selectable and copyable
 00:00 +8: test/info_dialog_test.dart: info dialog text is selectable and copyable
-00:00 +9: test/flash_dialog_test.dart: FlashInfo loads real assets/flash_info.json
-00:00 +10: test/flash_dialog_test.dart: FlashInfo fromJson tolerates missing fields
-00:00 +11: test/flash_dialog_test.dart: FlashButton / FlashDialog opens instruction with steps, links and Закрыть
-00:01 +12: test/flash_dialog_test.dart: FlashButton / FlashDialog opens instruction with steps, links and Закрыть
-00:01 +13: test/flash_dialog_test.dart: FlashButton / FlashDialog opens instruction with steps, links and Закрыть
-00:01 +14: test/flash_dialog_test.dart: FlashButton / FlashDialog opens instruction with steps, links and Закрыть
+00:00 +9: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +10: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +11: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +12: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +13: test/flash_dialog_test.dart: FlashInfo loads real assets/flash_info.json
+00:01 +14: test/flash_dialog_test.dart: FlashInfo fromJson tolerates missing fields
 00:01 +15: test/flash_dialog_test.dart: FlashButton / FlashDialog opens instruction with steps, links and Закрыть
 00:01 +16: test/flash_dialog_test.dart: FlashButton / FlashDialog opens instruction with steps, links and Закрыть
 00:01 +17: test/flash_dialog_test.dart: FlashButton / FlashDialog opens instruction with steps, links and Закрыть
@@ -88,14 +96,18 @@ No issues found! (ran in 0.8s)
 00:01 +23: test/flash_dialog_test.dart: FlashButton / FlashDialog opens instruction with steps, links and Закрыть
 00:01 +24: test/flash_dialog_test.dart: FlashButton / FlashDialog opens instruction with steps, links and Закрыть
 00:01 +25: test/flash_dialog_test.dart: FlashButton / FlashDialog opens instruction with steps, links and Закрыть
-00:01 +26: test/flash_dialog_test.dart: DownloadButton / DownloadDialog lists both chips and opens the matching URL
-00:02 +27: test/flash_dialog_test.dart: DownloadButton / DownloadDialog shows snackbar when the link cannot be opened
-00:02 +28: All tests passed!
+00:01 +26: test/flash_dialog_test.dart: FlashButton / FlashDialog opens instruction with steps, links and Закрыть
+00:01 +27: test/flash_dialog_test.dart: FlashButton / FlashDialog opens instruction with steps, links and Закрыть
+00:01 +28: test/flash_dialog_test.dart: FlashButton / FlashDialog opens instruction with steps, links and Закрыть
+00:01 +29: test/flash_dialog_test.dart: FlashButton / FlashDialog opens instruction with steps, links and Закрыть
+00:01 +30: test/flash_dialog_test.dart: DownloadButton / DownloadDialog lists both chips and opens the matching URL
+00:02 +31: test/flash_dialog_test.dart: DownloadButton / DownloadDialog shows snackbar when the link cannot be opened
+00:02 +32: All tests passed!
 RESULT flutter_firmware: analyze=0 test=0
 
 === flutter_color ===
 Analyzing flutter_color...                                      
-No issues found! (ran in 0.9s)
+No issues found! (ran in 1.1s)
 00:00 +0: loading test/chat_connection_test.dart
 00:00 +0: test/chat_connection_test.dart: server close tears down socket and notifies onDisconnected at once
 00:00 +1: test/chat_connection_test.dart: stream error is handled the same way
@@ -109,26 +121,30 @@ No issues found! (ran in 0.9s)
 00:00 +9: test/info_dialog_test.dart: info dialog text is selectable and copyable
 00:00 +10: test/info_dialog_test.dart: info dialog text is selectable and copyable
 00:00 +11: test/info_dialog_test.dart: info dialog text is selectable and copyable
-00:01 +12: test/chat_protocol_test.dart: buildMessageFrame new frame includes id
-00:01 +13: test/chat_protocol_test.dart: buildMessageFrame legacy frame omits id
-00:01 +14: test/chat_protocol_test.dart: validateName mirrors firmware name_is_valid
-00:01 +15: test/chat_protocol_test.dart: parseIncomingFrame parses new from:<id>:text
-00:01 +16: test/chat_protocol_test.dart: parseIncomingFrame parses legacy from:text
-00:01 +17: test/chat_protocol_test.dart: parseIncomingFrame legacy text with colon is not split into id
-00:01 +18: test/chat_protocol_test.dart: parseIncomingFrame id frame keeps colons inside text
-00:01 +19: test/chat_protocol_test.dart: parseIncomingFrame parses history with id
-00:01 +20: test/chat_protocol_test.dart: parseIncomingFrame ignores empty frames
-00:01 +21: test/chat_protocol_test.dart: parseIncomingFrame pings are recognized
-00:01 +22: test/chat_protocol_test.dart: parseIncomingFrame system messages are recognized
-00:01 +23: test/chat_protocol_test.dart: echoKeyFor returns id when present
-00:01 +24: test/chat_protocol_test.dart: echoKeyFor falls back to name:text without id
-00:01 +25: test/chat_protocol_test.dart: messageFitsFrame counts bytes correctly for cyrillic with id
-00:01 +26: All tests passed!
+00:00 +12: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +13: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +14: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:00 +15: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:01 +16: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:01 +17: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:01 +18: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:01 +19: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:01 +20: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:01 +21: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:01 +22: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:01 +23: test/chat_protocol_test.dart: parseIncomingFrame parses history with id
+00:01 +24: test/chat_protocol_test.dart: parseIncomingFrame ignores empty frames
+00:01 +25: test/chat_protocol_test.dart: parseIncomingFrame pings are recognized
+00:01 +26: test/chat_protocol_test.dart: parseIncomingFrame system messages are recognized
+00:01 +27: test/chat_protocol_test.dart: echoKeyFor returns id when present
+00:01 +28: test/chat_protocol_test.dart: echoKeyFor falls back to name:text without id
+00:01 +29: test/chat_protocol_test.dart: messageFitsFrame counts bytes correctly for cyrillic with id
+00:01 +30: All tests passed!
 RESULT flutter_color: analyze=0 test=0
 
 === flutter_ack ===
 Analyzing flutter_ack...                                        
-No issues found! (ran in 0.9s)
+No issues found! (ran in 1.1s)
 00:00 +0: loading test/chat_connection_test.dart
 00:00 +0: test/chat_connection_test.dart: server close tears down socket and notifies onDisconnected at once
 00:00 +1: test/chat_connection_test.dart: stream error is handled the same way
@@ -148,21 +164,25 @@ No issues found! (ran in 0.9s)
 00:01 +15: test/info_dialog_test.dart: info dialog text is selectable and copyable
 00:01 +16: test/info_dialog_test.dart: info dialog text is selectable and copyable
 00:01 +17: test/info_dialog_test.dart: info dialog text is selectable and copyable
-00:01 +18: test/chat_protocol_test.dart: buildMessageFrame new frame includes id
-00:01 +19: test/chat_protocol_test.dart: buildMessageFrame legacy frame omits id
-00:01 +20: test/chat_protocol_test.dart: validateName mirrors firmware name_is_valid
-00:01 +21: test/chat_protocol_test.dart: parseIncomingFrame parses new from:<id>:text
-00:01 +22: test/chat_protocol_test.dart: parseIncomingFrame parses legacy from:text
-00:01 +23: test/chat_protocol_test.dart: parseIncomingFrame legacy text with colon is not split into id
-00:01 +24: test/chat_protocol_test.dart: parseIncomingFrame id frame keeps colons inside text
-00:01 +25: test/chat_protocol_test.dart: parseIncomingFrame parses history with id
-00:01 +26: test/chat_protocol_test.dart: parseIncomingFrame ignores empty frames
-00:01 +27: test/chat_protocol_test.dart: parseIncomingFrame pings are recognized
-00:01 +28: test/chat_protocol_test.dart: parseIncomingFrame system messages are recognized
-00:01 +29: test/chat_protocol_test.dart: echoKeyFor returns id when present
-00:01 +30: test/chat_protocol_test.dart: echoKeyFor falls back to name:text without id
-00:01 +31: test/chat_protocol_test.dart: messageFitsFrame counts bytes correctly for cyrillic with id
-00:01 +32: All tests passed!
+00:01 +18: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:01 +19: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:01 +20: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:01 +21: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:01 +22: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:01 +23: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:01 +24: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:01 +25: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:01 +26: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:01 +27: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:01 +28: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:01 +29: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:01 +30: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:01 +31: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:01 +32: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:01 +33: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:01 +34: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:01 +35: test/info_dialog_test.dart: info dialog text is selectable and copyable
+00:01 +36: All tests passed!
 RESULT flutter_ack: analyze=0 test=0
 
-OVERALL: OK (2026-10-05T03:39Z, flutter 3.32.8)
+OVERALL: OK (2026-10-11T08:11Z, flutter 3.32.8)

@@ -319,6 +319,17 @@ WifiLock, кнопка «Выйти»). `assets/info.json` — `title`, `credits
   вызывается `onDisconnected` (неотправленные → «ошибка»), статус `error`;
   раньше мёртвый сокет жил до следующего опроса.
 - Окно «i»: `SelectionArea` — выделение и копирование текста.
+- `MessageStore.ingest`: позднее эхо или `hist:` по своему id после
+  таймаута/разрыва переводит сообщение из «ошибка» в доставлено (базовые) /
+  принято платой (ack, PRO) вместо дубликата слева.
+- `validateName` (базовые) и `name_is_valid` базовой прошивки: запрещены
+  имена `hist`, `ping`, `pong` — иначе live-кадр такого абонента парсер
+  принимал бы за историю/ping (в ack и PRO уже было в `kReservedNames`).
+- Android `MainActivity.onAvailable`: привязка процесса к сети делается в
+  UI-потоке после проверки актуальности колбэка — запоздавший колбэк старого
+  запроса не привязывает процесс к старой сети.
+- Android `ChatForegroundService`: при «Выйти» `cancelAll()` — снимается и
+  уведомление входящего сообщения (id 1001 из Dart), не только id 1/2 сервиса.
 - `flutter_color`/`flutter_ack`: `surfaceTintColor: Colors.transparent` у
   AppBar, чтобы белый/чёрный были точными (`#FFFFFF`/`#000000`), без оттенка
   Material 3.
@@ -380,16 +391,17 @@ WifiLock, кнопка «Выйти»). `assets/info.json` — `title`, `credits
 export PATH=$PATH:<путь к flutter>/bin
 ./run_flutter_tests.sh          # analyze + test для flutter, flutter_info, flutter_firmware, flutter_color, flutter_ack
                                 # → flutter_test_report.txt
-cd pro_version/flutter_pro && flutter analyze && flutter test        # 63 теста
-cd pro_version_open/flutter_pro && flutter analyze && flutter test   # 53 теста
+cd pro_version/flutter_pro && flutter analyze && flutter test        # 67 тестов
+cd pro_version_open/flutter_pro && flutter analyze && flutter test   # 57 тестов
 
 cd <версия> && flutter build apk --release      # Android
 cd <версия> && flutter build linux --release    # Linux
 ```
 
-Тестов на сегодня: flutter 23, flutter_info 23, flutter_firmware 28,
-flutter_color 26, flutter_ack 32, PRO 63, PRO open 53; `flutter analyze` чисто во всех
-(в каждой копии по 3 теста `chat_connection_test.dart` на обрыв WebSocket).
+Тестов на сегодня: flutter 27, flutter_info 27, flutter_firmware 32,
+flutter_color 30, flutter_ack 36, PRO 67, PRO open 57; `flutter analyze` чисто во всех
+(в каждой копии по 3 теста `chat_connection_test.dart` на обрыв WebSocket и
+по 4 теста `MessageStore late echo` на позднее эхо).
 После смены версии обязателен `flutter pub get` (наборы зависимостей разные).
 
 Проверено в эмуляторе Android 14: кнопки «Назад»/«Свернуть»/«Выйти» (базовые
