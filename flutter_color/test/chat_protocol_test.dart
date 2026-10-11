@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:radio_bridge_dual/chat_protocol.dart';
+import 'package:radio_bridge_dual/message_store.dart';
 
 void main() {
   group('buildMessageFrame', () {
@@ -109,6 +110,31 @@ void main() {
       // 'msg:' + 'User' + ':' + id + ':' + text
       // = 4 + 4 + 1 + 6 + 1 + 16 = 32 bytes
       expect(messageFitsFrame(name, text, id: id), true);
+    });
+  });
+
+  group('frames from flutter_color firmware (name over the air)', () {
+    test('remote station is shown under its own name, not Remote', () {
+      final frame = parseIncomingFrame('Дима:r1:Привет');
+      expect(frame.from, 'Дима');
+      expect(frame.id, 'r1');
+      expect(frame.text, 'Привет');
+      expect(frame.isHistory, false);
+    });
+
+    test('legacy firmware frames still arrive as Remote', () {
+      final frame = parseIncomingFrame('Remote:r2:n:Дима:Привет');
+      expect(frame.from, 'Remote');
+      expect(frame.text, 'n:Дима:Привет');
+    });
+
+    test('own echo from the air by another board is not mine without id match', () {
+      final store = MessageStore();
+      final outcome =
+          store.ingest(parseIncomingFrame('Дима:r3:Привет'), myName: 'Коля');
+      expect(outcome, IngestOutcome.addedNew);
+      expect(store.messages.single.from, 'Дима');
+      expect(store.messages.single.isMe, false);
     });
   });
 }

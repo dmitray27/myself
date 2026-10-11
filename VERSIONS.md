@@ -294,7 +294,7 @@ WifiLock, кнопка «Выйти»). `assets/info.json` — `title`, `credits
 | `flutter/` | — | — |
 | `flutter_info/` | `privacy/index.html` | — |
 | `flutter_firmware/` | `lib/flash_dialog.dart`, `assets/flash_info.json`, `test/flash_dialog_test.dart` | `url_launcher` |
-| `flutter_color/` | `lib/app_color.dart`, `test/app_color_test.dart`, `privacy/` | — |
+| `flutter_color/` | `lib/app_color.dart`, `test/app_color_test.dart`, `privacy/`, `firmware/` (прошивка с именем в эфире) | — |
 | `flutter_ack/` | то же + `test/ack_status_test.dart`; `chat_protocol`/`message_store`/`screen_pro` расширены статусами | — |
 | `pro_version/flutter_pro/` | `lib/pro_panels.dart`, `lib/history_store.dart`, `lib/group_cipher.dart`, `flash_dialog.dart`, тесты `group_cipher_test`, `history_store_test`, `flash_dialog_test` | `url_launcher`, `path_provider`, `pointycastle`, `crypto` |
 | `pro_version_open/flutter_pro/` | как PRO без `group_cipher*` | `url_launcher`, `path_provider` |
@@ -336,6 +336,15 @@ WifiLock, кнопка «Выйти»). `assets/info.json` — `title`, `credits
 - Файлы `flutter_color/STRICT_REVIEW_*.txt` — внешнее ревью; принято P1.1
   (teardown), отклонены P1.2 (dispose уже сериализован), P1.3 (дедуп по тексту
   скрыл бы намеренные повторы), P1.4 (heartbeat уже есть: WS ping 5 с).
+
+### `flutter_color/firmware/` — прошивка с именем отправителя в эфире
+Копия базовой прошивки; единственное отличие — AFSK-полезная нагрузка
+`n:<имя>:<текст>` вместо голого текста (`main/air_frame.c`). Приёмная плата
+рассылает `<имя>:r<n>:<текст>`, поэтому абонент на другой плате видит имя
+отправителя, а не `Remote`. Старые передатчики принимаются как раньше
+(`Remote`); старый приёмник покажет новый кадр как `Remote: n:имя:текст`.
+Во всех остальных прошивках (базовая, PRO, PRO open) имя в эфир **не** уходит —
+его видят только клиенты той же платы.
 
 ## Матрица функций
 
@@ -399,7 +408,7 @@ cd <версия> && flutter build linux --release    # Linux
 ```
 
 Тестов на сегодня: flutter 27, flutter_info 27, flutter_firmware 32,
-flutter_color 30, flutter_ack 36, PRO 67, PRO open 57; `flutter analyze` чисто во всех
+flutter_color 33 (+8 host-тестов прошивки `firmware/test_host`), flutter_ack 36, PRO 67, PRO open 57; `flutter analyze` чисто во всех
 (в каждой копии по 3 теста `chat_connection_test.dart` на обрыв WebSocket и
 по 4 теста `MessageStore late echo` на позднее эхо).
 После смены версии обязателен `flutter pub get` (наборы зависимостей разные).

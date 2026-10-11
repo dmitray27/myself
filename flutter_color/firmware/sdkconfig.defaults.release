@@ -1,0 +1,6 @@
+# Quiet field build. Layer on top of the base defaults:
+#   idf.py -B build_release -DSDKCONFIG=sdkconfig.release \
+#       -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.release" build
+# (add ;sdkconfig.defaults.esp32s3 before .release for the S3).
+# Verbose build = plain `idf.py build` (CONFIG_AFSK_VERBOSE_LOG=y by default).
+CONFIG_AFSK_VERBOSE_LOG=n
