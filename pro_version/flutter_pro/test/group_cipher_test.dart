@@ -1,8 +1,8 @@
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:radio_bridge_dual/chat_protocol.dart';
-import 'package:radio_bridge_dual/group_cipher.dart';
+import 'package:radiochat/chat_protocol.dart';
+import 'package:radiochat/group_cipher.dart';
 
 void main() {
   group('GroupCipher', () {

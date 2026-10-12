@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:radio_bridge_dual/app_color.dart';
+import 'package:radiochat/app_color.dart';
 
 void main() {
   setUp(() {

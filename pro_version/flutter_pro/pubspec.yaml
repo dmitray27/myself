@@ -1,4 +1,4 @@
-name: radio_bridge_dual
+name: radiochat
 description: Радиочат через UV-82 и ESP32 (TX + RX)
 
 publish_to: 'none'

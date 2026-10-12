@@ -208,7 +208,7 @@ $ANDROID_HOME/build-tools/<версия>/apksigner verify --print-certs \
 
 ## Известные ограничения
 
-- Package name `ru.dubinich.radiochat`, label «Радиочат»; Dart-пакет по-прежнему `radio_bridge_dual`.
+- Package name `ru.dubinich.radiochat`, label «Радиочат»; Dart-пакет `radiochat`.
 - Иконка foreground-уведомления — системная (Bluetooth), своей пока нет.
 - Каждая плата — отдельная точка доступа, поэтому один клиент видит только
   «свою» плату; сквозной тест TX → эфир → RX требует двух устройств.

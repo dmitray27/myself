@@ -42,9 +42,12 @@
   меню «Копировать / Выделить всё».
 - **Фоновая работа**: Kotlin foreground-сервис с уведомлением «Радиочат»,
   WifiLock; уведомления о новых сообщениях при свёрнутом приложении.
-- Общие файлы: `chat_connection.dart`, `chat_controller.dart`, `chat_protocol.dart`,
-  `message_store.dart`, `info_dialog.dart`, `screen_pro.dart`, `main.dart`;
-  Kotlin `MainActivity.kt`, `ChatForegroundService.kt`.
+- Общие файлы (байт в байт во всех 7 копиях): `chat_connection.dart`, `info_dialog.dart`,
+  Kotlin `MainActivity.kt`, `ChatForegroundService.kt`. Одинаковы в 5 базовых копиях
+  (`flutter`, `info`, `firmware`, `color`; `ack` — своя версия): `chat_controller.dart`,
+  `chat_protocol.dart`, `message_store.dart`; в `ack` и PRO они расширены.
+  `main.dart` общий у `flutter`/`info`/`firmware`, свой у `color`+`ack` (темы) и у PRO.
+  `screen_pro.dart` — свой в каждой копии. Правка общего файла копируется во все копии вручную.
 
 ## Версии
 
@@ -108,7 +111,9 @@
 синий, фиолетовый) плюс белый (белая шапка, чёрные текст и иконки, всегда
 светлая тема) и чёрный (чёрная шапка, белые текст и иконки, всегда тёмная тема). Цвет применяется к теме, шапке и своим сообщениям,
 сохраняется (`shared_preferences`, ключ `app_color`), по умолчанию зелёный.
-Свои файлы: `lib/app_color.dart`, `test/app_color_test.dart`.
+Иконки AppBar 20 px (`iconSize: 20`, область нажатия 36×36), иконка отправки 20 px —
+как в репо `dmitray27/flutter`. У AppBar `surfaceTintColor: transparent`.
+Свои файлы: `lib/app_color.dart`, `test/app_color_test.dart`, `firmware/` (см. ниже).
 
 ### `flutter_ack/` — цвет + статусы доставки
 **+** к `flutter_color/`: разбор кадров `status:<id>:<state>[:<станция>]`
@@ -248,21 +253,24 @@ AFSK 200 бод, преамбула 640 бит, блок до 50 байт + за
 ### Путь сообщения (имя всегда вместе с текстом)
 ```
 телефон A ──WS──► плата A ──AFSK (эфир)──► плата B ──WS──► телефон B
-msg:Иван:m3k9z1a:Привет    "Иван:m3k9z1a:Привет"        Иван:m3k9z1a:Привет
-                            (один кадр, до 1024 байт,     пузырь: имя «Иван»,
-                             блоки по 50 байт + заголовок) ниже текст «Привет»
+msg:Иван:m3k9z1a:Привет    "Привет"                     Remote:r7:Привет
+  эхо клиентам платы A:     (только текст, блоки        пузырь: имя «Remote»,
+  Иван:m3k9z1a:Привет        по 50 байт + заголовок)     ниже текст «Привет»
 PRO: ◄── ACK(seq, станция B) ──  → телефону A: status:m3k9z1a:delivered:B
 ```
-Имя — часть полезной нагрузки и считается в лимите кадра; получатель
-показывает имя над текстом (`msg.from`, затем `msg.text`). Своё эхо ложится
-вправо (имя совпало с моим). Имена по протоколу не уникальны.
+Базовая и PRO-прошивки передают в эфир **только текст**: имя и id видят лишь
+клиенты той же платы (эхо, `hist:`), приёмная плата подписывает сообщение
+`Remote` и своим id `r<n>`. Имя в эфир уходит только у `flutter_color/firmware/`
+(`n:<имя>:<текст>`, см. ниже) — тогда получатель видит «Иван». Имя считается
+в лимите WS-кадра 1024 байта; в эфире — только в `flutter_color/firmware`.
+Своё эхо ложится вправо (имя совпало с моим). Имена по протоколу не уникальны.
 
 ### Лимиты и таймауты
 | Параметр | Значение | Где |
 |---|---|---|
 | Кадр `msg:…` целиком | 1024 байта UTF-8 (`kMaxFrameBytes`, `WS_MAX_FRAME_LEN`) | клиент проверяет до отправки, плата отвергает |
 | Текст в поле ввода | 300 символов (`maxMessageLength`), счётчик виден за 50 до лимита | `chat_controller.dart`, `screen_pro.dart` |
-| Имя | 15 символов в UI (`maxNameLength`), 31 байт в прошивке; без `:`, не `System*` | `validateName` |
+| Имя | 15 символов в UI (`maxNameLength`), 31 байт в прошивке; без `:`, не `System*`, не `hist`/`ping`/`pong` (ack/PRO ещё `status`/`stat`/`peers`) | `validateName`, `name_is_valid` |
 | Эхо платы | 6 с (`echoTimeout`) → статус «ошибка», повтор по нажатию | клиент |
 | Рукопожатие WS / закрытие | 8 с / 8 с, отписка 2 с | `ChatConnection` |
 | WS ping/pong | каждые 5 с (`pingInterval`); без pong канал закрывается и сразу разрывается с очисткой | `WebSocketChatSocket` |
@@ -275,7 +283,7 @@ PRO: ◄── ACK(seq, станция B) ──  → телефону A: status
 
 ## Состав каждой копии (файлы)
 
-Общее для всех `lib/`: `main.dart` (точка входа, тема, окно Linux),
+Состав `lib/` (одинаковые файлы — см. «Общие файлы» выше): `main.dart` (точка входа, тема, окно Linux),
 `chat_connection.dart` (WebSocket: рукопожатие, разрыв, статус, `PollBackoff`),
 `chat_controller.dart` (состояние чата, Wi-Fi/`/ping`, отправка, имя, звук,
 уведомления, Android-сервис), `chat_protocol.dart` (сборка/разбор кадров,
@@ -302,7 +310,8 @@ WifiLock, кнопка «Выйти»). `assets/info.json` — `title`, `credits
 \* Общие зависимости: `http`, `web_socket_channel`, `network_info_plus`,
 `shared_preferences`, `flutter_local_notifications`, `audioplayers`,
 `characters`, `window_manager` (Linux). Android `applicationId`
-`ru.dubinich.radiochat` у всех.
+`ru.dubinich.radiochat` у всех; имя Dart-пакета (`pubspec.yaml`, импорты
+`package:radiochat/...`) и Linux-бинарника — `radiochat` у всех копий.
 
 ### Статусы своего сообщения
 | Иконка | Статус | Базовые копии | `flutter_ack` / PRO |
@@ -424,4 +433,6 @@ flutter_color 33 (+8 host-тестов прошивки `firmware/test_host`), f
 - 5 — быстрые фразы («Принял», «SOS»), отправка координат GPS.
 - 9 — проверка версии прошивки (`version` в `/ping`).
 - Копирование сообщения из ленты чата, поиск (вне PRO), локализация EN.
-- Общий Dart-пакет вместо шести копий (правки сейчас дублируются вручную).
+- Общий Dart-пакет вместо семи копий (правки сейчас дублируются вручную).
+- Белая/чёрная темы (`color`, `ack`): свои и чужие пузыри почти одного серого,
+  белая шапка сливается с белым фоном — различимость не доработана.

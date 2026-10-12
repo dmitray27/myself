@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:radio_bridge_dual/history_store.dart';
-import 'package:radio_bridge_dual/message_store.dart';
+import 'package:radiochat/history_store.dart';
+import 'package:radiochat/message_store.dart';
 
 void main() {
   group('history encode/decode', () {

@@ -142,7 +142,7 @@ Report written to: afsk_test_report.txt
 ### Шаг 4: Ручной тест Android на телефоне
 
 1. На телефоне подключиться к AP `AFSK-TRX-****` / `afsk12345`.
-2. Запустить приложение `radio_bridge_dual`.
+2. Запустить приложение `radiochat`.
 3. Дождаться `✅ Успешно подключено к ESP32`.
 4. Отправить несколько сообщений, проверить, что они приходят обратно (echo) и видны в чате.
 
@@ -155,7 +155,7 @@ Report written to: afsk_test_report.txt
 ### Шаг 5: Ручной тест Linux-десктопа
 
 ```bash
-flutter/build/linux/x64/release/bundle/radio_bridge_dual
+flutter/build/linux/x64/release/bundle/radiochat
 ```
 
 **Ожидаемый результат:**

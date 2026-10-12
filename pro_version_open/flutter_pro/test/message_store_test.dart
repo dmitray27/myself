@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:radio_bridge_dual/chat_protocol.dart';
-import 'package:radio_bridge_dual/message_store.dart';
+import 'package:radiochat/chat_protocol.dart';
+import 'package:radiochat/message_store.dart';
 
 Message send(MessageStore store, String id, String text) {
   final m = store.addOutgoing(id, 'User', text);

@@ -128,14 +128,14 @@ $PYTHON "$TEST_SCRIPT" test --host 192.168.4.1 --report "$REPORT" || fail "Pytho
 
 # 5. Linux desktop application runtime smoke test.
 echo "Step 5: Linux bundle runtime smoke test"
-if [ -x "$LINUX_BUNDLE/radio_bridge_dual" ]; then
+if [ -x "$LINUX_BUNDLE/radiochat" ]; then
   if command -v Xvfb >/dev/null 2>&1; then
     echo "Xvfb found, running app headless"
     export DISPLAY=:99
     Xvfb :99 -screen 0 1024x768x24 &
     sleep 2
     LINUX_LOG=/tmp/ws_linux_app.log
-    timeout 25s "$LINUX_BUNDLE/radio_bridge_dual" >"$LINUX_LOG" 2>&1 &
+    timeout 25s "$LINUX_BUNDLE/radiochat" >"$LINUX_LOG" 2>&1 &
     APP_PID=$!
     sleep 20
     kill $APP_PID 2>/dev/null || true
@@ -143,14 +143,14 @@ if [ -x "$LINUX_BUNDLE/radio_bridge_dual" ]; then
   else
     echo "Xvfb not installed; running app directly"
     LINUX_LOG=/tmp/ws_linux_app.log
-    timeout 25s "$LINUX_BUNDLE/radio_bridge_dual" >"$LINUX_LOG" 2>&1 &
+    timeout 25s "$LINUX_BUNDLE/radiochat" >"$LINUX_LOG" 2>&1 &
     APP_PID=$!
     sleep 20
     kill $APP_PID 2>/dev/null || true
   fi
   check_linux_log
 else
-  fail "Linux bundle not found at $LINUX_BUNDLE/radio_bridge_dual"
+  fail "Linux bundle not found at $LINUX_BUNDLE/radiochat"
 fi
 
 # 6. Wait for Android emulator and test APK.

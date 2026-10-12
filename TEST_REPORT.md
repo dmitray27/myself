@@ -82,7 +82,7 @@ The real board does not send a `System:` greeting on WebSocket open, which is ex
 ## 4. Flutter Linux desktop app
 
 - Built with: `flutter build linux --release`
-- Bundle: `flutter/build/linux/x64/release/bundle/radio_bridge_dual`
+- Bundle: `flutter/build/linux/x64/release/bundle/radiochat`
 - Test log: `ws_real_hw_log.txt`
 - Result: app launched, pinged the ESP32, connected over WebSocket and sent `setName:Linux`:
   ```

@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:radio_bridge_dual/chat_connection.dart';
+import 'package:radiochat/chat_connection.dart';
 
 class FakeSocket implements ChatSocket {
   final controller = StreamController<String>();

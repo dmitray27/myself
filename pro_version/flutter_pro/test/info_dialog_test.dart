@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:radio_bridge_dual/info_dialog.dart';
+import 'package:radiochat/info_dialog.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
